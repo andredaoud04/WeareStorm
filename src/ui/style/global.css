@@ -1,0 +1,27 @@
+html, body, #app {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--c-night900, #141B33);
+  color: var(--c-paper, #F7F9FC);
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+* { box-sizing: border-box; }
+.safe {
+  position: absolute;
+  inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 6px var(--c-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

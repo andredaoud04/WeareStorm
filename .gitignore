@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+reports/tmp/
+*.log
+.DS_Store
+.vercel
+screens-out/

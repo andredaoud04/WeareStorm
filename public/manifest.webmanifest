@@ -1,0 +1,9 @@
+{
+  "name": "We Are Storm",
+  "short_name": "We Are Storm",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141B33",
+  "theme_color": "#141B33",
+  "start_url": "/"
+}
