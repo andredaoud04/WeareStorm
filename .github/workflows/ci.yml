@@ -17,4 +17,5 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run harness:ci
       - run: npm run build
