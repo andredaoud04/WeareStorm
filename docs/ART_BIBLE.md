@@ -6,12 +6,17 @@ characters. Assembled from the "Visual Craft" proposal; reconcile with `GDD.md` 
 
 - Troop names follow the GDD. Rig variants: **standard biped** (Clubber, Slinger, Hoplite, Javelineer, Footman, Bolter,
   Corsair, Bombardier, Trencher, Gunner, Voltblade, Pulse Ranger), **tank biped** (Rockhide, Ironclad), **quadruped + rider**
-  (Tusker; Knight = barded horse + rider), **vehicle** (Landship), **mech** (Titan), **Warlords** (unique rigs at 2.5×).
-- The per-Age screen-wide powers in §5.11 are roadmap (v1.2). v1 builds `stormcall` (3 jagged bolts + shockwave + coin
-  burst), and `suddenStorm` is the presentation of GDD §2.10 "Storm Rising".
-- Base flags: see `OWNER_DECISIONS.md` (default: small pennant on a separate pole; nothing hangs on the architecture).
-- Implementation: painter recipes in TypeScript (Canvas2D Path2D or Pixi Graphics) → baked once per DPR into atlases →
-  animated as PixiJS sprite rigs. Unit portraits in DOM UI are rendered from the same rigs (baked bust textures).
+  (Tusker; the Knight's barded horse + rider; Chief Grumbo's mammoth), **vehicle** (Landship), **mech** (Titan; OMEGA Core
+  reuses the frame), **Warlords** (unique rigs at 2.5×). Age names: Stone, Ancient, **Medieval**, Gunpowder, Industrial,
+  Future; the background display names below (Dawnvale … Neon Frontier) are canonical (GDD Reconciliation §4b).
+- The per-Age screen-wide powers in §5.11 are roadmap (v1.2). v1 builds `stormcall` (clouds gather and a ground marker
+  appears on `stormcallCast`; 3 jagged bolts + shockwave + coin burst on `stormcallStrike`), and `suddenStorm` is the
+  presentation of GDD §2.10 "Storm Rising".
+- Base flags: see `OWNER_DECISIONS.md`. The faction pennant stands on its own pole behind the base (§5.9); no cloth,
+  banners or flags on architecture in any Age.
+- Implementation: painter recipes in TypeScript on **Canvas2D `Path2D` only** (no Pixi Graphics bakes, no SVG output) →
+  baked into tiered atlases (lane / card / hero, TECH §5) → animated as PixiJS sprite rigs. Unit portraits in the DOM UI
+  (battle deck, Army, Ages) are static busts extracted from the same bakes and shown as `<img>`.
 
 ### 5.1 North star
 
@@ -26,14 +31,14 @@ A bright, toy-like, **bold-outlined flat-cartoon** world. Think premium mobile s
 
 | Item | Value |
 |---|---|
-| Art unit | 1 art unit = 1 world unit (wu). Phone reference: 0.291 pt/wu (§2.1) |
-| Troop height | 150 wu (≈ 44 pt on a 390-wide phone, ≈ 70 pt on iPad) |
+| Art unit | 1 art unit = 1 world unit (wu). `ptPerWu = clamp(viewportW / 1340, 0.27, 0.467)`: 0.280 at 375, 0.291 at 390, 0.321 at 430, 0.467 on iPad (GDD Reconciliation §1b) |
+| Troop height | 150 wu (≈ 42 pt at 375, 44 pt at 390, 48 pt at 430, 70 pt on iPad) |
 | Tank / vehicle / boss | 200 / 170 (wide) / 380 wu |
 | Base | 260 wide × 520 tall wu |
-| **Silhouette outline** | **6 wu** (≈ 1.75 pt at phone reference). Drawn as an *outer* stroke: stroke 12 under the fill |
-| Inner detail line | 3 wu, in the material's dark tone, never pure ink, so the inside reads softer than the silhouette |
-| Minimum detail size | 8 wu (≈ 2.3 pt). Anything smaller is cut |
-| UI outline | 3 pt ink on all panels, buttons, cards and pills, which matches the units' on-screen line weight |
+| **Silhouette outline** | **8 wu**: 2.24 pt at 375, 2.33 at 390, 2.57 at 430, 3.74 on iPad. Drawn as an *outer* stroke: stroke 16 under the fill, baked as the part's ink texture (§5.7) |
+| Inner detail line | 4 wu, in the material's dark tone, never pure ink, so the inside reads softer than the silhouette |
+| Minimum detail size | 10 wu (≈ 2.9 pt at 390). Anything smaller is cut |
+| UI outline | **2.5 pt × uiScale** ink on all panels, buttons, cards, pills, text and icons: 2.4 / 2.5 / 2.75 / 3.4 pt at 375 / 390 / 430 / iPad, within ±11% of the units' outline at every matrix size |
 
 ### 5.3 Light, shading and colour rules
 
@@ -48,7 +53,7 @@ A bright, toy-like, **bold-outlined flat-cartoon** world. Think premium mobile s
    - Far layers are blended 35–55 % toward the sky-horizon colour (aerial perspective).
    - The lane band is ≥ 20 % lighter in value than the troops' mid-tones.
    - A grayscale "squash test" screenshot must still separate troops from the ground.
-7. **Colour budget per troop:** ≤ 6 fills, plus skin, plus ink. One faction-coloured region must cover ≥ 15 % of the silhouette area.
+7. **Colour budget per troop:** ≤ 6 fills, plus skin, plus ink. One faction-coloured region must cover ≥ 20 % of the silhouette area (GDD §2.14; measured by `art:lint`, §5.16).
 
 ### 5.4 Faction system (blue vs red, colour-blind safe)
 
@@ -58,14 +63,14 @@ A bright, toy-like, **bold-outlined flat-cartoon** world. Think premium mobile s
 | Future-Age glow | #46E3FF (cyan) | #FF5A3C |
 | Facing | Right | Left (mirrored via `scale.x = −1`) |
 | Emblem shape language | Round: circles, disc shields, rounded pennants | Angular: chevrons, notched pennants, spikes |
-| Base flags | Blue round-tailed banner | Red swallow-tailed banner |
+| Base pennant (on its own pole, §5.9) | Blue, round tail | Red, notched tail |
 | HP bars | Left, blue | Right, red |
 
 Both factions share the same rigs. Faction colours are **tokens** that get resolved at bake time, so each troop is baked twice. Blue-versus-orange-red also stays distinguishable for deuteranopes, and facing plus emblem shape add redundancy beyond colour.
 
 ### 5.5 Palettes per Age (hex)
 
-| Token | Stone · Dawnvale | Ancient · Sunreach | Crusader · Bannerhold | Gunpowder · Powder Coast | Industrial · Ironworks | Future · Neon Frontier |
+| Token | Stone · Dawnvale | Ancient · Sunreach | Medieval · Bannerhold | Gunpowder · Powder Coast | Industrial · Ironworks | Future · Neon Frontier |
 |---|---|---|---|---|---|---|
 | skyTop | #6EC6F5 | #58B9F0 | #5DAEF2 | #4F8FD9 | #6F7FA6 | #1B2350 |
 | skyHorizon | #FFE6B0 | #FFE2A6 | #DDF2FF | #FFC98A | #F6B884 | #FF8CC6 (mid #4B3BA8) |
@@ -129,7 +134,7 @@ Both factions share the same rigs. Faction colours are **tokens** that get resol
 |---|---|
 | Stone | Hair tuft / bone |
 | Ancient | Crest |
-| Crusader | Kettle brim / great helm |
+| Medieval | Kettle brim / great helm |
 | Gunpowder | Shako / tricorn |
 | Industrial | Round helmet + goggles |
 | Future | Visor dome / antenna |
@@ -161,7 +166,9 @@ Both factions share the same rigs. Faction colours are **tokens** that get resol
 
 ### 5.7 Rig specification (sprite skeleton)
 
-Each troop is a `Container` tree of baked part sprites. Coordinates are in wu, with the origin at the centre between the feet and y pointing up shown as negative.
+Each troop is a `Container` tree of baked part sprites. Coordinates are in wu, with the origin at the centre between the feet and y pointing up shown as negative (the Canvas convention; the sim has no y).
+
+**Ink and fill.** Each part bakes two textures: **ink** (the shape stroked at 2× the outline width, 16 wu, in ink colour) and **fill** (flat fill + crescent + highlight + 4 wu inner lines), plus a white fill for the hit flash. A unit renders all its ink sprites in a back sub-container, then all its fill sprites in front, so one outline wraps the whole silhouette and part boundaries (head over torso, arms, legs) never get a full-weight ink line. armFront, legFront and weapon bake a 4 wu shadow-tone rim where they overlap the body, so they still read as separate shapes.
 
 **Standard biped (melee/ranged, 150 wu):**
 
@@ -183,21 +190,21 @@ Each troop is a `Container` tree of baked part sprites. Coordinates are in wu, w
 | smear (strike trail) | weapon | grip | arc 120° | 12 (shown 2 frames) |
 
 **Variants:**
-- **Tank biped (200 wu):** same tree, wider torso; legs 26 % of height; shield as its own part on armBack (Bulwark, Knight).
-- **Vehicle** (Cannon Cart, Steam Crawler):
+- **Tank biped (200 wu):** same tree, wider torso; legs 26 % of height (52 wu); shield as its own part on armBack (Rockhide, Ironclad).
+- **Vehicle** (Landship):
   - hull, plus wheels or a tread loop. A tread is 10 segment sprites moved along a rounded-rect path, at a speed tied to ground speed, so there is **no sliding**.
   - barrel (pivot at the trunnion; recoil 12 wu)
   - crew head (with a blink)
   - smoke socket
   - suspension bob, using a 2-spring chain
-- **Mech** (Titan, OMEGA-9): two-bone legs with knee IK solved analytically, so the feet plant on the step curve. Plus a cockpit dome with a pilot head and a shoulder emitter.
-- **Quadruped** (Old Tusk):
+- **Mech** (Titan; OMEGA Core reuses the frame): two-bone legs with knee IK solved analytically, so the feet plant on the step curve. Plus a cockpit dome with a pilot head and a shoulder emitter.
+- **Quadruped** (Tusker; the Knight's horse; Chief Grumbo's mammoth at 2.5×):
   - Body ellipse; 4 legs with phase offsets (0, 0.5, 0.25, 0.75).
   - Trunk as a 3-segment chain with a spring.
   - Tusks and ear flaps (spring).
   - A rider biped parented to the saddle.
 
-**Secondary motion:** plumes, hair, scarves, capes, banners, ear flaps and trunks use a **damped angular spring** (k = 180, d = 14) driven by the root's acceleration. This runs in presentation only and is cheap.
+**Secondary motion:** plumes, hair, scarves, capes, ear flaps and trunks use a **damped angular spring** (k = 180, d = 14) driven by the root's acceleration. This runs in presentation only and is cheap.
 
 ### 5.8 Animation set and timings
 
@@ -207,32 +214,39 @@ Clips are data: per-part keyframe tracks (rotation, offset, scale) with easing, 
 |---|---|---|---|
 | **spawn** | 0.25 s | Drops from 24 wu above the gate. Lands with squash (1.18, 0.82) → spring back. Faction ring flash under the feet | `spawn` event |
 | **idle** | 1.2 s loop | Torso scaleY 1 ↔ 1.03 (breath). Head lags 0.1 s. Weapon sway ±3°. Blinks | — |
-| **walk** | period = 2 × stride / speed (stride 28 wu; tanks 40) | Legs ±28°, arms ±18° (counter). Root bob 3 wu at 2× frequency. Torso lean 4°. Head counter-rotates 2°. **Feet planted (no sliding)** because the stride is matched to sim speed | sim `x` |
-| **attack (melee)** | = interval | Anticipation through windup: weapon −70°, lean −8°, squash (1.06, 0.94), `fierce` face. Strike in 60 ms: weapon +60°, lunge +6 wu, stretch (0.94, 1.06), smear arc. **Impact** on the hit tick: 40 ms pose hold. Recover 250 ms ease-out | `attackStart.windupTicks` → `hit` |
+| **walk** | period = 2 × stride / speed (stride 28 wu; tanks 40) | Leg swing ±θ with θ = asin(stride / (2·legLen)), computed from rig data, not hand-set: 17.7° for bipeds (stride 28, leg 46), 22.6° for tanks (stride 40, leg 52). Arms ±18° (counter). Root bob 3 wu at 2× frequency. Torso lean 4°. Head counter-rotates 2°. **Feet planted (no sliding)** because the stance sweep equals the body travel | sim `x` (`UnitView.state` = walk) |
+| **attack (melee)** | = interval | Anticipation through windup: weapon −70°, lean −8°, squash (1.06, 0.94), `fierce` face. Strike in 60 ms: weapon +60°, lunge +6 wu, stretch (0.94, 1.06), smear arc. **Impact** on the hit tick: 40 ms pose hold. Recover 250 ms ease-out | `attackStart` (windup = `impactTick − tick`) → `hit` |
 | **attack (ranged)** | = interval | Draw/aim through windup (bowstring pull, sling spin speeds up, gun shoulders). Release on the projectile tick: recoil 8 wu, lean 5°, muzzle flash 60 ms, smoke puff | `attackStart` → `projectile` |
 | **attack (vehicle)** | = interval | Barrel elevates during windup. Fire: barrel recoil 12 wu, hull rocks 3°, wheels or treads jolt back. Big smoke ring | same |
-| **hit react** | 180 ms | White flash overlay 0 → 80 ms. Torso spring kicked back 10°. Squash (0.92, 1.08). `ouch` face 150 ms | `hit` event |
-| **knockback** | 250 ms | Hop arc (12 wu high) following the sim's x displacement. Dust puff on landing | `knockback` |
+| **hit react** | 180 ms | Flash: swap the fill textures to their baked white versions for 80 ms (no overlay sprites). Torso spring kicked back 10°. Squash (0.92, 1.08). `ouch` face 150 ms | `hit` event |
+| **recoil** | 250 ms | Visual-only 6 wu push away from the attacker, eased back; the sim x never changes (the sim has no knockback) | `hit` with `heavy: true` |
 | **death (A: launch)** | 0.8 s | Pops up 40 wu with a backward spin of 1 rev, fades from 0.5 s, cartoon poof cloud on landing, `ko` face | `death` |
 | **death (B: topple)** | 0.7 s | Rotates back 90° with a bounce, two star sprites orbit the head, then sinks and fades | `death` |
 | **death (C: break; tanks, vehicles)** | 0.9 s | Parts detach with seeded velocities and spin (helmet, weapon, wheel), gravity, a dust burst, fade | `death` |
 | **cheer** | 0.6 s loop | Jump 10 wu, weapon raised, `cheer` face | victory |
-| **boss intro** | 1.0 s | Roar pose, screen-wide shockwave ring, slow-motion 0.4× | `bossIntro` |
+| **Warlord intro** | 1.0 s | Roar pose, screen-wide shockwave ring, slow-motion 0.4× | `warlordIntro` |
 
-Death variant choice uses the render RNG seeded by unit id: melee 60 % A / 40 % B, and tanks always C. Corpses never stay on the lane. Hit flash uses **pre-baked white silhouette textures** (one per part) as overlay sprites. This avoids per-unit filters.
+Death variant choice uses the render RNG seeded by unit id: melee 60 % A / 40 % B, and tanks always C. Corpses never stay on the lane. Hit flash swaps each part's fill texture to its **pre-baked white version** (made with `'source-in'` at bake time), so it adds no sprites and no per-unit filters.
 
 ### 5.9 Bases per Age
 
-Each base is one rig of baked parts: back towers → body → gate → front props → flag (a MeshPlane cloth). It has 3 damage overlays and a collapse script. The player and enemy versions are identical apart from the faction tokens (roof tiles, banners, awnings, glow) and mirroring.
+Each base is one rig of baked parts: back props → main tower and body → gate → front props. The faction pennant is a separate rig on its own pole. Each base has 3 damage overlays and a collapse script. The player and enemy versions are identical apart from the faction tokens (roof tiles, awnings, painted trim, glow) and mirroring.
+
+**Composition grid** (player base; the enemy base is mirrored about x = 500). Phones show only x ∈ [−170, 0] of the 260 wu footprint, so the essentials sit there:
+- **Gate** at x ∈ [−50, 0].
+- **Main tower** centred at x = −100, width ≤ 140 (x ∈ [−170, −30]).
+- x ∈ [−260, −170] holds only non-essential back props (seen on iPad and landscape).
+- **Faction pennant:** a free-standing pole at x = −150 behind the base body, pole top at 600 wu, MeshPlane cloth 60 × 40 wu, round tail (Storm) or notched tail (Ember).
+- **No cloth, banners or flags attached to architecture in any Age.** Faction colour on buildings comes from roof tiles, awnings, painted trim and glow.
 
 | Age | Base | Signature parts and ambient life |
 |---|---|---|
 | Stone | **Totem Camp** | Hide-and-timber hut, thatch roof with smoke from the vent, a bone-arch gate, palisade stakes, a totem pole with a painted faction face, a fire pit flicker |
 | Ancient | **Sun Ziggurat** | Three stepped sandstone tiers, columned gate with bronze doors, faction awnings, two braziers with flame sprites, a gold sun disc that glints |
-| Crusader | **Banner Keep** | Stone keep and round tower, conical tile roof in faction colour, wooden hoarding, portcullis gate, 2 pennants plus a big banner (cloth) |
-| Gunpowder | **Star Bastion** | Angled brick bastion with white trim, two cannon ports (barrels recoil when the base is hit, as feedback), a flagpole with a large flag |
+| Medieval | **Banner Keep** | Stone keep and round tower, conical tile roof in faction colour, wooden hoarding with faction-coloured awnings, portcullis gate |
+| Gunpowder | **Star Bastion** | Angled brick bastion with white trim, two cannon ports (barrels recoil when the base is hit, as feedback) |
 | Industrial | **Iron Works** | Brick factory, riveted steel gate, two smokestacks (particle smoke), a facade gear turning slowly, a faction-painted water tower |
-| Future | **Aegis Spire** | White curved tower with glass panels, a floating ring, an energy-shield dome that flashes a hex pattern on hit, a holo flag |
+| Future | **Aegis Spire** | White curved tower with glass panels, a floating ring, an energy-shield dome that flashes a hex pattern on hit |
 
 **Damage states:**
 
@@ -248,12 +262,12 @@ Each base is one rig of baked parts: back towers → body → gate → front pro
 - Parts fall with gravity and rotation.
 - 10 dust plumes.
 - 16 debris chunks in the Age's material (rock, sandstone, stone, brick, steel, white panels).
-- The flag drops.
+- The pennant pole tips over.
 - Camera punch 1.0 → 1.025.
 
 ### 5.10 Backgrounds (parallax layers)
 
-Each layer is a Canvas2D texture baked at its on-screen size × DPR. Layers are generated **procedurally from a fixed seed**, so they are identical on every boot and screenshot-stable. For example, mountains use midpoint displacement smoothed into Catmull-Rom curves, and trees are stamped from 3 variants with jitter. Layers are drawn 1.6× the stage width so tablets show more world without stretching.
+Each layer is a Canvas2D texture baked at its on-screen scale × `min(DPR, 2)`; the sky gradient is a 1 × 256 texture stretched to fit. Layers are generated **procedurally from a fixed seed**, so they are identical on every boot and screenshot-stable. For example, mountains use midpoint displacement smoothed into Catmull-Rom curves, and trees are stamped from 3 variants with jitter. Each parallax layer is a **seamlessly tileable strip** (a TilingSprite with a 1024 wu period), so any screen width, including iPad landscape, is covered without stretching.
 
 | Layer | Depth (shake parallax) | Content |
 |---|---|---|
@@ -269,12 +283,12 @@ Each layer is a Canvas2D texture baked at its on-screen size × DPR. Layers are 
 |---|---|
 | Stone | Butterflies, a smoke plume from the far volcano |
 | Ancient | Heat shimmer (sin-offset strip), drifting sand motes |
-| Crusader | Petals, bird flocks |
+| Medieval | Petals, bird flocks |
 | Gunpowder | Gulls, sails bobbing |
 | Industrial | Embers, a smoke conveyor |
 | Future | Twinkling stars, drones with blinking lights, light motes |
 
-The battle **camera is static** for readability. Depth comes from the shake parallax, the ambient motion and the depth rows.
+The battle **camera is static** for readability. Depth comes from the shake parallax, the ambient motion and the presentation-only rank spread and ±30 wu depth band (GDD Reconciliation §1b).
 
 ### 5.11 VFX catalogue (recipes in `src/render/vfx/recipes.ts`)
 
@@ -296,26 +310,26 @@ All particle textures are baked by the painter:
 | `spawnRing` | spawn | Faction ring scale 0.4 → 1.2 + alpha fade; 4 dust puffs | 300 ms | 5 sprites |
 | `footDust` | tank/boss step | 2 puffs, ground layer | 400 ms | 2 |
 | `hitSpark` | melee hit | 4-point star pop (scale 0 → 1.3 → 0, 90 ms) + 3 streaks radiating + 1 debris (Age material) | 200 ms | 5 |
-| `hitHeavy` | tank/boss hit | `hitSpark` ×1.6 + ring + camera trauma 0.12 + hit-stop 50 ms + damage number | 300 ms | 8 |
+| `hitHeavy` | `hit` with `heavy: true` (tank/boss hit) | `hitSpark` ×1.6 + ring + camera trauma 0.12 + the target's rig freezes 60 ms (§5.15) + recoil clip; damage number only if player-dealt | 300 ms | 8 |
 | `projPebble` / `arrow` / `bolt` | projectile | Rotating sprite on a parabola; arrows align to velocity; bolts and bullets draw a tracer (stretched streak, additive) | flight | 1–2 |
 | `muzzleFlash` | gun fire | Star flash (additive) 60 ms + 2 smoke puffs drifting up | 500 ms | 3 |
 | `plasma` | Future ranged | Additive glow orb + trail of 6 fading discs; splash ring on impact | flight + 250 ms | 8 |
-| `splashBoom` | splash hit | Cartoon explosion: 5 puffs (orange → grey), flash, 6 debris, scorch decal fading over 2 s | 600 ms | 14 |
-| `deathPoof` | death A/B | 6 outlined puff circles expand and fade + 2 stars | 450 ms | 8 |
-| `coinPop` | kill / chunk | Coin(s) arc up 30 wu, hover 250 ms, then **fly to the Gold pill** (ease-in, 450 ms, crossing from the world to the HUD layer); the pill bumps 1.12 | 900 ms | ≤ 5 per event |
-| `damageNumber` | heavy hits, base hits, power | BitmapText pops 0 → 1.25 → 1, floats up 24 wu, fades. White normal, #FFD447 heavy, #FF6B5A damage taken by the player base | 700 ms | ≤ 12 alive |
+| `splashBoom` | `projectileEnd` with `result: 'explode'` (at its `x`, radius `r`) | Cartoon explosion: 5 puffs (orange → grey), flash, 6 debris, scorch decal fading over 2 s | 600 ms | 14 |
+| `deathPoof` | `death` (variants A/B) | 6 outlined puff circles expand and fade + 2 stars | 450 ms | 8 |
+| `coinPop` | `death` / `baseChunk` with gold > 0 | Coin(s) arc up 30 wu, hover 250 ms, then **fly to the DOM Gold pill** (ease-in, 450 ms; the start point comes from the camera's world-to-screen function via the layout registry, TECH §2); the pill bumps 1.12 | 900 ms | ≤ 5 per event |
+| `damageNumber` | player-dealt `hit` events (GDD §2.14): merged per target per 150 ms, never on `blocked: 'ward'` | BitmapText pops 0 → 1.25 → 1, floats up 24 wu, fades. White normal, #FFD447 heavy | 700 ms | ≤ 12 alive (oldest recycled) |
 | `baseHit` | base damaged | Base squash 0.985 for 80 ms + white flash 60 ms + 3 debris + HP ghost bar | 250 ms | 4 |
 | `baseCollapse` | win / lose | §5.9 | 2 s | 40 |
-| `waveTelegraph` | waveIncoming | 3 red chevrons slide in at the right edge, pulse twice, fade | 1.5 s | 3 |
-| `powerCharged` | power ready | Ring glow pulse 1.6 Hz + 8 orbiting sparkles + "READY" chip pop | loop | 10 |
+| `waveTelegraph` | none in v1 (the v1 contract has no `waveIncoming` event; the rally toast covers the beat) | 3 red chevrons slide in at the right edge, pulse twice, fade | 1.5 s | 3 |
+| `stormcallCharged` | `stormcallCharged` | Ring glow pulse 1.6 Hz + 8 orbiting sparkles + "READY" chip pop | loop | 10 |
 | `meteorRain` | Stone power | Sky darkens 15 %. 5 flaming boulders (rock sprite + additive fire trail of 10 discs) fall at 12°. Each impact: `splashBoom`, crater decal, trauma 0.25 | 1.6 s | 60 |
 | `sunfireVolley` | Ancient | Golden arrows (×15) arc from off-screen left; impacts flash gold; a light-ray fan from the sun | 1.6 s | 50 |
-| `trebuchetBarrage` | Crusader | Boulders arc from behind the player base with a whoosh; stone debris | 1.6 s | 50 |
+| `trebuchetBarrage` | Medieval | Boulders arc from behind the player base with a whoosh; stone debris | 1.6 s | 50 |
 | `broadside` | Gunpowder | Muzzle flashes from off-screen left, cannonballs with smoke trails, big booms | 1.6 s | 60 |
 | `airshipRaid` | Industrial | A blimp sprite crosses the sky (parallax 0.35) dropping 5 bombs; whistle trails; booms | 2.0 s | 60 |
 | `orbitalLance` | Future | Targeting reticles appear (0.3 s), then cyan beams (additive quads with noise flicker) slam down, shockwave rings, screen flash 15 % | 1.6 s | 50 |
-| `suddenStorm` | stalemate | Sky dims 25 %. Procedural lightning (jagged polyline, 3 branches, glow) hits the bases. Rain streaks layer | loop | 80 |
-| `evolveVortex` | Evolution | §5.15 cinematic | 3.2 s | 150 |
+| `suddenStorm` | `stormRising` (GDD §2.10) | Sky dims 25 %. Procedural lightning (jagged polyline, 3 branches, glow) hits the bases. Rain streaks layer | loop | 80 |
+| `evolveVortex` | Evolution | §5.14 cinematic | 3.2 s | 150 |
 | `confetti` | victory | 80 quads in palette colours; flip via scaleX = cos(t); gravity + drag | 2.5 s | 80 |
 | `lowHpVignette` | player base < 25 % | Red edge vignette pulsing at 0.8 Hz (alpha 0–0.18) | loop | 1 |
 
@@ -323,15 +337,16 @@ All particle textures are baked by the painter:
 
 | Use | Font | Size at 390 w | Treatment |
 |---|---|---|---|
-| Display / numbers / buttons | **Lilita One** (OFL, self-hosted via `@fontsource/lilita-one`) | H1 40, H2 28, button L 24, M 20, HUD numbers 28–32 | White fill + 3 pt ink stroke (HUD) or a stroke in the button's lip colour; 2 pt hard drop shadow |
+| Display / numbers / buttons | **Lilita One** (OFL, self-hosted via `@fontsource/lilita-one`) | H1 40, H2 28, button L 24, M 20, Food number 26, stage chip 16 | White fill + 2.5 pt × uiScale ink stroke (HUD) or a stroke in the button's lip colour; 2 pt hard drop shadow |
 | UI text / labels | **Nunito** 800/900 (OFL, `@fontsource/nunito`) | Body 15/20, caption 13/16, chip 12 | Ink (#1D1830) on light panels; white on dark |
-| Damage numbers | Lilita One BitmapFont (installed at boot with stroke 4, ink) | 18 (normal), 24 (heavy), 30 (power) | — |
+| Damage numbers | Lilita One BitmapFont (installed at boot; ink stroke 2.5 pt at the displayed size) | 18 (normal), 24 (heavy), 30 (Stormcall) | — |
 
 Casing rules:
 - Headers and banners: UPPERCASE with +2 % tracking.
 - Buttons: Title Case.
 - Numbers: tabular (padded) so tickers do not jitter.
 - Minimum text size: 12 pt.
+- No emoji or arrow characters in any string (GDD Reconciliation §8); use the kit icons.
 
 ### 5.13 UI kit (one kit for DOM and Pixi; tokens in `src/style/tokens.ts`)
 
@@ -355,23 +370,23 @@ Casing rules:
 
 | Component | Spec |
 |---|---|
-| **Button** L/M/S | Height 64/52/40, radius 20/16/12. Layers: **lip** (darker shade, offset down 6/5/4 pt), **face** (vertical gradient, top +10 % lightness), **gloss** (top-half inset rounded rect, white 22 %), **3 pt ink outline**, label. **Press:** the face drops by the lip height and the lip collapses, 70 ms; release springs back (stiffness 500, damping 24) with a 1.04 overshoot. **Disabled:** grey palette, no gloss, label 60 %. **Highlighted:** a shine sweep (a 30° white band crossing in 500 ms) every 3.5 s, plus a 1.0 ↔ 1.03 breathe |
-| **Panel** | Radius 24, 3 pt ink, paper fill, optional colour header band (52 pt) with a white Lilita title, **hard offset shadow** 0 6 0 night-900 at 35 % (cartoon shadow, not blur) |
+| **Button** L/M/S | Height 64/52/40, radius 20/16/12. Layers: **lip** (darker shade, offset down 6/5/4 pt), **face** (vertical gradient, top +10 % lightness), **gloss** (top-half inset rounded rect, white 22 %), **UI outline** (2.5 pt × uiScale ink), label. **Press:** the face drops by the lip height and the lip collapses, 70 ms; release springs back (stiffness 500, damping 24) with a 1.04 overshoot. **Disabled:** grey palette, no gloss, label 60 %. **Highlighted:** a shine sweep (a 30° white band crossing in 500 ms) every 3.5 s, plus a 1.0 ↔ 1.03 breathe |
+| **Panel** | Radius 24, UI outline, paper fill, optional colour header band (52 pt) with a white Lilita title, **hard offset shadow** 0 6 0 night-900 at 35 % (cartoon shadow, not blur) |
 | **Sheet / Modal** | Panel from the bottom with a 28 pt top radius. Enters with translateY 100 % → 0 (easeOutBack 1.2, 320 ms). Scrim night-900 at 60 % |
-| **Pill (currency)** | 36 pt tall, night-800 fill, 3 pt ink. The icon (40 pt) **overhangs the left edge**. Lilita 20 white number. Bumps on change |
-| **Unit card** | 84 × 120 (Battle) / 110 × 150 (Army). Radius 14, 3 pt ink. Portrait area with a radial gradient in the role tint. **Live idle-animated unit bust**, rendered from the real rig. Cost chip at the bottom (ink pill, drumstick icon + number). Role icon in the top-left corner. States in §6.3 |
-| **Ring (ability)** | Ø 64. Ink ring, night-800 fill, purple progress sweep (conic, 4 pt), icon in the centre. Ready state adds glow and orbiting sparkles |
+| **Pill (currency)** | 36 pt tall, night-800 fill, UI outline. The icon (40 pt) **overhangs the left edge**. Lilita 20 white number. Bumps on change |
+| **Unit card** | 84 × 120 (Battle) / 110 × 150 (Army). Radius 14, UI outline. Portrait area with a radial gradient in the role tint. **Unit bust**: a static bust extracted from the real rig's bakes (card tier on the battle deck, hero tier in Army) and shown as an `<img>` with a CSS 1.2 s idle bob (TECH §5). The battle card's fill-from-bottom reads a CSS variable written every frame. Cost chip at the bottom (ink pill, drumstick icon + number). Role icon in the top-left corner. States in UX §3 |
+| **Ring (ability)** | Ø 64, a DOM button straddling the deck's top edge (UX §3). Ink ring, night-800 fill, purple progress sweep (conic, 4 pt), icon in the centre. Ready state adds glow and orbiting sparkles |
 | **Progress / HP bar** | Height 14 (HUD) / 20 (panels), full radius, 2.5 pt ink. Track night-700. Fill gradient plus a top highlight stripe at 30 %. **Damage ghost:** a white segment that holds 400 ms, then shrinks over 300 ms. **Heal / upgrade:** a green leading segment |
-| **Tab bar** | 72 pt + safe area, night-900 with a 3 pt ink top line. The active tab rises 10 pt with a blue plate and spring. Badge = red dot 18 pt with a white number |
+| **Tab bar** | 72 pt + safe area, night-900 with a UI-outline ink top line. The active tab rises 10 pt with a blue plate and spring. Badge = red dot 18 pt with a white number |
 | **Chip / Badge / Sticker** | "NEW" sticker: gold-400, rotated −8°, pops in. Level badge: an ink circle with a white number |
 | **Toast** | Ink pill with a white label; slides down from the top safe area; auto-hides after 2 s |
 | **Coach mark** | Scrim with a rounded-rect cutout (a soft 12 pt feathered edge), a vector **hand pointer** (painter-drawn, ink-outlined) bobbing ±6 pt at 1.4 Hz, and a speech bubble panel |
 
-**Icons:** 28 icons in one SVG set (`src/ui/kit/icons.ts`). Each is filled shapes plus a 2.5 px ink outline on a 48 px grid, shaded by the same cel-shadow rule. The same SVG strings feed the DOM (inline SVG) and Pixi (rasterized once through an Image into the atlas).
+**Icons:** one SVG set (`src/ui/kit/icons.ts`), drawn on a 48 px grid as filled shapes plus an ink outline, shaded by the same cel-shadow rule. The outline is **2.5 pt at the displayed size**, not 2.5 px on the grid: SVG `vector-effect: non-scaling-stroke` with `stroke-width` 2.5 × uiScale. The same SVG strings feed the DOM (inline SVG) and Pixi (rasterized once through an Image into the atlas). Anything that might be tempting as an emoji or arrow character in copy (bolt, skull, drumstick, arrows, check) is an icon here instead.
 - **Currency:** Gold coin (with an embossed storm bolt), Food drumstick.
 - **Stats:** heart (HP), sword (DMG), crosshair (range), boot (speed), shield (armor).
 - **Controls:** gear, pause, play, ×2 chevrons, lock, check, home, sound, music, vibration, retreat flag, info, close.
-- **Progress and rewards:** star, crown (boss), bolt (Evolve / power), up-arrow (upgrade), helmet (Army), clock.
+- **Progress and rewards:** star, crown (boss), skull (Warlord pip), bolt (Evolve / Stormcall / Storm Rising chip), up-arrow (upgrade), right-arrow ("now to next" in upgrade rows and tips), helmet (Army), clock.
 - **Roles:** melee / ranged / tank glyphs.
 
 ### 5.14 Motion design
@@ -424,14 +439,14 @@ Casing rules:
 - Your base collapses.
 - The world desaturates to 30 % over 600 ms (a single ColorMatrix on the world container).
 - The "DEFEAT" banner (red/grey) slides in.
-- The sheet shows "You keep +N Gold" and a contextual tip with a deep link (for example, "Food Rate Lv3 → +12 % Food/s — 14 Gold").
+- The sheet shows "You keep +N Gold" and a contextual tip with a deep link to the `recommendUpgrade()` item (for example, "Food Lv 3 [right-arrow icon] +10% Food/s — 26 Gold"; the arrow is the kit icon, never a character).
 
 **Purchase:**
 - 5 coins fly from the wallet pill to the row (300 ms).
 - The level badge flips (scaleY 1 → 0 → 1, 200 ms).
 - The stat ticker runs.
 - 6 sparkles appear.
-- A "+12 %" float rises.
+- A "+10%" float rises (the track's per-level effect).
 
 **Evolution cinematic** (Pixi overlay, 3.2 s, skippable after 1 s):
 
@@ -450,10 +465,22 @@ Casing rules:
 | Lever | Spec |
 |---|---|
 | **Trauma shake** | `offset = maxOffset × trauma² × noise(t·18 Hz)`. maxOffset 7 pt, maxAngle 0.8°. Trauma decays 1.6/s. Sources: tank hit 0.12, base hit 0.15, splash 0.2, power impact 0.25–0.35, collapse 0.8. Parallax layers shake × depth |
-| **Hit-stop** | Freezes the **presentation clock** (sim ticks are consumed later, so determinism holds). Heavy hit 50 ms, tank kill 40 ms, power impact 70 ms, base kill 120 ms. Cooldown 250 ms between hit-stops. Halved at 2× |
-| **Slow-motion** | Base kill 0.3× for 900 ms; boss intro 0.4× for 1 s |
+| **Hit-stop** | Freezes the **presentation clock**. The frame loop's accumulator does not accrue during hit-stop or slow-motion, and there is no catch-up burst afterwards (TECH §4), so the tick sequence and outcomes never change. Global hit-stops are listed below; global cooldown 1,000 ms. Halved at 2× |
+| **Slow-motion** | Base kill 0.3× for 900 ms; Warlord intro 0.4× for 1 s |
 | **Punch zoom** | 1.0 → 1.025 → 1.0 over 300 ms on collapse and the power finale |
 | **Flash** | Full-screen white at ≤ 35 % alpha, only for the collapse, evolution and Orbital Lance |
+
+**Hit-stop table.** Only these moments freeze the whole world:
+
+| Moment | Global hit-stop | Event |
+|---|---|---|
+| Base collapse | 120 ms | `end` (victory or defeat) |
+| Warlord slam impact | 60 ms | `hit` from the Warlord (after `slamTelegraph`) |
+| Stormcall strike | 70 ms | `stormcallStrike` |
+| Knight Charge first hit | 50 ms | first `hit` from a charging Knight |
+| Player-caused tank kill | 40 ms | `death` of an enemy tank |
+
+Ordinary tank and boss hits freeze **only the target's rig** for 60 ms; the rest of the world keeps moving. At most one global hit-stop per 1,000 ms; a second one inside the cooldown is skipped.
 
 ### 5.16 Art production process (how a codegen-only team reaches commercial quality)
 
@@ -467,16 +494,27 @@ Casing rules:
 | Line consistency | Outline width matches the Clubber within ±15 % on screen |
 | Shading | One crescent, light from the top-left, coloured shadow, no stray gradients |
 | Appeal | Readable face, charming proportions, oversized weapon, no awkward tangents |
-| Palette | Uses Age and material tokens only; the faction region is ≥ 15 % of the silhouette |
+| Palette | Uses Age and material tokens only; the faction region is ≥ 20 % of the silhouette |
 | Motion | No foot sliding; the impact frame lands on the hit; secondary motion settles |
 | Cohesion | Side-by-side with the Clubber and a base, it looks like the same game |
 
 4. **Reference board in code.** The `gallery` scene also renders a "style row" (ink swatch, shading demo sphere, outline sample, button, card) at the top of each sheet, so drift is visible at a glance.
+5. **Automatic lints (failing thresholds, not self-scores).** The rubric is subjective, so G1 also needs two measured gates:
+   - **`npm run art:lint`** (Playwright on the gallery bake). It fails when any of these is off:
+     - outline ink run width = 8 wu ± 15 %, sampled along 32 normals per part;
+     - ≥ 97 % of opaque non-edge pixels within ΔE2000 ≤ 3 of the Age + material + faction token set;
+     - faction-colour area ≥ 20 % of the silhouette alpha (§5.3 rule 7, GDD §2.14);
+     - troop mid-tone against lane luminance difference ≥ 0.20;
+     - a dev assertion that a sprite's on-screen px / bake px ≤ 1.25 (nothing upscaled);
+     - in a replay, planted-foot world-x drift ≤ 1 wu per stance;
+     - the strike frame's tick equals the sim's `impactTick`.
+   - **`npm run audio:lint`** (OfflineAudioContext in Chromium) renders every SFX and the music loops and fails on: peak > −1 dBFS; an SFX shorter than 40 ms or longer than 900 ms; per-category RMS outside ± 3 dB of its category; any NaN or DC offset; a music loop seam with |Δ| ≥ 0.01.
+   - Agents cannot listen, so G1 also requires the **owner to sign off audio on a device**.
 
 ### 5.17 "AAA-level polish": the concrete checklist (gate G1 and the final gate)
 
 **Visual**
-- [ ] One outline weight and colour across troops, bases, props and UI (measured on contact sheets).
+- [ ] One outline weight and colour across troops, bases, props and UI: 8 wu on the world, 2.5 pt × uiScale on the UI, within ±11 % of each other at every matrix size (measured by `art:lint`).
 - [ ] One light direction; no ungraded grey shadows; no gradients on characters.
 - [ ] Nothing is upscaled > 1.25× from its bake resolution, and there is no visible aliasing at DPR 2–3.
 - [ ] Every troop passes the 32 px grayscale squint test.
@@ -492,7 +530,7 @@ Casing rules:
 - [ ] HP bars have a damage ghost.
 
 **Performance**
-- [ ] 60 fps on the battle stress scene on iPhone 11/SE 2-class hardware, or the 8 ms CPU budget in headless profiling (§7.9).
+- [ ] Stress-scene perf gate passes: p95 `updateMs` ≤ 8 ms in Chromium with 4× CPU throttling and ≤ 40 draw calls (TECH §7); at G1, smooth on the owner's iPhone with the `?fps=1` overlay.
 - [ ] No GC hitches > 4 ms during battle (pooled objects; no per-frame allocations in hot paths).
 - [ ] Time to "Tap to start" ≤ 2.5 s on a fast-4G profile; bake ≤ 400 ms.
 
@@ -505,6 +543,8 @@ Casing rules:
 
 **Audio**
 - [ ] The mix never clips (limiter on master); concurrency limits per SFX; music ducks under big moments.
+- [ ] `npm run audio:lint` passes (§5.16 step 5).
+- [ ] At G1, the owner signs off the audio by listening on a device; agents cannot judge sound by ear.
 
 **Copy**
 - [ ] Short, playful, consistent casing; no placeholder text or debug UI in production builds.
