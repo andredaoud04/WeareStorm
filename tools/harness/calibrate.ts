@@ -28,10 +28,11 @@ interface Member { save: SaveV1; r: () => number; battles: number; who: Persona 
 function entryState(m: Member): SaveV1 {
   let save = m.save;
   if (mustEvolve(save) && canEvolve(save)) save = evolve(save);
-  return shop(save, 'casual', m.r, m.who).save;
+  return shop(save, COHORT, m.r, m.who).save;
 }
 
-const COHORT: BotKind = 'casual';
+/** Calibrated against a typical player (1–3 s reactions), not the near-optimal casual bot (QA finding). */
+const COHORT: BotKind = 'average';
 
 function firstTryWinRate(pop: Member[], st: StageDef): number {
   let wins = 0;
@@ -80,8 +81,8 @@ function advance(st: StageDef) {
     let save = m.save;
     if (mustEvolve(save) && canEvolve(save)) save = evolve(save);
     for (let a = 0; a < 25 && save.campaignStage === st.id; a++) {
-      save = shop(save, 'casual', m.r, m.who).save;
-      const res = playBattle(save, st.id, 'casual', m.r, m.battles, { persona: m.who });
+      save = shop(save, COHORT, m.r, m.who).save;
+      const res = playBattle(save, st.id, COHORT, m.r, m.battles, { persona: m.who });
       m.battles++;
       save = settleBattle(save, `c${m.battles}`, st.id, res.result, res.gold, res.seconds).save;
     }

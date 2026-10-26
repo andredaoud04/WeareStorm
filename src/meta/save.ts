@@ -17,9 +17,14 @@ export interface SaveV1 {
   settings: { sound: boolean; music: boolean; haptics: boolean; reduceMotion: boolean; damageNumbers: boolean };
   lossStreak: number; // consecutive losses on the current stage (drives the lose-forward assist)
   lastSettledBattleId: string | null;
-  pendingBattle: { battleId: string; goldEarned: number } | null;
+  /** The last few settled battle ids, so a battle can never be paid twice (even out of order). */
+  recentBattleIds: string[];
+  /** The battle in progress, so a crash still settles it (as a retreat, Gold kept). */
+  pendingBattle: { battleId: string; stageId: number; goldEarned: number } | null;
   stats: { battles: number; victories: number; goldEarned: number; playSeconds: number };
 }
+
+export const RECENT_IDS = 16;
 
 export const freshLevels = (): Record<Track, number> => ({ food: 1, walls: 1, melee: 1, ranged: 1, tank: 1 });
 
@@ -38,6 +43,7 @@ export function newSave(): SaveV1 {
     settings: { sound: true, music: true, haptics: true, reduceMotion: false, damageNumbers: true },
     lossStreak: 0,
     lastSettledBattleId: null,
+    recentBattleIds: [],
     pendingBattle: null,
     stats: { battles: 0, victories: 0, goldEarned: 0, playSeconds: 0 },
   };
@@ -93,9 +99,10 @@ export function migrate(raw: unknown): SaveV1 {
     },
     lossStreak: int(r.lossStreak, 0, 1000, 0),
     lastSettledBattleId: typeof r.lastSettledBattleId === 'string' ? r.lastSettledBattleId : null,
+    recentBattleIds: Array.isArray(r.recentBattleIds) ? r.recentBattleIds.filter((x): x is string => typeof x === 'string').slice(-RECENT_IDS) : [],
     pendingBattle:
       pending && typeof pending === 'object' && typeof pending.battleId === 'string'
-        ? { battleId: pending.battleId, goldEarned: int(pending.goldEarned, 0, 1e9, 0) }
+        ? { battleId: pending.battleId, stageId: int(pending.stageId, 1, 30, Math.min(30, campaignStage)), goldEarned: int(pending.goldEarned, 0, 1e9, 0) }
         : null,
     stats: {
       battles: int(stats.battles, 0, 1e9, 0),

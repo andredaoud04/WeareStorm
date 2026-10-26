@@ -78,6 +78,7 @@ export type SimEvent =
   | { kind: 'stormRising'; level: number }
   | { kind: 'stormcallCharged' }
   | { kind: 'stormcallCast'; x: number; radius: number; strikeTick: Tick }
+  | { kind: 'stormcallNoTarget' }
   | { kind: 'stormcallStrike'; x: number; radius: number }
   | { kind: 'deployQueued'; slot: Slot; foodSpent: number; queue: number }
   | { kind: 'deployRejected'; slot: Slot; reason: 'food' | 'queue' | 'cap' | 'locked' }

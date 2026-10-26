@@ -84,6 +84,34 @@ describe('progression', () => {
   });
 });
 
+describe('settlement and stage guards (QA regressions)', () => {
+  it('never pays the same battle twice, even out of order', () => {
+    let s = { ...newSave(), campaignStage: 3 };
+    s = settleBattle(s, 'A', 3, 'defeat', 10, 30).save;
+    s = settleBattle(s, 'B', 3, 'defeat', 12, 30).save;
+    const again = settleBattle(s, 'A', 3, 'defeat', 10, 30);
+    expect(again.save).toBe(s);
+    expect(s.gold).toBe(22);
+  });
+
+  it('treats bad numbers as zero and refuses stages the player has not reached', () => {
+    const r = settleBattle(newSave(), 'n', 1, 'defeat', Number.NaN, -40);
+    expect(r.save.gold).toBe(0);
+    expect(r.save.stats.playSeconds).toBe(0);
+    const cheat = settleBattle(newSave(), 'x', 30, 'victory', 50, 60);
+    expect(cheat.save).toEqual(newSave());
+  });
+
+  it('plays the campaign in order; Future replays open only after the campaign', () => {
+    const s = { ...newSave(), campaignStage: 4 };
+    expect(canPlayStage(s, 4)).toBe(true);
+    expect(canPlayStage(s, 3)).toBe(false); // no Gold farming on earlier stages
+    const done = { ...newSave(), campaignStage: 31, armyAge: 'future' as const };
+    expect(canPlayStage(done, 27)).toBe(true);
+    expect(canPlayStage(done, 12)).toBe(false);
+  });
+});
+
 describe('save', () => {
   it('round-trips and repairs broken fields without losing the rest', () => {
     const s = { ...newSave(), gold: 123, campaignStage: 7 };
