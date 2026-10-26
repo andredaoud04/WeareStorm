@@ -25,6 +25,8 @@ export interface SimInput {
   owned: { ranged: boolean; tank: boolean };
   levels: { food: number; walls: number; melee: number; ranged: number; tank: number };
   stormcall: boolean;
+  /** Lose-forward assist 0..0.3: enemy HP/DMG and assault-budget reduction after consecutive losses (GDD P3). */
+  assist: number;
 }
 
 export type SimCommand =
@@ -41,25 +43,46 @@ export interface BattleStats {
   durationTicks: number;
 }
 
+export type BattleResult = 'victory' | 'defeat' | 'retreat';
+
+/**
+ * Everything the presentation layer needs to animate a tick. Positions are world units (wu), ticks are absolute.
+ * `id` is always a unit id except where noted; projectiles carry their own `projId`.
+ */
 export type SimEvent =
-  | { kind: 'spawn'; id: number; side: Side; def: UnitDefId; x: number }
-  | { kind: 'attackStart'; id: number; targetId: number | 'base'; impactTick: Tick }
-  | { kind: 'projectile'; id: number; from: number; to: number | 'base'; arriveTick: Tick; style: ProjStyle }
-  | { kind: 'hit'; targetId: number | 'base'; targetSide: Side; amount: number; heavy: boolean; armored: boolean }
+  | { kind: 'spawn'; id: number; side: Side; def: UnitDefId; x: number; rally: boolean }
+  | { kind: 'attackStart'; id: number; targetId: number | 'base'; impactTick: Tick; area?: { x: number; r: number } }
+  | { kind: 'projectile'; projId: number; id: number; from: number; to: number | 'base'; toX: number; arriveTick: Tick; style: ProjStyle }
+  | { kind: 'projectileEnd'; projId: number; x: number; result: 'hit' | 'fizzle' | 'explode'; r?: number }
+  | {
+      kind: 'hit';
+      targetId: number | 'base';
+      targetSide: Side;
+      /** Attacking unit id; 0 for the Stormcall strike. */
+      sourceId: number;
+      projId?: number;
+      amount: number;
+      heavy: boolean;
+      armored: boolean;
+      /** Set when a ward absorbed the hit (amount is 0): play a "ting", no number. */
+      blocked?: 'ward';
+    }
   | { kind: 'whiff'; id: number }
   | { kind: 'death'; id: number; side: Side; def: UnitDefId; x: number; gold: number }
-  | { kind: 'baseChunk'; side: Side; pct: number; gold: number }
-  | { kind: 'rally' }
+  | { kind: 'baseChunk'; side: Side; source: 'base' | 'warlord'; pct: number; gold: number }
+  | { kind: 'rally'; size: number }
   | { kind: 'wardUp' }
   | { kind: 'wardBroken' }
   | { kind: 'warlordIntro'; id: number }
   | { kind: 'slamTelegraph'; id: number; x: number; radius: number; impactTick: Tick }
   | { kind: 'stormRising'; level: number }
   | { kind: 'stormcallCharged' }
+  | { kind: 'stormcallCast'; x: number; radius: number; strikeTick: Tick }
+  | { kind: 'stormcallNoTarget' }
   | { kind: 'stormcallStrike'; x: number; radius: number }
-  | { kind: 'deployQueued'; slot: Slot; queue: number }
-  | { kind: 'deployRejected'; slot: Slot; reason: 'food' | 'queue' | 'cap' }
-  | { kind: 'end'; result: 'victory' | 'defeat'; goldEarned: number; stats: BattleStats };
+  | { kind: 'deployQueued'; slot: Slot; foodSpent: number; queue: number }
+  | { kind: 'deployRejected'; slot: Slot; reason: 'food' | 'queue' | 'cap' | 'locked' }
+  | { kind: 'end'; result: BattleResult; goldEarned: number; stats: BattleStats };
 
 export type SimEventKind = SimEvent['kind'];
 
@@ -73,6 +96,8 @@ export interface UnitView {
   hp: number;
   maxHp: number;
   state: 'walk' | 'windup' | 'recover' | 'idle';
+  /** Impact tick while winding up, end of recovery while recovering; 0 otherwise. */
+  phaseEnd: Tick;
 }
 
 export interface BattleSnapshot {
@@ -83,8 +108,8 @@ export interface BattleSnapshot {
   enemyBase: { hp: number; maxHp: number; warded: boolean };
   units: readonly UnitView[];
   queue: Readonly<Record<Slot, number>>;
-  stormcall: { unlocked: boolean; charge: number }; // charge 0..1
+  stormcall: { unlocked: boolean; charge: number; ready: boolean; casting: boolean }; // charge 0..1
   stormLevel: number;
   goldEarned: number;
-  result: 'victory' | 'defeat' | null;
+  result: BattleResult | null;
 }
