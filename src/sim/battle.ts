@@ -138,9 +138,10 @@ export function buildSchedule(stage: StageDef, assist = 0): Spawn[] {
   const budget = stage.budget * (1 - clampAssist(assist));
   const perTick = Math.round((budget * ageDef(stage.age).foodFactor * 1000) / TICKS_PER_SECOND);
   const start = sec(stage.assaultStartSec);
-  let vfood = tokenDef(stage, pattern[0]!).cost * 1000 - perTick;
+  const end = sec(stage.assaultEndSec);
   let p = 0;
-  for (let t = start; t <= sec(stage.assaultEndSec); t++) {
+  let vfood = tokenDef(stage, pattern[0]!).cost * 1000 - perTick;
+  for (let t = start; t <= end; t++) {
     vfood += perTick;
     const kind = pattern[p % pattern.length]!;
     const cost = tokenDef(stage, kind).cost * 1000;
@@ -171,6 +172,7 @@ export function createBattle(input: SimInput): Battle {
   const pmax = playerBaseHp(input.armyAge, input.levels.walls);
   const emax = Math.round(enemyBaseHp(stage.age, stage.idx, stage.warlord) * timelineMult(input.timeline));
   const trickle = trickleOf(stage);
+  const schedule = buildSchedule(stage, input.assist);
   const state: BattleState = {
     input,
     stage,
@@ -185,7 +187,7 @@ export function createBattle(input: SimInput): Battle {
     playerBase: { hp: pmax, max: pmax },
     enemyBase: { hp: emax, max: emax, warded: stage.warlord },
     chunksPaid: 0,
-    schedule: buildSchedule(stage, input.assist),
+    schedule,
     scheduleIdx: 0,
     trickleNext: sec(stage.assaultEndSec) + trickle.every,
     trickleIdx: 0,
@@ -218,7 +220,8 @@ function makeUnit(s: BattleState, side: Side, def: UnitDef, hpMult: number, dmgM
     side,
     def: def.id,
     role: def.role,
-    x: side === 'player' ? PLAYER_SPAWN : ENEMY_SPAWN,
+    // spawn fully behind the gate so a new unit never overlaps a hostile standing at it
+    x: side === 'player' ? Math.min(PLAYER_SPAWN, PLAYER_GATE - (def.width * MU) / 2) : Math.max(ENEMY_SPAWN, ENEMY_GATE + (def.width * MU) / 2),
     hp: Math.max(1, Math.round(def.hp * hpMult)),
     maxHp: Math.max(1, Math.round(def.hp * hpMult)),
     dmg: Math.max(1, Math.round(def.dmg * dmgMult)),
@@ -305,8 +308,10 @@ export function stepMut(s: BattleState, commands: readonly SimCommand[]): SimEve
   const t = s.tick;
 
   // 1. Commands
-  for (const c of commands) applyCommand(s, c, ev);
-  if (s.result) return finish(s, ev);
+  for (const c of commands) {
+    applyCommand(s, c, ev);
+    if (s.result) return finish(s, ev); // nothing after a retreat in the same tick takes effect
+  }
 
   // 2. Release the player's spawn queue
   if (s.releaseIn > 0) s.releaseIn -= 1;
@@ -345,8 +350,11 @@ export function stepMut(s: BattleState, commands: readonly SimCommand[]): SimEve
   }
   const startX = new Map(s.units.map((u) => [u.id, u.x]));
 
-  // 6–8. ACT: impacts, new attacks, movement; projectile arrivals
+  // 6–8. ACT. Pass A resolves every impact and attack start against START-of-tick positions (nobody has moved
+  // yet), pass B moves the units that are free to walk. Splitting the passes makes the outcome independent of the
+  // order of s.units (QA found slams hitting or missing depending on whether the target had already moved).
   const hits: Hit[] = [];
+  const walkers: Unit[] = [];
   for (const u of s.units) {
     u.moving = false;
     if (u.phase === 'windup' && t >= u.phaseEnd) {
@@ -381,9 +389,10 @@ export function stepMut(s: BattleState, commands: readonly SimCommand[]): SimEve
       });
       if (slam) ev.push({ kind: 'slamTelegraph', id: u.id, x: u.x / MU, radius: slam + u.width / MU / 2, impactTick: u.phaseEnd });
     } else {
-      move(s, u, startX);
+      walkers.push(u);
     }
   }
+  for (const u of walkers) move(s, u, startX);
   arriveProjectiles(s, hits, ev);
   strikeStormcall(s, hits, ev);
 
@@ -395,11 +404,13 @@ export function stepMut(s: BattleState, commands: readonly SimCommand[]): SimEve
 
   // 11. Base state: chunks, ward, rally
   baseRewards(s, ev);
-  if (!s.rallyDone && s.enemyBase.hp * 2 < s.enemyBase.max) {
+  if (!s.rallyDone && s.enemyBase.hp > 0 && s.enemyBase.hp * 2 < s.enemyBase.max) {
     s.rallyDone = true;
-    ev.push({ kind: 'rally', size: s.stage.rally });
+    const room = FIELD_CAP - s.units.filter((u) => u.side === 'enemy').length;
+    const size = Math.max(0, Math.min(s.stage.rally, room));
+    ev.push({ kind: 'rally', size });
     const pattern = tokens(s.stage.pattern);
-    for (let i = 0; i < s.stage.rally; i++) spawnEnemy(s, pattern[i % pattern.length]!, ev, true);
+    for (let i = 0; i < size; i++) spawnEnemy(s, pattern[i % pattern.length]!, ev, i);
   }
 
   // 12. Win/lose (if both bases fall on the same tick, the player wins)
@@ -426,7 +437,10 @@ function applyCommand(s: BattleState, c: SimCommand, ev: SimEvent[]) {
     const sc = s.stormcall;
     if (!sc.unlocked || s.tick < sc.readyAt || sc.strikeAt >= 0) return;
     const aim = stormcallAim(s.units);
-    if (!aim) return;
+    if (!aim) {
+      ev.push({ kind: 'stormcallNoTarget' }); // stays charged; the UI shakes the ring
+      return;
+    }
     sc.strikeAt = s.tick + sec(STORMCALL.gatherSec);
     sc.strikeX = aim.x;
     ev.push({ kind: 'stormcallCast', x: aim.x / MU, radius: STORMCALL.radius, strikeTick: sc.strikeAt });
@@ -489,7 +503,8 @@ function enemySpawns(s: BattleState, ev: SimEvent[]) {
   }
 }
 
-function spawnEnemy(s: BattleState, kind: SpawnToken | 'W', ev: SimEvent[], rally: boolean) {
+/** `rally` is the unit's index in a rally pack (staggered outward, behind the gate), or false for a normal spawn. */
+function spawnEnemy(s: BattleState, kind: SpawnToken | 'W', ev: SimEvent[], rally: number | false) {
   const def = tokenDef(s.stage, kind);
   const assist = 1 - clampAssist(s.input.assist);
   // The Warlord's calibrated multiplier scales HP only: its slam damage stays at the designed value so the
@@ -498,9 +513,9 @@ function spawnEnemy(s: BattleState, kind: SpawnToken | 'W', ev: SimEvent[], rall
   const u = kind === 'W'
     ? makeUnit(s, 'enemy', def, s.stage.bossMult * common, common)
     : makeUnit(s, 'enemy', def, s.stage.enemyStatMult * common);
-  if (rally) u.x -= (s.units.length % 3) * 30 * MU; // stagger a rally pack slightly so it reads as a group
+  if (rally !== false) u.x += (rally % 3) * 30 * MU; // stagger outward so a pack reads as a group
   s.units.push(u);
-  ev.push({ kind: 'spawn', id: u.id, side: 'enemy', def: def.id, x: u.x / MU, rally });
+  ev.push({ kind: 'spawn', id: u.id, side: 'enemy', def: def.id, x: u.x / MU, rally: rally !== false });
   if (kind === 'W') {
     s.warlordId = u.id;
     ev.push({ kind: 'warlordIntro', id: u.id });

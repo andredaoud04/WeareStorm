@@ -35,9 +35,12 @@ export function playerBaseHp(age: AgeId, wallsLevel: number): number {
   return Math.round(ageDef(age).baseHp * (1 + 0.15 * (wallsLevel - 1)));
 }
 
+/** Enemy bases are 80% of the player's base HP for the Age (+10% per stage, Warlord keep +25%): the final push is
+ * the payoff of a won battle, so it should be short (harness: battle P50 ≤ 100 s). Base Gold is per 5%, unchanged. */
 export function enemyBaseHp(age: AgeId, stageIdx: number, warlord: boolean): number {
-  return Math.round(ageDef(age).baseHp * (1 + 0.1 * stageIdx) * (warlord ? 1.25 : 1));
+  return Math.round(ageDef(age).baseHp * ENEMY_BASE_SHARE * (1 + 0.1 * stageIdx) * (warlord ? 1.25 : 1));
 }
+export const ENEMY_BASE_SHARE = 0.8;
 
 /**
  * First-clear victory bonus (replays pay 50%). ageIdx is 0-based (Stone = 0). The Warlord bonus is 40 + 15·ageIdx

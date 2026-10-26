@@ -254,3 +254,74 @@ describe('Stormcall', () => {
     expect(ev.some((e) => e.kind === 'stormcallStrike')).toBe(true);
   });
 });
+
+describe('QA regressions', () => {
+  const allIn = (stageId: number) =>
+    input({ stageId, owned: { ranged: true, tank: true }, levels: { food: 3, walls: 2, melee: 3, ranged: 2, tank: 2 } });
+  const mixed = (st: BattleState): SimCommand[] => (st.food >= 12000 ? [{ kind: 'deploy', slot: (['melee', 'ranged', 'tank'] as const)[st.tick % 3]! }] : []);
+
+  it('is independent of the order of units: every tick matches with the unit list reversed', () => {
+    const key = (st: BattleState) => JSON.stringify([...st.units].sort((x, y) => x.id - y.id).map((u) => [u.id, u.x, u.hp, u.phase]));
+    for (const stageId of [3, 5, 9, 10]) {
+      const a = createBattle(allIn(stageId)).state;
+      const b = createBattle(allIn(stageId)).state;
+      let ticks = 0;
+      while (!a.result && a.tick < 20 * 200) {
+        const cmds = mixed(a);
+        stepMut(a, cmds);
+        b.units.reverse(); // worst case for a loop that reads positions other units already moved this tick
+        stepMut(b, cmds);
+        b.units.sort((x, y) => x.id - y.id);
+        if (key(a) !== key(b)) break;
+        ticks++;
+      }
+      expect(key(b)).toBe(key(a));
+      expect(ticks).toBeGreaterThan(100);
+    }
+  });
+
+  it('never spawns a unit overlapping a hostile standing at its gate', () => {
+    const { events, s } = run(allIn(9), mixed);
+    expect(s.result).not.toBeNull();
+    for (const e of events) if (e.kind === 'spawn') expect(e.side === 'enemy' ? e.x >= 1000 : e.x <= 0).toBe(true);
+  });
+
+  it('caps the rally at the 30-unit field limit and never rallies on the victory tick', () => {
+    const s = createBattle(input({ stageId: 9 })).state;
+    s.schedule = [];
+    s.trickleNext = Infinity;
+    for (let i = 0; i < 30; i++) s.units.push(enemyAt(500 + i * 10, 5000 + i));
+    s.enemyBase.hp = Math.floor(s.enemyBase.max * 0.49);
+    stepMut(s, []);
+    expect(s.units.filter((u) => u.side === 'enemy').length).toBeLessThanOrEqual(30);
+    const t = createBattle(input({ stageId: 9 })).state;
+    t.enemyBase.hp = 0;
+    t.enemyBase.max = 1000;
+    const ev = stepMut(t, []);
+    expect(ev.some((e) => e.kind === 'rally')).toBe(false);
+    expect(t.result).toBe('victory');
+  });
+
+  it('ignores commands queued after a retreat in the same tick', () => {
+    const s = createBattle(input()).state;
+    s.food = 50_000;
+    const ev = stepMut(s, [{ kind: 'retreat' }, { kind: 'deploy', slot: 'melee' }]);
+    expect(ev.some((e) => e.kind === 'deployQueued')).toBe(false);
+    expect(s.food).toBe(50_000);
+  });
+
+  it('reports a Stormcall tap with nothing to hit', () => {
+    const s = createBattle(input({ stageId: 4, stormcall: true })).state;
+    s.schedule = [];
+    s.tick = s.stormcall.readyAt;
+    expect(stepMut(s, [{ kind: 'stormcall' }])).toContainEqual({ kind: 'stormcallNoTarget' });
+  });
+});
+
+function enemyAt(x: number, id: number): Unit {
+  return {
+    id, side: 'enemy', def: 'stone.clubber', role: 'melee', x: x * 1000, hp: 60, maxHp: 60, dmg: 12, armor: 0, width: 60_000,
+    range: 12_000, speed: 0, interval: 20, windup: 7, proj: null, projSpeed: 0, trait: null, killGold: 1,
+    phase: 'idle', moving: false, phaseEnd: 0, target: 0, charged: false, rapidLeft: 0, nextShot: 0,
+  };
+}

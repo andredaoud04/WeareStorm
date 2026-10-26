@@ -2,7 +2,7 @@ import type { AgeId, BattleResult, SimInput, Slot } from '../contracts';
 import { AGE_ORDER } from '../contracts';
 import { ASSIST, EVOLVE_PRICE, STORMCALL, TRACKS, UNLOCK_PRICE, upgradePrice, victoryBonus, type Track } from '../data/economy';
 import { STAGE_COUNT, stageDef } from '../data/stages';
-import { freshLevels, type SaveV1 } from './save';
+import { RECENT_IDS, freshLevels, type SaveV1 } from './save';
 
 /** Pure progression rules (GDD §3.5–3.6, §2.11). Every function returns a new save or the same one if invalid. */
 
@@ -12,11 +12,15 @@ const ageIdx = (a: AgeId) => AGE_ORDER.indexOf(a);
 export const frontierAge = (save: SaveV1): AgeId => stageDef(Math.min(STAGE_COUNT, save.campaignStage)).age;
 
 /**
- * A stage is playable once reached, with an army of its Age or (after an early Evolve) one Age ahead.
- * Battles of a later Age than the army need an Evolve first (GDD §3.5).
+ * The campaign is played in order: the frontier stage (or a retry of it). Earlier stages cannot be replayed for
+ * Gold until the campaign is complete; then the Future stages 26–30 are open as replays (GDD §2.11, §3.4).
+ * The army must be of the stage's Age or, after an early Evolve, one Age ahead; a later Age needs an Evolve first.
  */
 export function canPlayStage(save: SaveV1, stageId: number): boolean {
-  if (stageId < 1 || stageId > STAGE_COUNT || stageId > save.campaignStage) return false;
+  if (!Number.isInteger(stageId) || stageId < 1 || stageId > STAGE_COUNT) return false;
+  const complete = save.campaignStage > STAGE_COUNT;
+  const reachable = complete ? stageDef(stageId).age === 'future' : stageId === save.campaignStage;
+  if (!reachable) return false;
   const lead = ageIdx(save.armyAge) - ageIdx(stageDef(stageId).age);
   return lead === 0 || lead === 1;
 }
@@ -54,16 +58,20 @@ export function settleBattle(
   durationSec: number,
 ): { save: SaveV1; settlement: Settlement } {
   const none = { goldKept: 0, bonus: 0, total: 0, firstClear: false };
-  if (save.lastSettledBattleId === battleId) return { save, settlement: none };
+  if (save.lastSettledBattleId === battleId || save.recentBattleIds.includes(battleId)) return { save, settlement: none };
+  // Only a stage the player could have fought can be settled (no paying out stage 30 to a fresh save).
+  if (!Number.isInteger(stageId) || stageId < 1 || stageId > STAGE_COUNT || stageId > save.campaignStage) return { save, settlement: none };
   const st = stageDef(stageId);
   const firstClear = result === 'victory' && !save.clearedStages.includes(stageId);
   const bonus = result !== 'victory' ? 0 : firstClear ? victoryBonus(st.age, st.idx, st.warlord) : Math.floor(victoryBonus(st.age, st.idx, st.warlord) / 2);
-  const goldKept = Math.max(0, Math.floor(goldEarned));
+  const goldKept = Number.isFinite(goldEarned) ? Math.max(0, Math.floor(goldEarned)) : 0;
+  const seconds = Number.isFinite(durationSec) ? Math.max(0, durationSec) : 0;
   const total = goldKept + bonus;
   const next: SaveV1 = {
     ...save,
     gold: save.gold + total,
     lastSettledBattleId: battleId,
+    recentBattleIds: [...save.recentBattleIds, battleId].slice(-RECENT_IDS),
     pendingBattle: save.pendingBattle?.battleId === battleId ? null : save.pendingBattle,
     clearedStages: firstClear ? [...save.clearedStages, stageId] : save.clearedStages,
     warlordsBeaten: result === 'victory' && st.warlord && !save.warlordsBeaten.includes(st.age) ? [...save.warlordsBeaten, st.age] : save.warlordsBeaten,
@@ -73,7 +81,7 @@ export function settleBattle(
       battles: save.stats.battles + 1,
       victories: save.stats.victories + (result === 'victory' ? 1 : 0),
       goldEarned: save.stats.goldEarned + total,
-      playSeconds: save.stats.playSeconds + Math.round(durationSec),
+      playSeconds: save.stats.playSeconds + Math.round(seconds),
     },
   };
   return { save: next, settlement: { goldKept, bonus, total, firstClear } };

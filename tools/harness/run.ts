@@ -6,7 +6,7 @@ import { quantile, runCampaign, type BotKind } from './campaign';
 
 const N = Number(process.argv[2] ?? 30);
 const MAX = Number(process.argv[3] ?? 30);
-const BOTS: BotKind[] = ['casual', 'lazy', 'slow'];
+const BOTS: BotKind[] = (process.argv[4]?.split(',') as BotKind[] | undefined) ?? ['casual', 'average', 'lazy', 'slow'];
 
 for (const bot of BOTS) {
   const runs = Array.from({ length: N }, (_, i) => runCampaign(bot, 1000 + i, { maxStage: MAX }));

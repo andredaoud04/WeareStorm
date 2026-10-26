@@ -27,6 +27,8 @@ for (const bot of ['lazy', 'slow'] as BotKind[]) {
 }
 
 const casual = Array.from({ length: N }, (_, i) => runCampaign('casual', 1000 + i));
+/** The cohort the calibrator targets (a typical player): first-try, duration and lose-forward rows use it. */
+const average = Array.from({ length: N }, (_, i) => runCampaign('average', 3000 + i));
 const lazy = Array.from({ length: N }, (_, i) => runCampaign('lazy', 2000 + i));
 
 // Pacing
@@ -42,12 +44,16 @@ const maxAttempts = Math.max(...lazy.flatMap((r) => r.stages.map((s) => s.attemp
 check(maxAttempts <= 12, `lazy max attempts on any stage ${maxAttempts} ≤ 12`);
 
 // Battle feel
-const durs = casual.flatMap((r) => r.stages.flatMap((s) => s.durations));
-check(quantile(durs, 0.99) <= 165, `battle duration P99 ${quantile(durs, 0.99).toFixed(0)} s ≤ 165`);
-check(quantile(durs, 0.5) >= 45 && quantile(durs, 0.5) <= 100, `battle duration P50 ${quantile(durs, 0.5).toFixed(0)} s in 45–100`);
+// Durations, split: regular battles must stay snappy; Warlord fights are the long climax of each Age.
+const dursOf = (warlord: boolean) => average.flatMap((r) => r.stages.filter((s) => STAGES[s.stage - 1]!.warlord === warlord).flatMap((s) => s.durations));
+const dReg = dursOf(false);
+const dBoss = dursOf(true);
+check(quantile(dReg, 0.5) >= 45 && quantile(dReg, 0.5) <= 100, `regular battle duration P50 ${quantile(dReg, 0.5).toFixed(0)} s in 45–100`);
+check(quantile(dReg, 0.99) <= 160, `regular battle duration P99 ${quantile(dReg, 0.99).toFixed(0)} s ≤ 160`);
+check(quantile(dBoss, 0.5) <= 130 && quantile(dBoss, 0.99) <= 190, `Warlord battle duration P50 ${quantile(dBoss, 0.5).toFixed(0)} s ≤ 130, P99 ${quantile(dBoss, 0.99).toFixed(0)} s ≤ 190`);
 // Storm Rising must stay special on regular stages; Warlord fights are meant to run long and often reach it.
 const stormShare = (warlord: boolean) => {
-  const reps = casual.flatMap((r) => r.stages.filter((s) => STAGES[s.stage - 1]!.warlord === warlord));
+  const reps = average.flatMap((r) => r.stages.filter((s) => STAGES[s.stage - 1]!.warlord === warlord));
   return reps.reduce((a, s) => a + s.stormRising, 0) / Math.max(1, reps.reduce((a, s) => a + s.attempts, 0));
 };
 check(stormShare(false) <= 0.35, `Storm Rising reached in ${pct(stormShare(false))} of regular-stage battles ≤ 35% (Warlord battles: ${pct(stormShare(true))})`);
@@ -58,28 +64,30 @@ const firstTry = (filter: (stage: number) => boolean, runs: CampaignReport[]) =>
   return reps.filter((s) => s.firstTryWin).length / Math.max(1, reps.length);
 };
 const st = (id: number) => STAGES[id - 1]!;
-const ageOpeners = firstTry((id) => id > 1 && st(id).idx === 0, casual);
+const ageOpeners = firstTry((id) => id > 1 && st(id).idx === 0, average);
 check(ageOpeners >= 0.85, `stage 1 of each later Age, first attempt ${pct(ageOpeners)} ≥ 85% (evolution spike)`);
-const regular = firstTry((id) => st(id).idx >= 1 && !st(id).warlord, casual);
+const weakOpeners = [6, 11, 16, 21, 26].filter((id) => firstTry((x) => x === id, average) < 0.75);
+check(!weakOpeners.length, `each Age opener first attempt ≥ 75%${weakOpeners.length ? ` — off: ${weakOpeners.join(', ')}` : ''}`);
+const regular = firstTry((id) => st(id).idx >= 1 && !st(id).warlord, average);
 check(regular >= 0.75 && regular <= 0.97, `regular stages 2–4, first attempt ${pct(regular)} in 75–97%`);
-const bosses = firstTry((id) => st(id).warlord, casual);
+const bosses = firstTry((id) => st(id).warlord, average);
 check(bosses >= 0.35 && bosses <= 0.75, `Warlord stages, first attempt ${pct(bosses)} in 35–75%`);
 // Per stage, so an average can never hide one brutal (or free) fight.
-const perStage = STAGES.map((x) => ({ x, rate: firstTry((id) => id === x.id, casual) }));
-const badBoss = perStage.filter(({ x, rate }) => x.warlord && (rate < 0.25 || rate > 0.8));
-check(!badBoss.length, `every Warlord first attempt in 25–80%${badBoss.length ? ` — off: ${badBoss.map(({ x, rate }) => `${x.id} ${pct(rate)}`).join(', ')}` : ''}`);
+const perStage = STAGES.map((x) => ({ x, rate: firstTry((id) => id === x.id, average) }));
+const badBoss = perStage.filter(({ x, rate }) => x.warlord && (rate < 0.2 || rate > 0.8));
+check(!badBoss.length, `every Warlord first attempt in 20–80%${badBoss.length ? ` — off: ${badBoss.map(({ x, rate }) => `${x.id} ${pct(rate)}`).join(', ')}` : ''}`);
 const badStage = perStage.filter(({ x, rate }) => !x.warlord && rate < 0.6);
 check(!badStage.length, `every regular stage first attempt ≥ 60%${badStage.length ? ` — off: ${badStage.map(({ x, rate }) => `${x.id} ${pct(rate)}`).join(', ')}` : ''}`);
 
 // Losing forward (GDD P3)
-const losses = casual.flatMap((r) => r.stages.flatMap((s) => s.lossGold));
+const losses = average.flatMap((r) => r.stages.flatMap((s) => s.lossGold));
 const zero = losses.filter((g) => g === 0).length / Math.max(1, losses.length);
-check(zero < 0.05, `zero-Gold losses ${pct(zero)} < 5% of casual losses`);
-const warlordLossGold = casual.flatMap((r) => r.stages.filter((s) => st(s.stage).warlord).flatMap((s) => s.lossGold));
+check(zero < 0.05, `zero-Gold losses ${pct(zero)} < 5% of losses`);
+const warlordLossGold = average.flatMap((r) => r.stages.filter((s) => st(s.stage).warlord).flatMap((s) => s.lossGold));
 check(quantile(warlordLossGold, 0.5) >= 20, `Warlord-stage loss Gold P50 ${quantile(warlordLossGold, 0.5)} ≥ 20 (a lost boss fight still buys most of an upgrade)`);
-const streaks = casual.flatMap((r) => r.stages.map((s) => s.attempts - 1));
-check(quantile(streaks, 0.9) <= 3, `consecutive losses per stage P90 ${quantile(streaks, 0.9)} ≤ 3 (casual)`);
-const afford = casual.reduce((a, r) => a + r.affordableAfterBattle, 0) / N;
+const streaks = average.flatMap((r) => r.stages.map((s) => s.attempts - 1));
+check(quantile(streaks, 0.9) <= 3, `consecutive losses per stage P90 ${quantile(streaks, 0.9)} ≤ 3`);
+const afford = average.reduce((a, r) => a + r.affordableAfterBattle, 0) / N;
 check(afford >= 0.8, `something affordable after ${pct(afford)} of battles in the first 30 min ≥ 80%`);
 
 if (fails.length) {

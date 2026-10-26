@@ -15,10 +15,11 @@ import { newSave, type SaveV1 } from '../../src/meta/save';
 
 /**
  * casual: taps ~1 s after a card is ready, shops everything affordable, uses Stormcall on clumps.
+ * average: the calibration target, a typical player: taps 1–3 s after a card is ready, shops like casual.
  * lazy: 2–6 s reactions, buys only the recommended item once per Hub visit. slow: 6–12 s reactions, same shopping.
  * random: random cards and random purchases. idle: never taps (Battle 1 must be lost).
  */
-export type BotKind = 'casual' | 'lazy' | 'slow' | 'random' | 'idle';
+export type BotKind = 'casual' | 'average' | 'lazy' | 'slow' | 'random' | 'idle';
 
 export function rng(seed: number) {
   let a = seed | 0 || 1;
@@ -30,7 +31,10 @@ export function rng(seed: number) {
   };
 }
 
-const REACTION: Record<BotKind, [number, number]> = { casual: [0.4, 1.6], lazy: [2, 6], slow: [6, 12], random: [1, 4], idle: [0, 0] };
+/** Taps per reaction: a player who looks away taps several cards when they look back, wasting no Food. */
+const BURST: Record<BotKind, number> = { casual: 1, average: 2, lazy: 4, slow: 4, random: 1, idle: 0 };
+
+const REACTION: Record<BotKind, [number, number]> = { casual: [0.4, 1.6], average: [1, 3], lazy: [2, 6], slow: [6, 12], random: [1, 4], idle: [0, 0] };
 
 export interface BattleOutcome {
   result: BattleResult;
@@ -92,23 +96,37 @@ export function playBattle(save: SaveV1, stageId: number, bot: BotKind, r: () =>
       stepMut(s, cmds);
       continue;
     }
-    const slot: Slot = bot === 'random' ? (['melee', 'ranged', 'tank'] as Slot[]).filter((x) => x === 'melee' || save.owned[x as 'ranged'])[Math.floor(r() * pattern.length) % pattern.length] ?? 'melee' : pattern[i % pattern.length]!;
+    const ownedSlots = (['melee', 'ranged', 'tank'] as Slot[]).filter((x) => x === 'melee' || save.owned[x as 'ranged' | 'tank']);
+    let slot: Slot = bot === 'random' ? ownedSlots[i % 7 === 0 ? 0 : Math.floor(r() * ownedSlots.length)] ?? 'melee' : pattern[i % pattern.length]!;
+    // Like a person: when enemies close in and the planned card is not affordable, tap the cheapest one that is.
+    if (bot !== 'random' && s.food < roster[slot].cost * 1000 && s.units.some((u) => u.side === 'enemy' && u.x < 500_000)) {
+      const cheapest = ownedSlots.filter((x) => s.food >= roster[x].cost * 1000).sort((a, b) => roster[a].cost - roster[b].cost)[0];
+      if (cheapest) slot = cheapest;
+    }
     if (s.food >= roster[slot].cost * 1000) {
       if (readyAt < 0) {
         readyAt = s.tick;
         wait = Math.round((rmin + r() * (rmax - rmin)) * TICKS_PER_SECOND);
       }
       if (s.tick - readyAt >= wait) {
-        cmds.push({ kind: 'deploy', slot });
-        i++;
+        // follow the rotation for as many cards as the Food covers, up to this player's burst size
+        let food = s.food;
+        for (let k = 0; k < BURST[bot]; k++) {
+          const sl = k === 0 || bot === 'random' ? slot : pattern[(i + k) % pattern.length]!;
+          const cost = roster[sl].cost * 1000;
+          if (food < cost) break;
+          food -= cost;
+          cmds.push({ kind: 'deploy', slot: sl });
+        }
         readyAt = -1;
       }
     }
-    if (bot === 'casual' && s.stormcall.unlocked && s.tick >= s.stormcall.readyAt && s.stormcall.strikeAt < 0) {
+    if ((bot === 'casual' || bot === 'average') && s.stormcall.unlocked && s.tick >= s.stormcall.readyAt && s.stormcall.strikeAt < 0) {
       const aim = stormcallAim(s.units);
       if (aim && aim.weight >= 3) cmds.push({ kind: 'stormcall' });
     }
-    stepMut(s, cmds);
+    const ev = stepMut(s, cmds);
+    i += ev.filter((e) => e.kind === 'deployQueued').length; // the rotation only moves on for accepted deploys
     opts.onTick?.(s);
   }
   const seconds = s.tick / TICKS_PER_SECOND;
