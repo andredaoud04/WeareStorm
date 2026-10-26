@@ -69,6 +69,12 @@ export function loadScene() {
     return s;
   };
   switch (scene) {
+    case 'gallery':
+      fixture({});
+      go('title');
+      document.getElementById('app')!.style.display = 'none';
+      void import('../render/scenes/gallery').then((g) => g.showGallery(params.get('ids')?.split(',')));
+      break;
     case 'title':
       fixture({});
       go('title');

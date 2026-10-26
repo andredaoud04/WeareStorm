@@ -1,11 +1,17 @@
 import { Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
-import type { BattleSnapshot, Role, Side, SimEvent, UnitView } from '../../contracts';
+import type { BattleSnapshot, Role, Side, SimEvent, UnitDefId, UnitView } from '../../contracts';
 import { TICKS_PER_SECOND } from '../../contracts';
 import type { BattleSession } from '../../app/battleController';
+import { unitDef } from '../../data/units';
 import { font } from '../../ui/style/tokens';
+import { drawBackdrop, drawCloud, drawForeground, drawGround, volcanoOf, type Layout } from '../art/backgrounds';
+import { BaseArt } from '../art/bases';
+import { AGE_PALETTE } from '../art/palette';
+import { RigLibrary, UnitArt, type DeathKind } from '../art/unitArt';
+import { vfxInk, vfxTextures, type VfxName } from '../vfx/textures';
 import { makeCamera, rankSpread, type Camera } from '../pixi/camera';
 import type { PixiHost } from '../pixi/app';
-import { HEIGHT, INK, STONE, drawBase, drawFigure, drawLeg, sideColors } from './stoneArt';
+import { HEIGHT, INK, STONE, drawFigure, drawLeg, sideColors } from './stoneArt';
 
 /**
  * The lane: background, both bases, troops, projectiles and effects (slice 1C placeholders). It reads snapshots and
@@ -17,6 +23,10 @@ interface UnitSprite {
   id: number;
   side: Side;
   role: Role;
+  def: UnitDefId;
+  /** Final rigged art (Stone Age); null = slice 1C placeholder figure (Ages without art yet). */
+  art: UnitArt | null;
+  speed: number;
   root: Container;
   body: Container;
   flash: Graphics;
@@ -34,7 +44,7 @@ interface UnitSprite {
 }
 
 interface Proj {
-  g: Graphics;
+  g: Container;
   fromX: number;
   toX: number;
   target: number | 'base';
@@ -45,16 +55,20 @@ interface Proj {
 }
 
 interface Particle {
-  g: Graphics;
-  x: number;
-  y: number;
-  vx: number;
+  g: Container;
+  x: number; // wu along the lane
+  y: number; // wu above the ground
+  vx: number; // wu/s
   vy: number;
-  life: number;
+  life: number; // ms
   max: number;
-  gravity: number;
-  spin: number;
+  gravity: number; // wu/s² (negative pulls down)
+  spin: number; // rad/s
   fade: boolean;
+  s0: number; // scale at birth and at death
+  s1: number;
+  flip?: boolean; // coin spin: scale.x oscillates
+  mirror?: number; // 1 or -1
 }
 
 interface Num {
@@ -78,13 +92,21 @@ export interface SceneOptions {
 
 export class BattleScene {
   readonly root = new Container();
-  private sky = new Sprite();
-  private far = new Graphics();
-  private mid = new Graphics();
-  private ground = new Graphics();
+  private backdrop = new Sprite();
+  private clouds = new Container();
+  private cloudSprites: { s: Sprite; v: number }[] = [];
+  /** Ambient life behind the bases: volcano smoke and birds (presentation only). */
+  private ambient = new Container();
+  private smoke: { g: Graphics; age: number; x: number; y: number }[] = [];
+  private nextSmoke = 0;
+  private crater = { x: 0, y: 0, half: 0 };
+  private birds: { g: Graphics; x: number; y: number; v: number; phase: number }[] = [];
+  private groundSprite = new Sprite();
+  private fore = new Sprite();
   private bases = { player: new Container(), enemy: new Container() };
-  private baseArt = { player: new Graphics(), enemy: new Graphics() };
-  private baseFlash = { player: 0, enemy: 0 };
+  private baseArt: { player: BaseArt | null; enemy: BaseArt | null } = { player: null, enemy: null };
+  private baseScale = 0;
+  private lib = new RigLibrary();
   private ward = new Graphics();
   private lane = new Container();
   private unitsLayer = new Container();
@@ -110,13 +132,9 @@ export class BattleScene {
   constructor(private host: PixiHost, private opts: SceneOptions) {
     this.cam = makeCamera({ w: host.width, h: host.height, uiTop: opts.uiTop() });
     this.unitsLayer.sortableChildren = true;
-    this.root.addChild(this.sky, this.far, this.mid, this.ground, this.lane);
+    this.root.addChild(this.backdrop, this.ambient, this.clouds, this.groundSprite, this.lane, this.fore);
     this.lane.addChild(this.bases.player, this.bases.enemy, this.ward, this.unitsLayer, this.fxLayer);
     this.root.addChild(this.overlay);
-    this.bases.player.addChild(this.baseArt.player);
-    this.bases.enemy.addChild(this.baseArt.enemy);
-    drawBase(this.baseArt.player, 'player');
-    drawBase(this.baseArt.enemy, 'enemy');
     host.world.addChild(this.root);
     this.off.push(host.onResize(() => this.layout()));
     this.layout();
@@ -150,26 +168,35 @@ export class BattleScene {
     this.cam = makeCamera({ w, h, uiTop: this.opts.uiTop() });
     const k = this.cam.ptPerWu;
     const gy = this.cam.groundY;
-    this.sky.texture = skyTexture(STONE.skyTop, STONE.skyHorizon, STONE.sunGlow);
-    this.sky.width = w;
-    this.sky.height = gy + 4;
-    // far hills, mid hills and the ground band are drawn in screen space and tile across any width
-    this.far.clear();
-    const farY = gy - 210 * k;
-    this.far.moveTo(0, gy);
-    for (let x = 0; x <= w + 40; x += 40) this.far.lineTo(x, farY - Math.sin(x * 0.012 + 1.3) * 34 * k - Math.sin(x * 0.031) * 14 * k);
-    this.far.lineTo(w, gy).fill(STONE.far);
-    this.mid.clear();
-    const midY = gy - 96 * k;
-    this.mid.moveTo(0, gy);
-    for (let x = 0; x <= w + 30; x += 30) this.mid.lineTo(x, midY - Math.sin(x * 0.02 + 0.4) * 26 * k - Math.cos(x * 0.047) * 9 * k);
-    this.mid.lineTo(w, gy).fill(STONE.mid);
-    this.ground.clear();
-    this.ground.rect(0, gy - 8 * k, w, h - gy + 8 * k).fill(STONE.near);
-    this.ground.rect(0, gy - 34 * k, w, 48 * k).fill(STONE.lane);
-    this.ground.rect(0, gy + 6 * k, w, 8 * k).fill(STONE.laneDark);
-    // tufts along the lane edge
-    for (let x = 6; x < w; x += 58) this.ground.poly([x, gy + 14 * k, x + 8, gy - 8 * k + 14 * k, x + 16, gy + 14 * k]).fill(STONE.fgProp);
+    const res = Math.min(2, globalThis.devicePixelRatio || 1);
+    // painted layers, drawn for this exact screen (ART_BIBLE §5.10: never stretched)
+    const L: Layout = { w, h, groundY: gy, k };
+    const pal = AGE_PALETTE.stone;
+    replaceTexture(this.backdrop, paint(w, gy + 40 * k, res, (c) => drawBackdrop(c, L, pal)), w, gy + 40 * k);
+    replaceTexture(this.groundSprite, paint(w, h, res, (c) => drawGround(c, L, pal)), w, h);
+    replaceTexture(this.fore, paint(w, h, res, (c) => drawForeground(c, L, pal)), w, h);
+    this.layoutClouds(w, gy, k, res);
+    const v = volcanoOf(L);
+    this.crater = { x: v.x, y: v.craterY, half: v.craterHalf };
+    if (!this.birds.length) {
+      for (let i = 0; i < 3; i++) {
+        const g = new Graphics();
+        this.ambient.addChild(g);
+        this.birds.push({ g, x: -40 - i * 70, y: gy * (0.18 + i * 0.07), v: 26 + i * 6, phase: i * 1.7 });
+      }
+    }
+    // rigs and bases bake at the exact on-screen scale (px per wu)
+    const bake = k * res;
+    this.lib.setScale(bake);
+    if (!this.baseScale || Math.abs(bake - this.baseScale) / this.baseScale > 0.15) {
+      this.baseScale = bake;
+      for (const side of ['player', 'enemy'] as const) {
+        this.baseArt[side]?.destroy();
+        const b = new BaseArt(side, bake);
+        this.baseArt[side] = b;
+        this.bases[side].addChild(b.root);
+      }
+    }
     this.bases.player.position.set(this.cam.sx(0), gy);
     this.bases.player.scale.set(k);
     this.bases.enemy.position.set(this.cam.sx(1000), gy);
@@ -190,7 +217,71 @@ export class BattleScene {
   // ---------------------------------------------------------------------------------------------------------------
   // Units
 
-  private makeUnit(id: number, side: Side, role: Role): UnitSprite {
+  private updateAmbient(dtMs: number) {
+    const dt = dtMs / 1000;
+    // volcano smoke: puffs rise, swell and fade
+    this.nextSmoke -= dtMs;
+    if (this.nextSmoke <= 0) {
+      this.nextSmoke = 520;
+      const g = new Graphics().circle(0, 0, 10).fill({ color: 0xe6e1ea });
+      this.ambient.addChild(g);
+      this.smoke.push({ g, age: 0, x: this.crater.x + (Math.sin(this.time) * this.crater.half) / 2, y: this.crater.y });
+    }
+    this.smoke = this.smoke.filter((p) => {
+      p.age += dt;
+      p.y -= dt * 14;
+      p.x += dt * 9;
+      const s = (0.5 + p.age * 0.45) * Math.max(0.6, this.crater.half / 12);
+      p.g.position.set(p.x, p.y);
+      p.g.scale.set(s);
+      p.g.alpha = Math.max(0, 0.75 - p.age / 6);
+      if (p.age > 4.5) {
+        p.g.destroy();
+        return false;
+      }
+      return true;
+    });
+    // birds: a lazy V-formation that crosses the sky now and then
+    for (const b of this.birds) {
+      b.x += b.v * dt;
+      b.phase += dt * 7;
+      if (b.x > this.host.width + 60) b.x = -60 - Math.random() * 400;
+      const f = Math.sin(b.phase) * 4;
+      b.g.clear();
+      b.g.moveTo(-7, f).quadraticCurveTo(-3, -2, 0, 1).quadraticCurveTo(3, -2, 7, f).stroke({ width: 2, color: 0x3b3550, alpha: 0.7, cap: 'round', join: 'round' });
+      b.g.position.set(b.x, b.y + Math.sin(b.phase * 0.15) * 3);
+    }
+  }
+
+  private layoutClouds(w: number, gy: number, k: number, res: number) {
+    for (const c of this.cloudSprites) c.s.destroy({ texture: true });
+    this.cloudSprites = [];
+    const n = Math.max(3, Math.round(w / 160));
+    for (let i = 0; i < n; i++) {
+      const cw = (260 + ((i * 97) % 180)) * k * 1.6;
+      const ch = cw * 0.42;
+      const s = new Sprite(paint(cw, ch, res, (c) => drawCloud(c, cw, ch, AGE_PALETTE.stone, 300 + i)));
+      s.setSize(cw, ch);
+      s.position.set((i / n) * (w + cw) - cw * 0.5, gy * (0.08 + ((i * 37) % 30) / 100));
+      s.alpha = 0.92;
+      this.clouds.addChild(s);
+      this.cloudSprites.push({ s, v: 4 + ((i * 13) % 7) });
+    }
+  }
+
+  private makeUnit(id: number, side: Side, role: Role, def: UnitDefId = ''): UnitSprite {
+    if (this.lib.has(def)) {
+      const root = new Container();
+      const art = new UnitArt(this.lib, def, side, id);
+      const r = role === 'warlord' ? 150 : role === 'tank' ? 54 : 40;
+      const shadow = new Graphics().ellipse(0, 0, r, r * 0.2).fill({ color: STONE.shadow, alpha: 0.26 });
+      const hp = new Graphics();
+      hp.visible = false;
+      root.addChild(shadow, art.root, hp);
+      this.unitsLayer.addChild(root);
+      const flash = new Graphics();
+      return { id, side, role, def, art, speed: unitDef(def).speed, root, body: art.root, flash, legA: flash, legB: flash, hp, phase: 0, attackFrom: -1, impactTick: -1, flashUntil: 0, lungeUntil: 0, dying: -1, lastX: 0, hpFrac: 1 };
+    }
     const root = new Container();
     const body = new Container();
     const legA = new Graphics();
@@ -216,7 +307,7 @@ export class BattleScene {
     hp.visible = !!hpH;
     root.addChild(shadow, body, hp);
     this.unitsLayer.addChild(root);
-    return { id, side, role, root, body, flash, legA, legB, hp, phase: 0, attackFrom: -1, impactTick: -1, flashUntil: 0, lungeUntil: 0, dying: -1, lastX: 0, hpFrac: 1 };
+    return { id, side, role, def, art: null, speed: 0, root, body, flash, legA, legB, hp, phase: 0, attackFrom: -1, impactTick: -1, flashUntil: 0, lungeUntil: 0, dying: -1, lastX: 0, hpFrac: 1 };
   }
 
   private clearUnits() {
@@ -237,9 +328,9 @@ export class BattleScene {
   }
 
   private spawnIdle() {
-    const roles: Role[] = ['melee', 'ranged', 'melee'];
-    roles.forEach((r, i) => {
-      const u = this.makeUnit(9000 + i, 'player', r);
+    const roles: [Role, UnitDefId][] = [['melee', 'stone.clubber'], ['ranged', 'stone.slinger'], ['melee', 'stone.clubber']];
+    roles.forEach(([r, def], i) => {
+      const u = this.makeUnit(9000 + i, 'player', r, def);
       u.lastX = 90 + i * 70;
       this.idle.push(u);
     });
@@ -253,8 +344,9 @@ export class BattleScene {
     for (const e of events) {
       switch (e.kind) {
         case 'spawn': {
-          const u = this.makeUnit(e.id, e.side, this.session?.curr.units.find((x) => x.id === e.id)?.role ?? 'melee');
+          const u = this.makeUnit(e.id, e.side, unitDef(e.def).role, e.def);
           u.lastX = e.x;
+          u.art?.onSpawn();
           this.units.set(e.id, u);
           this.ring(e.x, e.side === 'player' ? 0x7db8ff : 0xff9a84);
           break;
@@ -264,6 +356,7 @@ export class BattleScene {
           if (u) {
             u.attackFrom = tick;
             u.impactTick = e.impactTick;
+            u.art?.onAttackStart(tick, e.impactTick);
           }
           break;
         }
@@ -276,10 +369,10 @@ export class BattleScene {
           break;
         }
         case 'projectile': {
-          const g = new Graphics();
           const pebble = e.style === 'pebble';
-          g.circle(0, 0, pebble ? 9 : 7).fill(pebble ? 0x9aa3b5 : 0xf7f9fc).stroke({ width: 4, color: INK });
-          this.fxLayer.addChild(g);
+          const pp = this.fx('pebble', e.from, 70, { max: 1e9, fade: false, s0: pebble ? 1 : 0.8, s1: pebble ? 1 : 0.8 });
+          this.particles.splice(this.particles.indexOf(pp), 1); // driven by the projectile loop instead
+          const g = pp.g;
           const side: Side = this.session?.curr.units.find((x) => x.id === e.id)?.side ?? 'player';
           this.projs.set(e.projId, { g, fromX: e.from, toX: e.toX, target: e.to, fire: tick, arrive: e.arriveTick, arc: pebble ? 70 : 30, side });
           break;
@@ -290,19 +383,23 @@ export class BattleScene {
             p.g.destroy();
             this.projs.delete(e.projId);
           }
-          if (e.result === 'fizzle') this.puff(e.x, 8, 0xdce3ef, 3);
-          if (e.result === 'explode') this.puff(e.x, 26, 0xffcf3d, 10);
+          if (e.result === 'fizzle') this.puff(e.x, 8, 3, true);
+          if (e.result === 'explode') {
+            this.spark(e.x, 26, true);
+            this.puff(e.x, 26, 10, true);
+          }
           break;
         }
         case 'hit': {
           if (e.targetId === 'base') {
-            this.baseFlash[e.targetSide] = this.time + 90;
+            this.baseArt[e.targetSide]?.hit();
             if (e.blocked === 'ward') {
-              this.spark(1000, 120, 0xb79cff, 5);
+              this.fx('spark', 1000, 120, { tint: 0xb79cff, max: 180, s0: 0.6, s1: 1.1 }); // ward 'ting'
               break;
             }
             const x = e.targetSide === 'enemy' ? 1000 + 40 : -40;
-            this.spark(x, 90 + ((e.sourceId * 37) % 80), 0xffffff, 4);
+            this.spark(x, 90 + ((e.sourceId * 37) % 80), e.heavy);
+            if (e.heavy) this.puff(x, 60, 3, true);
             if (e.targetSide === 'player') this.shake(e.heavy ? 0.22 : 0.08);
             if (e.targetSide === 'enemy') this.number('base', x, 200, e.amount);
             break;
@@ -310,9 +407,15 @@ export class BattleScene {
           const u = this.units.get(e.targetId);
           if (!u) break;
           u.flashUntil = this.time + 80;
+          u.art?.onHit(e.heavy);
           const src = this.units.get(e.sourceId);
           if (src && e.projId === undefined) src.lungeUntil = this.time + 110;
-          this.spark(u.lastX, HEIGHT[u.role] * 0.55, e.heavy ? 0xffcf3d : 0xffffff, e.heavy ? 7 : 4);
+          this.spark(u.lastX + (u.side === 'player' ? 10 : -10), HEIGHT[u.role] * 0.55, e.heavy);
+          if (src && e.projId === undefined && src.art && src.role !== 'ranged') {
+            // melee smear arc on the striking side (2 frames)
+            const dir = src.side === 'player' ? 1 : -1;
+            this.fx('smear', src.lastX + dir * 50, HEIGHT[src.role] * 0.6, { ink: false, max: 90, s0: 1, s1: 1.1, mirror: dir, tint: 0xfffbe8 });
+          }
           if (e.heavy && !rm) this.shake(u.role === 'warlord' ? 0.12 : 0.05);
           if (e.targetSide === 'enemy') this.number(e.targetId, u.lastX, HEIGHT[u.role] + 20, e.amount);
           break;
@@ -322,8 +425,10 @@ export class BattleScene {
           if (u) {
             u.dying = 0;
             u.hp.visible = false;
+            const kind: DeathKind = u.role === 'tank' || u.role === 'warlord' ? 'break' : (u.id * 7) % 10 < 6 ? 'launch' : 'topple';
+            u.art?.onDeath(kind);
           }
-          this.puff(e.x, 30, 0xf7f9fc, 9);
+          this.puff(e.x, 30, 7);
           if (e.gold > 0) this.coins(e.x, Math.min(5, e.gold));
           if (u?.role === 'warlord' || u?.role === 'tank') this.shake(0.3);
           break;
@@ -334,7 +439,7 @@ export class BattleScene {
         case 'wardBroken':
           this.warded = false;
           this.redrawWard();
-          this.puff(1130, 200, 0xb79cff, 18);
+          for (let i = 0; i < 12; i++) this.fx('spark', 1130 + Math.cos(i) * 120, 200 + Math.sin(i) * 160, { tint: 0xc9b6ff, vy: 120, max: 520, s0: 0.8, s1: 0.2, spin: 6 });
           this.shake(0.4);
           if (!rm) this.session?.hitStop(80);
           break;
@@ -357,12 +462,15 @@ export class BattleScene {
           this.flashWhite = rm ? 0 : 0.55;
           this.shake(0.55);
           if (!rm) this.session?.hitStop(70);
-          this.puff(e.x, 40, 0xc9b6ff, 16);
+          this.puff(e.x, 30, 10, true);
+          this.fx('scorch', e.x, 0, { ink: false, max: 2400, s0: 1.4, s1: 1.5 }).g.alpha = 0.6;
           break;
         case 'end': {
           const loser: Side = e.result === 'victory' ? 'enemy' : 'player';
+          this.baseArt[loser]?.startCollapse();
+          if (e.result === 'victory') for (const u of this.units.values()) if (u.side === 'player' && u.dying < 0) u.art?.cheer();
           const x = loser === 'enemy' ? 1130 : -130;
-          for (let i = 0; i < 4; i++) this.puff(x + (i - 1.5) * 60, 60 + i * 40, 0xdce3ef, 10);
+          for (let i = 0; i < 4; i++) this.puff(x + (i - 1.5) * 60, 60 + i * 40, 8, i % 2 === 0);
           this.shake(0.7);
           if (!rm && e.result === 'victory') {
             this.session?.hitStop(120);
@@ -396,7 +504,7 @@ export class BattleScene {
       for (const v of s.curr.units) {
         let u = this.units.get(v.id);
         if (!u) {
-          u = this.makeUnit(v.id, v.side, v.role);
+          u = this.makeUnit(v.id, v.side, v.role, v.def);
           this.units.set(v.id, u);
         }
         const p = prevById.get(v.id);
@@ -409,6 +517,16 @@ export class BattleScene {
         if (s.curr.units.some((v) => v.id === id)) continue;
         if (u.dying < 0) u.dying = 0;
         u.dying += dtMs;
+        if (u.art) {
+          if (u.art.dying < 0) u.art.onDeath('topple');
+          u.art.update(dtMs, 'idle', tickTime, 0);
+          u.root.children[0]!.alpha = Math.max(0, 1 - u.dying / 500); // the ground shadow fades first
+          if (u.art.done) {
+            u.root.destroy({ children: true });
+            this.units.delete(id);
+          }
+          continue;
+        }
         const t = Math.min(1, u.dying / 420);
         u.body.rotation = (u.side === 'player' ? -1 : 1) * t * 1.35;
         u.root.alpha = 1 - t;
@@ -428,7 +546,10 @@ export class BattleScene {
         const x = p.fromX + (toX - p.fromX) * f;
         const y = 70 + Math.sin(f * Math.PI) * p.arc;
         p.g.position.set(sx(x), gy - y * k);
-        p.g.scale.set(Math.max(0.6, k * 2.2));
+        p.g.scale.set(k);
+        p.g.rotation += 0.3;
+        // a short fading trail of motion puffs
+        if (((this.time / 16) | 0) % 3 === 0) this.fx('puff', x, y, { max: 200, s0: 0.18, s1: 0.05 });
       }
       // markers (slam telegraph, Stormcall gather)
       this.markers = this.markers.filter((m) => {
@@ -452,8 +573,16 @@ export class BattleScene {
         u.root.position.set(sx(u.lastX), gy + (i % 2 ? 6 : -4) * k);
         u.root.scale.set(k);
         u.root.zIndex = gy;
-        u.body.y = -Math.abs(Math.sin(this.time / 900 + i)) * 4;
+        if (u.art) u.art.update(dtMs, 'idle', 0, 0);
+        else u.body.y = -Math.abs(Math.sin(this.time / 900 + i)) * 4;
       });
+      for (const side of ['player', 'enemy'] as const) this.baseArt[side]?.update(dtMs, 1);
+    }
+    this.updateAmbient(dtMs);
+    // clouds drift and wrap
+    for (const c of this.cloudSprites) {
+      c.s.x += (c.v * dtMs) / 1000;
+      if (c.s.x > this.host.width + 20) c.s.x = -c.s.width - 20;
     }
 
     // particles, numbers, bolts, shake, flash
@@ -463,12 +592,14 @@ export class BattleScene {
       p.vy += p.gravity * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+      const f = Math.min(1, p.life / p.max);
+      const sc = k * (p.s0 + (p.s1 - p.s0) * f);
       p.g.position.set(sx(p.x), gy - p.y * k);
       p.g.rotation += p.spin * dt;
-      p.g.scale.set(k * 2 * (p.fade ? 1 - p.life / p.max : 1) + 0.2);
-      if (p.fade) p.g.alpha = Math.max(0, 1 - p.life / p.max);
+      p.g.scale.set(sc * (p.flip ? Math.cos(p.life / 60) : 1) * (p.mirror ?? 1), sc);
+      if (p.fade) p.g.alpha = f < 0.5 ? 1 : Math.max(0, 1 - (f - 0.5) * 2);
       if (p.life >= p.max) {
-        p.g.destroy();
+        p.g.destroy({ children: true });
         return false;
       }
       return true;
@@ -512,11 +643,12 @@ export class BattleScene {
     const depth = spread?.depth ?? 0;
     const facing = u.side === 'player' ? 1 : -1;
     const lunge = this.time < u.lungeUntil ? 10 * facing : 0;
-    u.root.position.set(this.cam.sx(x + dx + lunge), this.cam.groundY + depth * k * 0.35);
+    u.root.position.set(this.cam.sx(x + dx + (u.art ? 0 : lunge)), this.cam.groundY + depth * k * 0.35);
     u.root.scale.set(k * facing, k);
     u.root.zIndex = depth;
-    // walk cycle vs windup lean
-    if (v.state === 'walk') {
+    if (u.art) {
+      u.art.update(this.animDt * 1000, v.state, tickTime, u.speed);
+    } else if (v.state === 'walk') {
       u.phase += this.animDt * SPEED_BOB * Math.PI * 2;
       const swing = Math.sin(u.phase) * 0.45;
       u.legA.rotation = swing;
@@ -554,12 +686,7 @@ export class BattleScene {
   private drawBaseState(c: BattleSnapshot) {
     for (const side of ['player', 'enemy'] as const) {
       const b = side === 'player' ? c.playerBase : c.enemyBase;
-      const frac = b.hp / b.maxHp;
-      const root = this.bases[side];
-      const k = this.cam.ptPerWu;
-      root.rotation = frac < 0.33 ? (side === 'player' ? -0.03 : 0.03) : 0;
-      root.y = this.cam.groundY + (frac <= 0 ? 40 * k : 0);
-      this.baseArt[side].tint = this.time < this.baseFlash[side] ? 0xffd2c4 : frac < 0.15 ? 0xd9b0a0 : 0xffffff;
+      this.baseArt[side]?.update(this.animDt * 1000, Math.max(0, b.hp / b.maxHp));
     }
     if (this.warded !== c.enemyBase.warded) {
       this.warded = c.enemyBase.warded;
@@ -570,39 +697,59 @@ export class BattleScene {
   // ---------------------------------------------------------------------------------------------------------------
   // Effects (placeholder recipes; slice 1D replaces them with ART_BIBLE §5.11)
 
+  /** One baked effect sprite (ink behind, fill in front) living in world units. */
+  private fx(name: VfxName, x: number, y: number, o: Partial<Omit<Particle, 'g' | 'x' | 'y'>> & { tint?: number; ink?: boolean } = {}): Particle {
+    const scale = this.lib ? this.cam.ptPerWu * Math.min(2, globalThis.devicePixelRatio || 1) : 1;
+    const tex = vfxTextures(scale);
+    const c = new Container();
+    const ink = o.ink === false ? undefined : vfxInk(scale, name);
+    for (const t of [ink, tex[name]]) {
+      if (!t) continue;
+      const sp = new Sprite(t);
+      sp.anchor.set(0.5);
+      sp.scale.set(1 / scale);
+      c.addChild(sp);
+    }
+    if (o.tint !== undefined) (c.children[c.children.length - 1] as Sprite).tint = o.tint;
+    this.fxLayer.addChild(c);
+    const p: Particle = { g: c, x, y, vx: 0, vy: 0, life: 0, max: 400, gravity: 0, spin: 0, fade: true, s0: 1, s1: 1, ...o };
+    this.particles.push(p);
+    return p;
+  }
+
+  /** Spawn ring in the faction colour (ART_BIBLE §5.11 spawnRing). */
   private ring(x: number, color: number) {
-    const g = new Graphics().ellipse(0, 0, 40, 10).stroke({ width: 5, color, alpha: 0.9 });
-    this.fxLayer.addChild(g);
-    this.particles.push({ g, x, y: 0, vx: 0, vy: 0, life: 0, max: 380, gravity: 0, spin: 0, fade: true });
+    this.fx('ring', x, 0, { tint: color, max: 380, s0: 0.5, s1: 1.35, ink: false });
+    for (let i = 0; i < 3; i++) this.fx('puff', x + (i - 1) * 18, 4, { vx: (i - 1) * 40, vy: 30, max: 360, s0: 0.45, s1: 0.2, gravity: -40 });
   }
 
-  private spark(x: number, y: number, color: number, n: number) {
-    for (let i = 0; i < n; i++) {
-      const g = new Graphics().poly([0, -6, 2, -2, 6, 0, 2, 2, 0, 6, -2, 2, -6, 0, -2, -2]).fill(color);
-      this.fxLayer.addChild(g);
-      const a = (i / n) * Math.PI * 2 + this.time;
-      this.particles.push({ g, x, y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160 + 60, life: 0, max: 220, gravity: -300, spin: 8, fade: true });
+  /** Hit spark: one star burst, plus flying chips on heavy hits. */
+  private spark(x: number, y: number, heavy: boolean) {
+    this.fx(heavy ? 'sparkHeavy' : 'spark', x, y, { max: heavy ? 200 : 150, s0: heavy ? 0.7 : 0.55, s1: heavy ? 1.3 : 1, spin: 3 });
+    if (heavy) {
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2 + this.time;
+        this.fx('spark', x, y, { vx: Math.cos(a) * 220, vy: Math.sin(a) * 180 + 80, gravity: -500, max: 260, s0: 0.35, s1: 0.1, spin: 9 });
+      }
     }
   }
 
-  private puff(x: number, y: number, color: number, n: number) {
+  /** Cartoon dust/poof puffs. */
+  private puff(x: number, y: number, n: number, dark = false) {
     for (let i = 0; i < n; i++) {
-      const g = new Graphics().circle(0, 0, 9 + (i % 3) * 3).fill(color).stroke({ width: 3, color: INK, alpha: 0.5 });
-      this.fxLayer.addChild(g);
       const a = (i / n) * Math.PI * 2;
-      this.particles.push({ g, x, y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 60 + 40, life: 0, max: 480, gravity: -40, spin: 0, fade: true });
+      this.fx(dark ? 'puffDark' : 'puff', x, y, { vx: Math.cos(a) * 90, vy: Math.sin(a) * 60 + 40, gravity: -30, max: 520, s0: 0.5 + (i % 3) * 0.12, s1: 1.05 });
     }
   }
 
+  /** Coins pop up and tumble (coinPop). */
   private coins(x: number, n: number) {
     for (let i = 0; i < n; i++) {
-      const g = new Graphics().circle(0, 0, 8).fill(0xffcf3d).stroke({ width: 3, color: INK });
-      this.fxLayer.addChild(g);
-      this.particles.push({ g, x: x + (i - n / 2) * 12, y: 80, vx: (i - n / 2) * 30, vy: 420 + i * 40, life: 0, max: 700, gravity: -1300, spin: 0, fade: false });
+      this.fx('coin', x + (i - n / 2) * 14, 80, { vx: (i - n / 2) * 40, vy: 460 + i * 40, gravity: -1400, max: 760, fade: false, flip: true, s0: 0.8, s1: 0.8 });
     }
   }
 
-  private number(target: number | 'base', x: number, y: number, amount: number) {
+    private number(target: number | 'base', x: number, y: number, amount: number) {
     if (!this.opts.damageNumbers() || amount <= 0) return;
     // merge hits on the same target within 150 ms (GDD §2.14) and keep at most 12 alive
     const recent = this.numbers.find((n) => n.target === target && this.time - n.bornAt < 150);
@@ -655,22 +802,21 @@ export class BattleScene {
   }
 }
 
-const skyCache = new Map<string, Texture>();
-function skyTexture(top: string, horizon: string, glow: string): Texture {
-  const key = top + horizon + glow;
-  let t = skyCache.get(key);
-  if (t) return t;
+/** Paints a CSS-px sized canvas at `res` device pixels per px and returns it as a texture. */
+function paint(w: number, h: number, res: number, draw: (ctx: CanvasRenderingContext2D) => void): Texture {
   const c = document.createElement('canvas');
-  c.width = 4;
-  c.height = 256;
+  c.width = Math.max(1, Math.ceil(w * res));
+  c.height = Math.max(1, Math.ceil(h * res));
   const ctx = c.getContext('2d')!;
-  const g = ctx.createLinearGradient(0, 0, 0, 256);
-  g.addColorStop(0, top);
-  g.addColorStop(0.72, horizon);
-  g.addColorStop(1, glow);
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 4, 256);
-  t = Texture.from(c);
-  skyCache.set(key, t);
-  return t;
+  ctx.scale(res, res);
+  draw(ctx);
+  return Texture.from(c);
+}
+
+/** Swaps a layer's texture (freeing the old one) and sizes the sprite in CSS px. */
+function replaceTexture(s: Sprite, t: Texture, w: number, h: number) {
+  const old = s.texture;
+  s.texture = t;
+  s.setSize(w, h);
+  if (old && old !== Texture.EMPTY) old.destroy(true);
 }

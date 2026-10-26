@@ -18,9 +18,9 @@ describe('camera (GDD Reconciliation 1b)', () => {
   });
 
   it('puts the ground a clamped band above the bottom UI', () => {
-    expect(makeCamera({ w: 390, h: 844, uiTop: 700 }).groundY).toBeCloseTo(700 - 84.4);
-    expect(makeCamera({ w: 390, h: 400, uiTop: 300 }).groundY).toBe(300 - 48);
-    expect(makeCamera({ w: 820, h: 2000, uiTop: 1800 }).groundY).toBe(1800 - 120);
+    expect(makeCamera({ w: 390, h: 844, uiTop: 700 }).groundY).toBeCloseTo(700 - 126.6);
+    expect(makeCamera({ w: 390, h: 300, uiTop: 220 }).groundY).toBe(220 - 56);
+    expect(makeCamera({ w: 820, h: 2000, uiTop: 1800 }).groundY).toBe(1800 - 170);
   });
 
   it('fans a stack of same-side troops back from the front so a crowd reads as a crowd', () => {

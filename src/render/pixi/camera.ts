@@ -25,7 +25,8 @@ export const LANE_CENTER = 500;
 
 export function makeCamera(v: Viewport, centerX = LANE_CENTER): Camera {
   const ptPerWu = Math.min(0.467, Math.max(0.27, v.w / 1340));
-  const groundY = v.uiTop - Math.min(120, Math.max(48, 0.1 * v.h));
+  // a generous band below the lane holds the foreground props and keeps the action near the middle of the screen
+  const groundY = v.uiTop - Math.min(170, Math.max(56, 0.15 * v.h));
   return {
     ptPerWu,
     centerX,

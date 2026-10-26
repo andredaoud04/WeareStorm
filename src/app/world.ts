@@ -1,5 +1,6 @@
 import { effect } from '@preact/signals';
 import { pixiHost } from '../render/pixi/app';
+import { bakePortraits } from '../render/art/portraits';
 import { BattleScene } from '../render/scenes/battleScene';
 import { session } from './battleController';
 import { route, save } from './store';
@@ -27,10 +28,12 @@ export async function startWorld() {
     const s = session.value;
     const r = route.value;
     scene?.attach(r === 'battle' ? s : null);
-    host.world.visible = r !== 'title';
+    host.world.visible = true; // the title sits over the living diorama
     // the DOM moves when the route changes; re-measure after it lays out
     requestAnimationFrame(() => scene?.layout());
   });
+  if (import.meta.env.DEV || location.search.includes('scene=')) (window as unknown as { __scene?: unknown }).__scene = scene;
+  bakePortraits();
   host.app.ticker.add((t) => {
     const dt = t.deltaMS;
     const s = session.value;
