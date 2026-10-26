@@ -59,7 +59,7 @@ export function rankSpread<T extends { id: number; side: 'player' | 'enemy'; x: 
       const back = side === 'player' ? -1 : 1;
       // depth: alternate above/below the lane centre so a group fans out vertically too
       const depth = r === 0 ? 0 : r === 1 ? -18 : 18;
-      out.set(u.id, { dx: back * r * 16, depth: depth + ((u.id * 7) % 11) - 5 });
+      out.set(u.id, { dx: r === 0 ? 0 : back * r * 16, depth: depth + ((u.id * 7) % 11) - 5 });
     }
   }
   return out;

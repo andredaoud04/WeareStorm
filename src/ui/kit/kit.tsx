@@ -15,7 +15,8 @@ export function useCountUp(value: number, ms = 600): number {
     const start = performance.now();
     let raf = 0;
     const step = (now: number) => {
-      const f = Math.min(1, (now - start) / ms);
+      // rAF timestamps can be earlier than the performance.now() taken above: clamp, or the first frame goes negative
+      const f = Math.max(0, Math.min(1, (now - start) / ms));
       const e = 1 - Math.pow(1 - f, 3);
       setShown(Math.round(from.current + (value - from.current) * e));
       if (f < 1) raf = requestAnimationFrame(step);

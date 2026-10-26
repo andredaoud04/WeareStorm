@@ -68,7 +68,7 @@
 .btn:active::after, .btn.pressed::after { transform: translateY(var(--lip)); }
 .btn:active > *, .btn.pressed > * { transform: translateY(var(--lip)); }
 .btn.l { --h: calc(64 * var(--pt)); --lip: calc(6 * var(--pt)); --r: calc(20 * var(--pt)); font-size: calc(28 * var(--pt)); padding-left: calc(30 * var(--pt)); padding-right: calc(30 * var(--pt)); }
-.btn.s { --h: calc(40 * var(--pt)); --lip: calc(4 * var(--pt)); --r: calc(12 * var(--pt)); font-size: calc(17 * var(--pt)); padding-left: calc(14 * var(--pt)); padding-right: calc(14 * var(--pt)); min-width: calc(48 * var(--pt)); }
+.btn.s { --h: calc(44 * var(--pt)); --lip: calc(4 * var(--pt)); --r: calc(12 * var(--pt)); font-size: calc(17 * var(--pt)); padding-left: calc(14 * var(--pt)); padding-right: calc(14 * var(--pt)); min-width: calc(48 * var(--pt)); }
 .btn.green { --face: var(--c-green500); --lipc: var(--c-green700); }
 .btn.gold { --face: var(--c-gold400); --lipc: var(--c-gold600); }
 .btn.purple { --face: var(--c-purple500); --lipc: var(--c-purple700); }
@@ -77,7 +77,7 @@
 .btn.grey, .btn:disabled { --face: var(--c-grey400); --lipc: var(--c-grey600); cursor: default; }
 .btn:disabled .lbl { opacity: .7; }
 .btn:disabled::after { background: linear-gradient(180deg, var(--c-grey400), var(--c-grey400)); }
-.btn.icon-only { min-width: 0; width: calc(var(--h)); padding: 0 0 var(--lip); }
+.btn.icon-only { min-width: 0; width: calc(var(--h) + var(--lip)); padding: 0 0 var(--lip); }
 .btn.hl { animation: breathe 1.8s cubic-bezier(.22, 1, .36, 1) infinite; }
 .btn.hl .shine {
   position: absolute; z-index: 2; inset: 0 0 var(--lip); border-radius: var(--r); overflow: hidden; pointer-events: none; transform: none;

@@ -5,6 +5,7 @@ import { STAGES, stageDef } from '../../data/stages';
 import { mustEvolve } from '../../meta/progress';
 import { Icon } from '../kit/icons';
 import { Button, Pill, TabBar } from '../kit/kit';
+import { MAX_AGE } from './Ages';
 
 /** Hub, the Battle tab (UX §2): the diorama lives in the Pixi world behind this layer. */
 export function Hub() {
@@ -37,6 +38,11 @@ export function Hub() {
           <>
             <div class="cta-sub t-display">CAMPAIGN COMPLETE</div>
             <Button size="l" tone="gold" icon="star" label="Replay OMEGA Core" highlight onPress={() => play(30)} testId="battle" />
+          </>
+        ) : evolveFirst && age.index >= MAX_AGE ? (
+          <>
+            <div class="cta-sub t-display" data-testid="coming-soon">{age.name.toUpperCase()} IS COMING SOON</div>
+            <div class="cta-sub">You beat every battle of this build. Thanks for playing!</div>
           </>
         ) : evolveFirst ? (
           <>

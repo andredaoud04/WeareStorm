@@ -6,13 +6,13 @@ import { canEvolve, evolvePrice, mustEvolve } from '../../meta/progress';
 import { Icon } from '../kit/icons';
 import { Button, Panel, Pill } from '../kit/kit';
 
+/** Ages playable in this build. All six run on placeholder art; the G1 owner build sets VITE_MAX_AGE=1 (Stone). */
+export const MAX_AGE = Math.max(1, Math.min(6, Number(import.meta.env.VITE_MAX_AGE ?? 6)));
+
 /**
  * Ages (UX §6): the six-Age track and the Evolve button. Evolve is free once this Age's Warlord is beaten; before
- * that it can be bought early for Gold (GDD §3.5). G1 ships the Stone Age only (MAX_AGE), so later Ages read
- * "coming next".
+ * that it can be bought early for Gold (GDD §3.5). Ages past MAX_AGE read "coming next".
  */
-export const MAX_AGE = 1; // Ages playable in this build (Stone only until M2)
-
 export function Ages() {
   const s = save.value;
   const cur = ageDef(s.armyAge);

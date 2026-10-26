@@ -3,6 +3,7 @@ import type { Slot } from '../../contracts';
 import { session, type BattleSession } from '../../app/battleController';
 import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
 import { rosterOf } from '../../data/units';
+import type { SaveV1 } from '../../meta/save';
 import { Icon, type IconName } from '../kit/icons';
 import { Bar, Button, Pill, Sheet } from '../kit/kit';
 
@@ -65,11 +66,13 @@ function Hud({ s }: { s: BattleSession }) {
         <FoodPanel s={s} food={hud.food} rate={hud.foodRate} />
         <div class="cards">
           {owned.map((slot) => (
-            <DeckCard key={slot} s={s} slot={slot} queued={hud.queue[slot]} coach={coach && slot === 'melee'} disabled={ended} />
+            <div key={slot} class="card-slot">
+              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} coach={coach && slot === 'melee'} disabled={ended} />
+              {coach && !ended && slot === 'melee' && <Coach />}
+            </div>
           ))}
         </div>
       </div>
-      {coach && !ended && <Coach />}
       {sheet.value === 'pause' && <PauseSheet s={s} />}
       {sheet.value === 'retreat' && <RetreatSheet s={s} />}
     </div>
@@ -253,7 +256,7 @@ function RetreatSheet({ s }: { s: BattleSession }) {
   );
 }
 
-export function Toggles({ set }: { set: ReturnType<typeof getSettings> }) {
+export function Toggles({ set }: { set: SaveV1['settings'] }) {
   const canVibrate = typeof navigator !== 'undefined' && 'vibrate' in navigator;
   const rows: { k: keyof typeof set; label: string; icon: IconName }[] = [
     { k: 'sound', label: 'Sound', icon: 'sound' },
@@ -273,10 +276,6 @@ export function Toggles({ set }: { set: ReturnType<typeof getSettings> }) {
       ))}
     </div>
   );
-}
-
-function getSettings() {
-  return save.value.settings;
 }
 
 /** Leaves the battle screen (Results' Home / Next / Upgrade buttons call this after settling). */
