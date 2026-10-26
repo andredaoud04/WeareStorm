@@ -59,8 +59,8 @@ UPPERCASE banners, never more than ~8 words on a main screen.
 - Badges: Army shows count of affordable upgrades; Ages glows when Evolve is ready.
 - Gold pill bumps and counts up whenever Gold changes.
 - **Campaign complete** (after OMEGA Core, `campaignStage` 31): the age chip reads "CAMPAIGN COMPLETE" and the pips are all
-  filled. The BATTLE button opens a stage picker sheet listing the Future stages 26–30 as replays ("50% bonus" chip) plus a
-  disabled "Storm Surge — coming soon" card. There is no dead end.
+  filled. The BATTLE button opens a stage picker sheet listing the Future stages 26–30 as replays ("50% bonus" chip; the only
+  stages that can be replayed) plus a disabled "Storm Surge — coming soon" card. There is no dead end.
 - **G1 build (`MAX_AGE = 1`)**: after Chief Grumbo, EVOLVE! plays the evolution cinematic and lands on the Ages screen with
   an "ANCIENT AGE — coming next" panel; no Ancient battle can start (BUILD_PLAN Gate G1).
 
@@ -87,7 +87,8 @@ written by the frame loop; text updates through signals at ≤ 10 Hz (TECH §4).
 - **Deck**: height **12 + 120 + 12 = 144 pt × uiScale** at every size (138 pt at 375 wide, 144 at 390, 194 on iPad), plus
   the bottom safe inset. The same rule everywhere; there is no separate small-phone deck.
 - **Stormcall ring**: a 64-pt ring button straddling the deck's top edge (half above, half on the deck) at the right
-  margin. The reserved Hero ring (hidden in v1) mirrors it at the left margin.
+  margin. A tap with no hostile on the lane (`stormcallNoTarget`) shakes the ring and plays the soft "nope"; it stays
+  charged. The reserved Hero ring (hidden in v1) mirrors it at the left margin.
 - **Deck cards** (84 × 120): static unit bust (TECH §5), cost chip, fill-from-bottom while filling (a CSS variable written
   every frame), "READY" pop once, queued pips, "MAX" at army cap, shake + "nope" on failed tap. Locked slots are absent
   (cards centre-align).

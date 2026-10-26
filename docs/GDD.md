@@ -2,15 +2,16 @@
 
 Status: **design baseline for v1**, assembled 2026-10-13 from the "Feel First" proposal (game design) with the "Visual Craft"
 proposal's lane geometry, reconciled below. Revision 1.1 of the pack (2026-10-25) applies the lead's decisions after the critic review; the
-gameplay numbers now match the code on `claude/m1b-sim` (`src/data/*.ts`, `src/sim/battle.ts`, `src/meta/progress.ts`) and
+gameplay numbers now match the code on `claude/m1b-sim` at `e1c84e6` (`src/data/*.ts`, `src/sim/battle.ts`, `src/meta/progress.ts`) and
 are calibrated by the real harness (`docs/BALANCE.md` §4.7). Owner choices: **clean cartoon art everywhere** and **We Are
 Warriors-style core loop first**, six Ages kept. Everything is original (names, art, text, code); WAW is a genre reference only.
 
 ## Reconciliation (authoritative where it differs from the sections below)
 
 1. **Lane geometry (single source of truth for sim AND art).** 1 art unit = 1 world unit (wu). Player gate face at **x = 0**,
-   enemy gate face at **x = 1000**. Player base footprint x ∈ [−260, 0]; enemy base mirrored at [1000, 1260]. Player units
-   spawn at x = −20, enemy units at x = 1020. Sim body widths are the art's bounding width minus 4 wu, so clashing heads
+   enemy gate face at **x = 1000**. Player base footprint x ∈ [−260, 0]; enemy base mirrored at [1000, 1260]. Units spawn
+   fully behind their own gate: player x = min(−20, −width/2), enemy x = max(1020, 1000 + width/2), so a new unit never
+   overlaps a hostile standing at the gate. Sim body widths are the art's bounding width minus 4 wu, so clashing heads
    never overlap: **melee 60, ranged 52, tank 88, quadruped/vehicle 120** (Tusker, Knight, Landship), **Warlord 210**.
    Distances are **edge to edge**: `gap(a,b) = |xa − xb| − (wa + wb)/2`; the base edge is its gate face. Art heights:
    troop 150, tank 200, Warlord 380, base tower ≈ 520.
@@ -55,7 +56,7 @@ Warriors-style core loop first**, six Ages kept. Everything is original (names, 
 ## 0. TL;DR — the decisions that matter
 
 1. **The whole lane is visible and the camera never scrolls.** One horizontal lane spans the screen width. Your base is at the left edge and the enemy base at the right. Troops are about 44 pt tall on a phone and 70 pt on iPad. Each fight lasts 3–6 s, so a player can read it at a glance.
-2. **Battles have three phases and always end.** First an *authored assault*: a finite script whose window ends at 30–40 s. Then a light *trickle* of reinforcements, plus one *rally* when the enemy base drops below 50%. Then **"Storm Rising"** overtime from 100 s: both sides deal more damage over time, and from 120 s bases take double damage and the trickle stops. A 600 s hard stop counts as a defeat. The harness measures a median battle of 93 s and P99 of 128 s; Storm Rising is reached in 15% of regular battles and 74% of Warlord battles.
+2. **Battles have three phases and always end.** First an *authored assault*: a finite script whose window ends at 30–40 s. Then a light *trickle* of reinforcements, plus one *rally* when the enemy base drops below 50%. Then **"Storm Rising"** overtime from 100 s: both sides deal more damage over time, and from 120 s bases take double damage and the trickle stops. A 600 s hard stop counts as a defeat. The harness measures regular battles at P50 82 s / P99 131 s and Warlord battles at P50 116 s / P99 163 s; Storm Rising is reached in 25% of regular battles and 91% of Warlord battles.
 3. **The fixed-step sim resolves all hits at once.** It runs at 20 Hz (50 ms ticks). Food is stored as integer milli-food. Each attack has a windup, then an impact, then recovery. All damage in a tick is applied together. The renderer interpolates between ticks and uses the same windup timing, so the strike animation lands on the same frame as the damage.
 4. **Locked rules are kept exactly.** Food starts at 0 and Stone Age makes 1 Food/s. Stone troops cost 5/8/12. Kills give 1 Gold (normal) or 5 Gold (tank), plus base-damage Gold. You keep Gold when you lose. Gold only comes from campaign battles. There are six Ages, at most three troop cards, and a new player owns only the Stone melee troop.
 5. **The campaign is 30 stages: 6 Ages × 5 stages.** Stage 5 of each Age is a **Warlord** boss. The Warlord shields its base with a *ward* until you kill it. Beating the Warlord makes Evolution **free**; before that, an early Evolve costs Gold (180 / 420 / 820 / 1,450 / 2,500), so saving up to evolve is a real Gold goal.
@@ -76,7 +77,7 @@ Warriors-style core loop first**, six Ages kept. Everything is original (names, 
 | P1 | **Tap → Clash → Crumble** | Every tap gives visible feedback in the same frame, and a unit steps out within 250 ms. Every hit flashes; hits the player deals also show a number (§2.14). Every base falls with a big moment. | Input-latency e2e test; the polish checklist (ART_BIBLE §5.17) |
 | P2 | **Always a next upgrade** | After at least 80% of battles in the first 30 minutes, the player can afford something. Numbers visibly go up. | Harness CI row "affordable after battle ≥ 80%" (measured 92%) |
 | P3 | **Lose forward** | A defeat still pays Gold, and the defeat screen says what to upgrade. Each consecutive loss on the frontier stage weakens the next attempt (§2.11). There are no timers, no energy and no paywalls. | Harness CI: zero-Gold losses < 5%; Warlord-stage loss Gold P50 ≥ 20; consecutive losses P90 ≤ 3 |
-| P4 | **Ages you can feel** | Each Evolution brings a new world, base, troops, music and sounds, much bigger numbers, and a ceremony. The first stage of the new Age is visibly easier (§3.5). | Evolution-spike assertion: stage 1 of each later Age has ≥ 85% first-attempt win rate (measured 89%) |
+| P4 | **Ages you can feel** | Each Evolution brings a new world, base, troops, music and sounds, much bigger numbers, and a ceremony. The first stage of the new Age is visibly easier (§3.5). | Evolution-spike assertion: stage 1 of each later Age has ≥ 85% first-attempt win rate, each ≥ 75% (measured 95%) |
 | P5 | **One clean cartoon world** | One art bible and one UI kit cover everything, and everything is drawn in code. Bold outlines and bright flat colours look crisp at any DPR. | Screenshot matrix review; `npm run art:lint` (ART_BIBLE §5.16 step 5) |
 
 ### 1.2 Moment-to-moment loop (inside a battle)
@@ -106,7 +107,7 @@ Optional: toggle ×2 speed when you are confident.
 | 6–40 s | Assault | The authored waves arrive and the front line moves back and forth. A tank or the Age's signature unit appears. The window ends at 30 + 2·ageIdx s. |
 | 30–60 s | Turning point | The script ends and the trickle starts, spending less than half the player's Lv 1 Food rate. The player's army builds up. Hitting the enemy base below 50% triggers the **rally**. |
 | 60–100 s | Push & Crumble | The enemy base breaks. The game slows down, the camera punches in, and the base collapses. VICTORY. |
-| 100 s+ | Storm Rising | The sky darkens, rain falls, and damage ramps up for both sides so stalemates cannot drag on (15% of regular battles get here; most Warlord battles do). |
+| 100 s+ | Storm Rising | The sky darkens, rain falls, and damage ramps up for both sides so stalemates cannot drag on (25% of regular battles get here; 91% of Warlord battles do). |
 
 ### 1.3 Between-battle loop (meta)
 
@@ -126,7 +127,7 @@ Optional: toggle ×2 speed when you are confident.
 
 ### 1.4 Session flow
 
-* A loop (battle, results, upgrade) takes about **115 s** at ×1 speed (a 93 s median battle plus about 22 s of results and menus) and about 70 s at ×2.
+* A loop (battle, results, upgrade) takes about **105 s** at ×1 speed (an 82 s median regular battle plus about 22 s of results and menus) and about 65 s at ×2.
 * A typical session is **5–15 minutes, or 3–8 battles**. Age boundaries (the Warlord, then Evolution) are natural stopping points.
 * There is no energy, no timers and no daily gate in v1. Cold start to battle takes under 3 s on a mid phone. Resuming the app returns the player exactly where they were. A battle in progress auto-pauses when the app is hidden (§2.13).
 
@@ -146,10 +147,10 @@ Optional: toggle ×2 speed when you are confident.
 | ≈4:40 | Results → Hub | The **Rockhide (tank) unlock, 70 Gold**, is usually affordable now or after Battle 4. If so, it is pointed out (unlocks come first in `recommendUpgrade()`). | Tank role |
 | ≈5:10 | **Battle 4** | The **Stormcall** ring appears and charges (it unlocks once stage 3 is cleared). When it is full, a hand pointer and *"Call the storm!"* appear, then lightning hits, enemies scatter and coins burst out. At 30 s the enemy fields its first tank, an authored insert (§3.4). | Stormcall |
 | ≈6:40 | **Battle 5 — WARLORD** | At 12 s: slow-motion, a banner reading "CHIEF GRUMBO APPROACHES!", a boss HP bar, and a shimmering ward on the enemy base. Nimbus: *"Beat the Warlord to break the ward!"* Hits on Grumbo pay Gold even while the ward holds (§2.11). | Bosses, ward |
-| ≈8:00 | Win, or lose then retry | **Loss:** a calm DEFEAT screen: *"You keep 22 Gold — upgrade and try again!"* (a lost Warlord fight pays about 20–25 Gold; the harness measures P50 22). The primary button is UPGRADE, which teaches the lose, upgrade, retry loop, and the retry is 6% easier (§2.11). **Win:** "WARLORD DEFEATED", then a giant "EVOLVE!" button. | Losing forward |
+| ≈8:00 | Win, or lose then retry | **Loss:** a calm DEFEAT screen: *"You keep 21 Gold — upgrade and try again!"* (a lost Warlord fight pays about 20–25 Gold; the harness measures P50 21). The primary button is UPGRADE, which teaches the lose, upgrade, retry loop, and the retry is 6% easier (§2.11). **Win:** "WARLORD DEFEATED", then a giant "EVOLVE!" button. | Losing forward |
 | ≈9–13 min | **Evolution ceremony** | Storm clouds, lightning on the base, the troops transform, and the "ANCIENT AGE" title card slams in. | Ages |
 
-The harness (PR #2, 30 casual campaigns, 22 s of overhead per battle) measures the first Evolution at **P50 11.0 min and P90 12.6 min**. The CI band is P50 8–14 min and P90 ≤ 18 min (BALANCE §4.7).
+The harness (`e1c84e6`, 30 casual campaigns, 22 s of overhead per battle) measures the first Evolution at **P50 11.7 min and P90 14.5 min**. The CI band is P50 8–14 min and P90 ≤ 18 min (BALANCE §4.7).
 
 ### 1.6 Deliberately not in v1
 
@@ -164,7 +165,7 @@ Cards, skill collections, Heroes, Dungeons, Gems, a shop, ads and IAP, daily rew
 The numbers live in Reconciliation §1–1b; this is the summary.
 
 * **World units (wu).** The sim is one-dimensional: every unit and base has an x and nothing else. Positions are stored as integer milli-wu.
-* **Player gate face at x = 0, enemy gate face at x = 1000.** Player units spawn at x = −20 and enemy units at x = 1020, so the marching distance between gate faces is 1000 wu. Distances are edge gaps between body widths (melee 60, ranged 52, tank 88, quadruped/vehicle 120, Warlord 210).
+* **Player gate face at x = 0, enemy gate face at x = 1000.** Units spawn fully behind their own gate (player x = min(−20, −width/2), enemy x = max(1020, 1000 + width/2)), so the marching distance between gate faces is 1000 wu. Distances are edge gaps between body widths (melee 60, ranged 52, tank 88, quadruped/vehicle 120, Warlord 210).
 * **Rank spread and depth band (cosmetic only).** Same-side units within 8 wu of each other are drawn up to 3 ranks deep (16 wu apart), with a ±30 wu render-y depth band and z-sort by render y. This has **no gameplay effect**; it keeps a growing army readable.
 * **Camera.** Static, centred on x = 500, with `ptPerWu = clamp(viewportW / 1340, 0.27, 0.467)`: troops are 44 pt tall at 390 pt wide and 70 pt on iPad. Wider screens show more world at the sides.
 * **Ground line:** `groundY = deckTop − clamp(0.10 × viewportH, 48, 120)` pt. The space above is sky, where the storm and lightning happen.
@@ -224,10 +225,9 @@ Each tick runs in two phases.
   * **Target** = the nearest hostile unit by edge gap that is within `range`. Ties go to the lower id.
   * Otherwise, the hostile **base**, if its gate face is within `range`.
   * Otherwise, no target.
-* **ACT.**
-  * A unit that is mid-attack stays committed and does not move.
-  * A unit with a target and its cooldown at 0 starts an attack.
-  * A unit with no target moves forward `speed / 20` wu, clamped so it never passes the hostile gate face or a hostile unit.
+* **ACT** runs in two passes, so the result never depends on the order of the unit list (a regression test replays every tick with the list reversed):
+  * **Pass A:** every impact and every new attack start is resolved against the **start-of-tick positions**; nobody has moved yet. A unit that is mid-attack stays committed and does not move. A unit with a target and its cooldown at 0 starts an attack.
+  * **Pass B:** every unit with no target moves forward `speed / 20` wu, clamped so it never passes the hostile gate face or a hostile unit's start-of-tick position.
   * Units **do not collide with allies**, so allies can share an x; the rank spread (Reconciliation §1b) keeps them readable. They **cannot pass enemies**, because they stop as soon as an enemy is in range.
 
 Since the nearest hostile is always the front-most one, ranged units naturally shoot the front line and then the base.
@@ -242,13 +242,13 @@ Since the nearest hostile is always the front-most one, ranged units naturally s
   * A **splash** projectile explodes at the target's current position, or its last known x, and hits every hostile within the radius (`projectileEnd` result `explode` with `r`). It hits the base too if the gate face is within the radius.
 * **Damage applied** = `round(dmg × stormMult × (1 − armor))`, with a minimum of 1. HP is an integer.
 * **Tick order (fixed):**
-  1. Apply commands.
+  1. Apply commands (a retreat ends the tick at once; commands after it in the same tick are ignored).
   2. Release the spawn queue.
   3. Enemy script spawns.
   4. Food.
   5. SENSE.
-  6. ACT (move, start attacks).
-  7. Impacts produce damage events.
+  6. ACT pass A: impacts produce damage events and new attacks start, all against start-of-tick positions.
+  7. ACT pass B: free units move.
   8. Projectile arrivals and the Stormcall strike produce damage events.
   9. **APPLY all damage events at once.**
   10. Remove deaths together and grant rewards.
@@ -262,7 +262,7 @@ Since the nearest hostile is always the front-most one, ranged units naturally s
 ### 2.8 Bases
 
 * **Player base HP** = Age base HP × (1 + 0.15 × (BaseLv − 1)). Age base HP: Stone 400, Ancient 880, Medieval 1,920, Gunpowder 4,200, Industrial 9,200, Future 20,000.
-* **Enemy base HP** = Age base HP × (1 + 0.1 × stageIdx), and × 1.25 on Warlord stages. stageIdx runs 0–4. Stone values: 400 / 440 / 480 / 520 / 700.
+* **Enemy base HP** = Age base HP × `ENEMY_BASE_SHARE` (0.8) × (1 + 0.1 × stageIdx), and × 1.25 on Warlord stages. stageIdx runs 0–4. Stone values: 320 / 352 / 384 / 416 / 560. The final push is the payoff of a won battle, so it is kept short; base Gold is still per 5%.
 * **Bases are passive in v1** (no turrets). This keeps the fighting in the middle of the lane. A "Base Cannon" upgrade is a possible later sink.
 * **Damage states** (visual): Intact > 66%, Cracked 66–33%, Burning < 33%, then a collapse sequence at 0 (ART_BIBLE §5.9).
 * **Warlord ward.** On Warlord stages the enemy base is invulnerable until the Warlord dies. It shows a pulsing red hex bubble, and hits on it produce "ting" sparks and no numbers (the `hit` event carries `blocked: 'ward'` and amount 0). When the Warlord dies the ward **shatters** and a "WARD BROKEN!" toast appears. While the ward holds, damage to the Warlord pays Gold instead of base damage (§2.11).
@@ -275,18 +275,18 @@ Each stage is a data record (`StageDef` in `src/data/stages.ts`, TECH §3). Stag
 * **Pattern tokens.** `m`, `r` and `t` are the melee, ranged and tank of the stage's `enemyAge` roster; `M` is the stage Age's own melee. `enemyAge` is the stage's Age everywhere except stage 1 of each later Age (§3.4, §3.5).
 * **Inserts.** Authored set pieces added on top of the budget, so a calibrator change to E can never delete them: stage 4 one Rockhide at 30 s; stage 8 two tanks at 28 s; stage 12 one tank at 25 s; stages 17 and 22 two ranged at 25 s.
 * **Trickle.** After the assault ends, the enemy cycles the stage pattern with tanks removed, spending `TRICKLE_SHARE = 0.45` × the stage Age's Lv 1 Food rate, with at least 4 s between units (Stone stage 3: one unit about every 14 s). The share is independent of E, so after the assault the player always out-produces the enemy. Battle 1: one Clubber every 10 s, never a Slinger. The trickle stops when bases start taking double damage (120 s).
-* **Rally.** Once, when enemy base HP first drops below 50%, a pack of `min(4, 1 + stageIdx)` units spawns at once (none in Battle 1) with a horn sound and an "ENEMY RALLY!" toast.
+* **Rally.** Once, when enemy base HP first drops below 50%, a pack of `min(4, 1 + stageIdx)` units spawns at once (none in Battle 1) with a horn sound and an "ENEMY RALLY!" toast. The pack is capped by the 30-unit enemy field limit (the `rally` event reports the real size), never spawns on the tick the enemy base falls, and is staggered outward behind the gate (+30 wu per rank, three ranks).
 * **Warlord.** Spawns at 12 s on stage 5 of each Age (OMEGA Core at 10 s), with an intro banner (UX §3) and the `warlordIntro` clip (ART_BIBLE §5.8).
 * **Enemy field cap: 30.** Enemy units use the `enemyAge` roster at Lv 1 × the stage stat multiplier: 0.8 on Battle 1, otherwise 1.0. The lose-forward assist (§2.11) and later Timelines (§3.7) multiply further.
 
-The authored part is finite and the trickle spends less than half of a Lv 1 player's Food rate, so **a player who keeps deploying always wins eventually**. The old repo had endless 3.5 s spawns that a 1 Food/s player could not beat; this structure cannot repeat that. The rally and Storm Rising prevent "dead" endings and stalemates.
+The authored part is finite and the trickle spends less than half of a Lv 1 player's Food rate, so **a player who keeps deploying always wins eventually**. The old repo had endless 3.5 s spawns that a 1 Food/s player could not beat; this structure cannot repeat that. The rally and Storm Rising prevent "dead" endings and stalemates. **The assault stays one continuous stream.** Wave-based assaults (three separate waves) were tried and rejected: battles got longer and distracted players did no better (BALANCE §4.9).
 
 ### 2.10 Overtime — "Storm Rising" (anti-stalemate, on-brand)
 
 * From **100 s**, all damage is multiplied by **(1 + 0.2·k)**, where k = 1 + floor((t − 100 s) / 10 s). So ×1.2 at 100 s, ×1.4 at 110 s, and so on.
 * From **120 s**, bases take **×2** damage and the enemy trickle stops.
 * At **600 s** the battle hard-stops and counts as a defeat. This is a safety stop, far beyond the measured P99.
-* Presentation: the sky darkens in steps, rain starts, thunder rolls, and a small "STORM RISING 1/2/3" chip with the kit bolt icon appears under the stage chip. The rule is symmetric. It makes long battles dramatic instead of dull. The harness measures it in 15% of regular-stage battles and 74% of Warlord battles: the storm is meant to rise during boss fights and stay special elsewhere. Battle duration P99 is 128 s (CI bar ≤ 165 s).
+* Presentation: the sky darkens in steps, rain starts, thunder rolls, and a small "STORM RISING 1/2/3" chip with the kit bolt icon appears under the stage chip. The rule is symmetric. It makes long battles dramatic instead of dull. The harness measures it in 25% of regular-stage battles and 91% of Warlord battles: the storm is meant to rise during boss fights and stay special elsewhere. Regular battles end at P99 131 s (CI bar ≤ 160 s) and Warlord battles at P99 163 s (bar ≤ 190 s).
 
 ### 2.11 Win, lose, retreat and rewards
 
@@ -294,21 +294,21 @@ The authored part is finite and the trickle spends less than half of a Lv 1 play
 * **Gold earned during the battle is always kept** (locked rule):
   * **Kills:** 1 Gold per normal kill, 5 per tank, 25 per Warlord.
   * **Base damage:** +1 Gold for each full 5% of enemy base max HP removed, up to 20.
-  * **Warlord ward Gold:** while the ward is up, damage to the Warlord pays instead: +1 Gold per full 5% of the Warlord's max HP removed (max 20; killing it pays any of the 20 not yet paid), plus the 25 kill Gold. After the ward breaks, base damage pays the normal +1 per 5% (max 20). A lost Warlord fight therefore still pays about 20–25 Gold (harness P50 22).
-  * **Victory bonus (first clear only):** regular stages **12 + 4·stageIdx + 3·ageIdx**; Warlord stages **40 + 15·ageIdx** (Stone 40, Future 115). Replays pay 50% (rounded down). In v1 the UI offers replays once the campaign is complete (§3.4); Storm Surge adds more (§3.7).
+  * **Warlord ward Gold:** while the ward is up, damage to the Warlord pays instead: +1 Gold per full 5% of the Warlord's max HP removed (max 20; killing it pays any of the 20 not yet paid), plus the 25 kill Gold. After the ward breaks, base damage pays the normal +1 per 5% (max 20). A lost Warlord fight therefore still pays about 20–25 Gold (harness P50 21).
+  * **Victory bonus (first clear only):** regular stages **12 + 4·stageIdx + 3·ageIdx**; Warlord stages **40 + 15·ageIdx** (Stone 40, Future 115). Replays pay 50% (rounded down). **The campaign is played in order:** only the frontier stage (or a retry of it) can be started; earlier stages cannot be replayed for Gold. Once stage 30 is cleared, the Future stages 26–30 open as replays (§3.4); Storm Surge adds more (§3.7).
 * **Lose-forward assist.** Each consecutive loss (or retreat) on the current frontier stage takes 6% off the enemy's HP and DMG **and** 6% off its assault budget, capped at 30% (five losses). It resets on a win and applies only on the frontier stage, never on replays.
-* **Settlement is atomic** and keyed by `battleId`, so it is idempotent (TECH §6). A battle in progress writes a checkpoint of earned Gold every 5 s. If the app is killed, the next launch settles it as a retreat with that Gold. A crash never costs progress.
+* **Settlement is atomic** and keyed by `battleId`, so it is idempotent: the last 16 battle ids are remembered, a non-finite or negative Gold or duration counts as 0, and a stage the player has not reached is refused (TECH §6). A battle in progress writes a checkpoint of earned Gold every 5 s. If the app is killed, the next launch settles it as a retreat with that Gold. A crash never costs progress.
 
 ### 2.12 Stormcall (the one v1 special)
 
 * **Unlocks** once stage 3 is cleared, so it is available from Battle 4. It is a 64-pt ring button straddling the deck's top edge at the right margin (UX §3).
 * **Charge:** starts empty and is first ready at 25 s. The cooldown after each strike is 30 s. The ring fills clockwise and pulses plus chimes when full (`stormcallCharged`).
-* **Use:** one tap, **auto-aimed at the x that catches the most hostiles within the radius** (the Warlord counts as 3; ties go to the point nearer the player base). The candidate centres are each hostile's x and x + radius, so the strike can centre on a clump instead of its lead unit. The tap starts a 0.5 s gather (clouds build, ground marker): the sim emits `stormcallCast {x, radius, strikeTick}`, then strikes **once** (`stormcallStrike`):
+* **Use:** one tap, **auto-aimed at the x that catches the most hostiles within the radius** (the Warlord counts as 3; ties go to the point nearer the player base). The candidate centres are each hostile's x and x + radius, so the strike can centre on a clump instead of its lead unit. With no hostile on the lane the tap does nothing but emit `stormcallNoTarget`: the ring stays charged and shakes. Otherwise the tap starts a 0.5 s gather (clouds build, ground marker): the sim emits `stormcallCast {x, radius, strikeTick}`, then strikes **once** (`stormcallStrike`):
   * Every hostile unit within 104 wu of that x (plus half its body width) takes **2 × the army Age's Lv 1 melee HP** (2 × 60 × A): 120 in Stone, enough to kill a melee or ranged Lv 1 unit and to half-kill a tank.
-  * The Warlord takes **50% of that damage** (60 in Stone, about 4% of Chief Grumbo's 1,587 HP at the calibrated `bossMult` 1.526).
+  * The Warlord takes **50% of that damage** (60 in Stone, about 3% of Chief Grumbo's 1,876 HP at the calibrated `bossMult` 1.804).
   * Bases are immune.
   * Visually it is three bolts over 0.4 s; the damage is a single impact event.
-* No upgrades in v1; it scales with Army Age. If it is not unlocked, no ring is shown. The casual harness bot taps it when the aim would catch a weight of at least 3.
+* No upgrades in v1; it scales with Army Age. If it is not unlocked, no ring is shown. The casual and average harness bots tap it when the aim would catch a weight of at least 3.
 * **Why it is in v1:** lane battlers can feel passive when Food is low. One dramatic, readable, comeback-capable button adds a "clutch" moment every 30 s. It is **built in M1** (sim in 1B, ring and VFX in 1C/1D, juice in 1E; BUILD_PLAN) and is not behind a feature flag.
 
 ### 2.13 Speed-up and pause
@@ -408,28 +408,28 @@ Enemy units of the same Age have the same traits; the game is symmetric. Every t
 * The Hub shows **"Battle N"** with a subtitle and five pips for the current Age (the fifth is the kit skull icon).
 * **Stage 1 of every later Age (stages 6, 11, 16, 21, 26) fields the previous Age's roster** (`enemyAge`) with pattern `mmrmtM`: one melee of the new Age per cycle. The enemy base is the new Age's. This is the evolution power spike (§3.5).
 
-| # | Age | Title | Enemy pattern (assault) | Seed E* | Calibrated (PR #2)† | Notes / new thing |
+| # | Age | Title | Enemy pattern (assault) | Seed E* | Calibrated (`e1c84e6`)† | Notes / new thing |
 |---|---|---|---|---|---|---|
 | 1 | Stone | First Hunt | `m` | **0.6, pinned** (enemy ×0.8, assault window 10–30 s, trickle one Clubber every 10 s, no rally) | not calibrated | Tutorial win; lazy and slow-tapper bots must win ≥ 98% |
-| 2 | Stone | Sling Ridge | `mmr` | 0.85 | E 1.136 | Enemy slingers |
-| 3 | Stone | Boulder Pass | `mmrmr` | 0.75 | E 1.363 | ×2 speed unlocked |
-| 4 | Stone | Rockhide Rumble | `mmrtmr` | 0.80 | E 2.423 | First enemy tank. **Insert: one Rockhide at 30 s.** Stormcall available (stage 3 cleared) |
-| 5 | Stone | **WARLORD: Chief Grumbo** | `mmrmr` + Warlord at 12 s | 0.30 | bossMult 1.526 | Ward, boss bar, ward Gold |
-| 6 | Ancient | Bronze Dawn | `mmrmtM`, Stone roster | 1.2 | E 4.025 | Evolution showcase; must feel easy (≥ 85% first try) |
-| 7 | Ancient | Javelin Shore | `mrmrt` | 1.15 | E 2.727 | Javelin arcs |
-| 8 | Ancient | Temple Steps | `mmrtr` | 1.20 | E 2.784 | Insert: two Tuskers at 28 s (Cleave lesson) |
-| 9 | Ancient | Tusker Trail | `mrtmrt` | 1.20 | E 3.618 | |
-| 10 | Ancient | **WARLORD: Bronze Colossus** | `mmrmr` + Warlord at 12 s | 0.35 | bossMult 2.522 | |
-| 11–15 | Medieval | Banner Hill · Bolt Woods · Moat Crossing · Lance Charge · **WARLORD: Baron Blackmace** | same stageIdx pattern set (stage 11 uses the Ancient roster) | 1.2 · 1.15 · 1.20 · 1.20 · 0.35 | E 3.06 · 1.704 · 2.727 · 2.917 · bossMult 2.624 | Insert on stage 12: one Knight at 25 s (Charge lesson) |
-| 16–20 | Gunpowder | Powder Bay · Bomb Bluff · Corsair Cove · Anchor's Edge · **WARLORD: Admiral Kaboom** | ″ (stage 16: Medieval roster) | ″ | E 2.86 · 2.197 · 2.917 · 3.05 · bossMult 2.654 | Insert on stage 17: two Bombardiers at 25 s (teaches "don't clump", read via explosions) |
-| 21–25 | Industrial | Smoke Yard · Rail Junction · Gear Works · Landship Ridge · **WARLORD: Iron Juggernaut** | ″ (stage 21: Gunpowder roster) | ″ | E 3.675 · 1.969 · 2.746 · 2.841 · bossMult 2.449 | Insert on stage 22: two Gunners at 25 s (gunner nest) |
-| 26–30 | Future | Neon Outskirts · Pulse Plaza · Arc Bridge · Titan Foundry · **WARLORD: OMEGA Core** | ″ (stage 26: Industrial roster) | ″ | E 4.432 · 2.272 · 2.575 · 2.879 · bossMult 3.739 | Final stage: OMEGA Core spawns at 10 s |
+| 2 | Stone | Sling Ridge | `mmr` | 0.85 | E 1.023 | Enemy slingers |
+| 3 | Stone | Boulder Pass | `mmrmr` | 0.75 | E 1.203 | ×2 speed unlocked |
+| 4 | Stone | Rockhide Rumble | `mmrtmr` | 0.80 | E 2.575 | First enemy tank. **Insert: one Rockhide at 30 s.** Stormcall available (stage 3 cleared) |
+| 5 | Stone | **WARLORD: Chief Grumbo** | `mmrmr` + Warlord at 12 s | 0.30 | bossMult 1.804 | Ward, boss bar, ward Gold |
+| 6 | Ancient | Bronze Dawn | `mmrmtM`, Stone roster | 1.2 | E 3.476 | Evolution showcase; must feel easy (≥ 85% first try) |
+| 7 | Ancient | Javelin Shore | `mrmrt` | 1.15 | E 2.803 | Javelin arcs |
+| 8 | Ancient | Temple Steps | `mmrtr` | 1.20 | E 2.727 | Insert: two Tuskers at 28 s (Cleave lesson) |
+| 9 | Ancient | Tusker Trail | `mrtmrt` | 1.20 | E 3.249 | |
+| 10 | Ancient | **WARLORD: Bronze Colossus** | `mmrmr` + Warlord at 12 s | 0.35 | bossMult 3.196 | |
+| 11–15 | Medieval | Banner Hill · Bolt Woods · Moat Crossing · Lance Charge · **WARLORD: Baron Blackmace** | same stageIdx pattern set (stage 11 uses the Ancient roster) | 1.2 · 1.15 · 1.20 · 1.20 · 0.35 | E 3.022 · 1.704 · 3.031 · 3.306 · bossMult 3.358 | Insert on stage 12: one Knight at 25 s (Charge lesson) |
+| 16–20 | Gunpowder | Powder Bay · Bomb Bluff · Corsair Cove · Anchor's Edge · **WARLORD: Admiral Kaboom** | ″ (stage 16: Medieval roster) | ″ | E 2.832 · 1.61 · 2.974 · 3.088 · bossMult 2.962 | Insert on stage 17: two Bombardiers at 25 s (teaches "don't clump", read via explosions) |
+| 21–25 | Industrial | Smoke Yard · Rail Junction · Gear Works · Landship Ridge · **WARLORD: Iron Juggernaut** | ″ (stage 21: Gunpowder roster) | ″ | E 3.713 · 1.363 · 2.879 · 3.268 · bossMult 4.075 | Insert on stage 22: two Gunners at 25 s (gunner nest) |
+| 26–30 | Future | Neon Outskirts · Pulse Plaza · Arc Bridge · Titan Foundry · **WARLORD: OMEGA Core** | ″ (stage 26: Industrial roster) | ″ | E 4.291 · 2.301 · 2.547 · 2.927 · bossMult 3.519 | Final stage: OMEGA Core spawns at 10 s |
 
 \*E is a multiple of the player's Lv 1 Food rate for the stage's Age, spent during the assault window `[assaultStartSec, 30 + 2·ageIdx]` s, where `assaultStartSec` is 10 on Battle 1 and `6 + stageIdx` elsewhere (§2.9). Seeds live in `src/data/stages.ts`. Inserts are authored and are never removed by calibration.
 
-†The calibrator (BALANCE §4.7) writes `src/data/stages.calibrated.json`, which overrides the seed. It moves exactly one knob per stage: E on regular stages, the Warlord HP multiplier `bossMult` on Warlord stages (where E stays at its seed). The values are its output on PR #2, not hand-tuned.
+†The calibrator (BALANCE §4.7) writes `src/data/stages.calibrated.json`, which overrides the seed. It moves exactly one knob per stage: E on regular stages, the Warlord HP multiplier `bossMult` on Warlord stages (where E stays at its seed). Its population is the `average` cohort (a typical player, 1–3 s reactions). The values are its output at `e1c84e6`, not hand-tuned.
 
-**After OMEGA Core.** The Hub shows "CAMPAIGN COMPLETE". The BATTLE button opens a stage picker for the Future stages 26–30 (replays pay 50% of the victory bonus; kill and base Gold as normal) plus a "Storm Surge — coming soon" card (§3.7). There is no dead end.
+**After OMEGA Core.** The Hub shows "CAMPAIGN COMPLETE". The BATTLE button opens a stage picker for the Future stages 26–30 (the only replays `canPlayStage` allows) (replays pay 50% of the victory bonus; kill and base Gold as normal) plus a "Storm Surge — coming soon" card (§3.7). There is no dead end.
 
 ### 3.5 Evolution rules
 
@@ -442,8 +442,8 @@ Enemy units of the same Age have the same traits; the game is symmetric. Every t
   * Owned slots carry over: if you owned Ranged in Stone, you own Javelineer now.
   * The base, roster, Food rate and costs switch to the new Age.
   * **Gold is kept** (minus the price of an early Evolve).
-* **Where the evolution spike comes from.** Enemy stats scale by the same Age factor A as the player's, so a like-for-like stage could never feel stronger after an Evolve: a Hoplite with 132 HP would meet an enemy Hoplite with 132 HP. Instead, **stage 1 of each later Age fields the previous Age's roster** (pattern `mmrmtM`, with one new-Age melee per cycle), against the new Age's base. The freshly evolved army, with Camp levels reset, meets enemies a full Age behind it. Cheap new prices and the Gold carried over from the Warlord fight let the player buy several upgrades at once. The harness asserts that stage 1 of each later Age has ≥ 85% first-try wins (measured 89%).
-* **Data model:** `armyAge` and `campaignStage` are stored separately. After an early Evolve the army is one Age ahead of the frontier; after a Warlord win it is one Age behind until the player taps EVOLVE!. `src/meta/progress.ts` (`canPlayStage`, `evolvePrice`, `mustEvolve`) enforces the ±1 limit, and Storm Surge and Dungeons later use the same split.
+* **Where the evolution spike comes from.** Enemy stats scale by the same Age factor A as the player's, so a like-for-like stage could never feel stronger after an Evolve: a Hoplite with 132 HP would meet an enemy Hoplite with 132 HP. Instead, **stage 1 of each later Age fields the previous Age's roster** (pattern `mmrmtM`, with one new-Age melee per cycle), against the new Age's base. The freshly evolved army, with Camp levels reset, meets enemies a full Age behind it. Cheap new prices and the Gold carried over from the Warlord fight let the player buy several upgrades at once. The harness asserts that stage 1 of each later Age has ≥ 85% first-try wins overall and ≥ 75% each (measured 95%).
+* **Data model:** `armyAge` and `campaignStage` are stored separately. After an early Evolve the army is one Age ahead of the frontier; after a Warlord win it is one Age behind until the player taps EVOLVE!. `src/meta/progress.ts` (`canPlayStage`, `evolvePrice`, `mustEvolve`) enforces the ±1 limit and the in-order campaign (only the frontier stage until the campaign is complete), and Storm Surge and Dungeons later use the same split.
 
 ### 3.6 Upgrades — what Gold buys
 

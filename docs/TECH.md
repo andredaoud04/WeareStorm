@@ -51,7 +51,7 @@ src/
   audio/            synth.ts, sfx.ts (one function per SimEvent kind), music.ts (per-Age loops), mixer.ts (limiter,
                     ducking, concurrency caps)
 tools/
-  harness/          campaign.ts (bots, personas, runCampaign), run.ts (report), calibrate.ts, ci.ts (the 22-row gate)
+  harness/          campaign.ts (bots, personas, runCampaign), run.ts (report), calibrate.ts, ci.ts (the 24-row gate)
   screens/          playwright scripts: matrix.ts (UX §10), gallery.ts
 tests/              vitest specs mirroring src (sim/, meta/, data/, render/ pure helpers)
 docs/               design pack (this folder)
@@ -109,6 +109,7 @@ type SimEvent =
   | { kind: 'slamTelegraph'; id: number; x: number; radius: number; impactTick: Tick }
   | { kind: 'stormRising'; level: number } | { kind: 'stormcallCharged' }
   | { kind: 'stormcallCast'; x: number; radius: number; strikeTick: Tick }
+  | { kind: 'stormcallNoTarget' }        // tapped with no hostile on the lane: stays charged, the UI shakes the ring
   | { kind: 'stormcallStrike'; x: number; radius: number }
   | { kind: 'deployQueued'; slot: Slot; foodSpent: number; queue: number }
   | { kind: 'deployRejected'; slot: Slot; reason: 'food' | 'queue' | 'cap' | 'locked' }
@@ -137,7 +138,13 @@ snapshot(b: Battle): BattleSnapshot
   are deterministic: the same state and commands always give the same result (replay-hash test). The sim needs no
   randomness (ties break by id); `seed` travels in `SimInput` for replays.
 - State is plain data (arrays of structs, integer HP, integer milli-food, positions as integers in **milli-wu**).
-- Tick order exactly as GDD §2.7. Simultaneous damage application.
+- Tick order exactly as GDD §2.7. Simultaneous damage application. ACT is two-pass: every impact and attack start is
+  resolved against start-of-tick positions, then free units move, so the outcome never depends on the order of the unit
+  list (a regression test replays every tick with the list reversed). A `retreat` ends the tick: commands after it in the
+  same tick are ignored.
+- Units spawn fully behind their own gate: player x = min(−20, −width/2), enemy x = max(1020, 1000 + width/2). A rally pack
+  is capped by the 30-unit field limit, never spawns on the tick the enemy base falls, and is staggered outward (+30 wu per
+  rank).
 - **StageDef** (`src/data/stages.ts`): `id, age, idx, title, warlord, enemyAge, pattern, budget (E), assaultStartSec,
   assaultEndSec, trickleSec (0 = derive from TRICKLE_SHARE), rally, warlordAtSec, enemyStatMult, bossMult, inserts[]`,
   with `budget` and `bossMult` overridden by `stages.calibrated.json`. Spawn tokens `m`/`r`/`t` use `enemyAge`; `M` is the
@@ -187,11 +194,15 @@ snapshot(b: Battle): BattleSnapshot
 ## 6. Save system
 
 - Key `wearestorm.save`, JSON `{ v: 1, ...SaveV1, checksum }`; written atomically after settlement and on purchases;
-  in-battle checkpoint every 5 s (`pendingBattle { battleId, goldEarned }`) → settled as a retreat on next launch.
-  Settlement (`settleBattle` in `src/meta/progress.ts`) is idempotent by `lastSettledBattleId`.
+  in-battle checkpoint every 5 s (`pendingBattle { battleId, stageId, goldEarned }`) → settled as a retreat on next launch.
+  Settlement (`settleBattle` in `src/meta/progress.ts`) is idempotent: it refuses any id in `lastSettledBattleId` or the
+  last 16 ids in `recentBattleIds` (`RECENT_IDS`), treats non-finite or negative Gold and duration as 0, and refuses a
+  stage the save has not reached. `canPlayStage` allows only the frontier stage (or a retry of it); once the campaign is
+  complete, the Future stages 26–30 are replayable.
 - `SaveV1` (`src/meta/save.ts`): `gold, armyAge, campaignStage (1..30, 31 = campaign complete), clearedStages
   (first-clear ledger), warlordsBeaten, timeline, owned{ranged,tank}, levels{food,walls,melee,ranged,tank}, ftue,
-  settings{sound,music,haptics,reduceMotion,damageNumbers}, lossStreak, lastSettledBattleId, pendingBattle, stats`.
+  settings{sound,music,haptics,reduceMotion,damageNumbers}, lossStreak, lastSettledBattleId, recentBattleIds, pendingBattle,
+  stats`.
   Stormcall unlock is derived (stage 3 cleared), not stored.
 - `migrate(raw) → SaveV1` repairs field by field: one bad value falls back to its default without wiping the rest, and an
   `armyAge` more than one Age from the frontier is pulled back into range.
@@ -214,10 +225,10 @@ snapshot(b: Battle): BattleSnapshot
 
 | Layer | What | Tool |
 |---|---|---|
-| Sim | Determinism (replay hash), `step` never mutates its input, tick order, simultaneous resolution, traits, ward and ward Gold, rally, Storm Rising, Food exactness, caps, Stormcall aim and cast, retreat, golden spawn schedules (Battle 1 first enemy at tick 200; stage 2 fields a Slinger; stage 4 fields a Rockhide), speed ×1/×2 identical outcomes, pause | Vitest |
-| Meta | Prices, upgrades, free and early Evolve, idempotent settlement, retreat settlement, lose-forward streak, `recommendUpgrade`, save round-trip, migrations, corrupt-save recovery | Vitest |
+| Sim | Determinism (replay hash), `step` never mutates its input, order independence (unit list reversed), spawns never overlap a hostile at the gate, rally cap and no rally on the victory tick, commands after a retreat ignored, `stormcallNoTarget`, tick order, simultaneous resolution, traits, ward and ward Gold, rally, Storm Rising, Food exactness, caps, Stormcall aim and cast, retreat, golden spawn schedules (Battle 1 first enemy at tick 200; stage 2 fields a Slinger; stage 4 fields a Rockhide), speed ×1/×2 identical outcomes, pause | Vitest |
+| Meta | Prices, upgrades, free and early Evolve, idempotent settlement (also out of order), bad-number and unreached-stage guards, in-order campaign and Future-only replays after stage 30, retreat settlement, lose-forward streak, `recommendUpgrade`, save round-trip, migrations, corrupt-save recovery | Vitest |
 | Data | Every unit has art + SFX mapping; every SimEvent kind has VFX/SFX handler (exhaustive switch test); every string in `strings.en.ts` matches the no-emoji/no-arrow rule (GDD Reconciliation §8) | Vitest |
-| Balance | `npm run harness:ci`, the 22 rows in BALANCE.md §4.7 | tsx |
+| Balance | `npm run harness:ci`, the 24 rows in BALANCE.md §4.7 | tsx |
 | Art / audio | `npm run art:lint` and `npm run audio:lint` (ART_BIBLE §5.16 step 5) | Playwright (Chromium) |
 | Screens | UX §10 matrix + automatic layout checks over the DOM (including the battle HUD) and the layout registry's world anchors; gallery contact sheets | Playwright |
 | E2E | Fresh save: title → Battle 1 win by tapping the DOM deck cards → upgrade → Battle 2; reload mid-battle settles once. Hooks via `window.__ws` (§2) | Playwright |
