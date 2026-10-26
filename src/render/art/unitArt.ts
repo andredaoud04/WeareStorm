@@ -258,6 +258,8 @@ export class UnitArt {
     this.set(sp.weaponArm, null, null, pose.active ? pose.arm : (ranged ? RANGED.rest[0] : MELEE.rest[0]) + armSwing * (ranged ? 0.25 : 0.6));
     this.set('weapon', null, null, pose.weapon);
     this.set(sp.head, null, null, -torsoRot * 0.5 + (walk ? Math.sin(ph * 2) * 0.035 : 0));
+    // capes trail behind: swing with the stride, flutter with hit kicks (secondary motion, §5.7)
+    this.set('cape', null, null, (walk ? 0.12 + Math.sin(ph * 2) * 0.1 : Math.sin(this.t / 900) * 0.04) - this.kick * 0.02);
     if (this.cheering) {
       const j = Math.abs(Math.sin((this.t / 600) * Math.PI));
       this.set('torsoPivot', null, -legLen - j * 10, 0);

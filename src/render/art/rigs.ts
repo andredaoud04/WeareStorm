@@ -43,7 +43,7 @@ export interface RigSpec {
 
 const prim = (shape: Prim['shape'], fill: Prim['fill'], extra: Partial<Prim> = {}): Prim => ({ shape, fill, ...extra });
 
-function leg(len: number, r: number, pants: string): PartDef {
+function leg(len: number, r: number, pants: Prim['fill']): PartDef {
   return {
     prims: [
       prim(S.capsule(0, 0, 0, len - 10, r), pants, { lines: [L.line(-r * 0.6, len * 0.45, r * 0.5, len * 0.42)] }),
@@ -148,14 +148,14 @@ function tunic(w: number, h: number, hem = true): PartDef {
   return { prims };
 }
 
-function biped(id: string, o: { torso: PartDef; head: PartDef; weapon: PartDef; weaponAt: [number, number]; ranged?: boolean; tank?: boolean; shield?: PartDef; mantle?: PartDef }): RigSpec {
+function biped(id: string, o: { torso: PartDef; head: PartDef; weapon: PartDef; weaponAt: [number, number]; ranged?: boolean; tank?: boolean; shield?: PartDef; mantle?: PartDef; cape?: PartDef }): RigSpec {
   const tank = !!o.tank;
   const legLen = tank ? 52 : 46;
   const torsoH = tank ? 92 : 46;
   const skin = MAT.skin[0];
   const defs: Record<string, PartDef> = {
-    legBack: leg(legLen, tank ? 12 : 9, MAT.furDark),
-    legFront: leg(legLen, tank ? 12 : 9, MAT.fur),
+    legBack: leg(legLen, tank ? 12 : 9, 'factionShadow'),
+    legFront: leg(legLen, tank ? 12 : 9, 'factionShadow'),
     armBack: arm(tank ? 44 : 36, tank ? 9.5 : 7.5, skin, tank ? MAT.fur : undefined),
     armFront: arm(tank ? 44 : 36, tank ? 9.5 : 7.5, skin, tank ? MAT.fur : undefined),
     torso: o.torso,
@@ -165,6 +165,7 @@ function biped(id: string, o: { torso: PartDef; head: PartDef; weapon: PartDef; 
   };
   if (o.shield) defs.shield = o.shield;
   if (o.mantle) defs.mantle = o.mantle;
+  if (o.cape) defs.cape = o.cape;
   const sx = tank ? 22 : 12;
   const shoulderY = tank ? -torsoH + 18 : -36;
   const neckY = tank ? -torsoH + 4 : -42;
@@ -178,7 +179,8 @@ function biped(id: string, o: { torso: PartDef; head: PartDef; weapon: PartDef; 
         name: 'torsoPivot',
         at: [0, -legLen],
         children: [
-          { name: 'armBack', at: [-sx, shoulderY], children: o.shield ? [] : [] },
+          ...(o.cape ? [{ name: 'cape', at: [-6, shoulderY - 4] as [number, number] }] : []),
+          { name: 'armBack', at: [-sx, shoulderY] },
           { name: 'torso', at: [0, 0] },
           ...(o.mantle ? [{ name: 'mantle', at: [0, -torsoH + 6] as [number, number] }] : []),
           { name: 'head', at: [2, neckY], children: faceNodes() },
@@ -207,12 +209,15 @@ function biped(id: string, o: { torso: PartDef; head: PartDef; weapon: PartDef; 
 /** Clubber: hide tunic, messy hair with a bone, a club bigger than its head. */
 export function clubber(): RigSpec {
   return biped('stone.clubber', {
-    torso: tunic(42, 46),
-    head: stoneHead({ hair: MAT.hair[0], skin: MAT.skin[0], bone: true }),
+    torso: tunic(48, 48),
+    // a short hide cape in the faction colour, hanging behind the shoulders (team read, §5.3 rule 7)
+    cape: { prims: [prim(S.svg('M 6 -4 Q -18 -8 -26 16 Q -32 32 -28 44 L -20 38 L -16 46 L -8 38 L 0 44 Q 4 20 6 -4 Z', [-33, -10, 8, 47]), 'faction', { lines: [L.curve(-8, 4, -16, 20, -14, 36)] })] },
+    head: stoneHead({ hair: MAT.hair[0], skin: MAT.skin[0], bone: true, band: 'faction' }),
     weaponAt: [3, 32],
     weapon: {
       prims: [
         prim(S.capsule(0, 10, 2, -40, 5.5), MAT.wood, { lines: [L.line(-2, -6, 3, -10), L.line(-2, -22, 3, -26)] }),
+        prim(S.capsule(0, 4, 1, -14, 6.5), 'faction', { lines: [L.line(-4, -2, 5, -4), L.line(-4, -8, 5, -10)] }),
         prim(S.svg('M -14 -40 Q -20 -70 0 -84 Q 22 -88 22 -62 Q 22 -44 8 -36 Q -6 -32 -14 -40 Z', [-20, -88, 23, -32]), MAT.woodLight, { light: true, lines: [L.arc(4, -60, 5, 0.3, 2.6), L.curve(-8, -48, -4, -44, 2, -46)] }),
         prim(S.poly([16, -70, 30, -74, 20, -62], 2), MAT.stoneLight),
         prim(S.poly([-12, -64, -24, -72, -14, -54], 2), MAT.stoneLight),
@@ -224,7 +229,7 @@ export function clubber(): RigSpec {
 /** Slinger: lean, feather in the hair, a long staff-sling held level (the ranged silhouette line). */
 export function slinger(): RigSpec {
   return biped('stone.slinger', {
-    torso: tunic(38, 46),
+    torso: tunic(44, 48),
     head: stoneHead({ hair: MAT.hair[1], skin: MAT.skin[0], feather: true, band: 'faction' }),
     weaponAt: [3, 32],
     ranged: true,
@@ -286,8 +291,8 @@ export function grumbo(): RigSpec {
         // shaggy fur fringe along the belly
         prim(S.svg('M -140 0 L -126 28 L -112 10 L -96 34 L -80 14 L -60 36 L -40 16 L -20 38 L 0 18 L 20 38 L 40 16 L 60 34 L 78 14 L 96 28 L 110 6 Q 20 20 -140 0 Z', [-142, -4, 112, 40]), MAT.mammothDark, { noInk: true }),
         // faction blanket and saddle
-        prim(S.svg('M -80 -150 Q -10 -176 60 -150 L 70 -70 Q 0 -54 -86 -70 Z', [-88, -178, 72, -54]), 'faction', { lines: [L.curve(-78, -84, -6, -70, 66, -86)] }),
-        prim(S.svg('M -84 -72 L -70 -50 L -56 -70 L -42 -48 L -28 -68 L -14 -46 L 0 -66 L 14 -46 L 28 -66 L 42 -48 L 56 -68 L 70 -72 Z', [-86, -74, 72, -44]), 'factionLight', { noInk: true }),
+        prim(S.svg('M -96 -152 Q -10 -182 74 -150 L 86 -40 Q 0 -22 -104 -40 Z', [-106, -184, 88, -22]), 'faction', { lines: [L.curve(-94, -60, -6, -44, 82, -60), L.curve(-90, -120, -6, -140, 78, -118)] }),
+        prim(S.svg('M -104 -42 L -88 -18 L -72 -40 L -56 -16 L -40 -38 L -24 -14 L -8 -36 L 8 -14 L 24 -36 L 40 -16 L 56 -38 L 72 -18 L 86 -42 Z', [-106, -44, 88, -12]), 'factionLight', { noInk: true }),
         prim(S.rrect(-50, -178, 90, 30, 12), MAT.leather, { light: true }),
       ],
     },

@@ -19,13 +19,19 @@ function pose(spec: RigSpec): Record<string, { rot?: number; scale?: number }> {
 }
 
 export function paintRig(spec: RigSpec, side: Side, pxPerWu: number): string {
+  return paintRigCanvas(spec, side, pxPerWu).toDataURL('image/png');
+}
+
+/** The posed rig on a canvas; `factionOverride` swaps the faction colours (art:lint keys them out). */
+export function paintRigCanvas(spec: RigSpec, side: Side, pxPerWu: number, factionOverride?: string): HTMLCanvasElement {
   const tall = spec.kind === 'quad' ? 470 : spec.height + 40;
   const wide = spec.kind === 'quad' ? 520 : spec.height * 1.25;
   const c = document.createElement('canvas');
   c.width = Math.ceil(wide * pxPerWu);
   c.height = Math.ceil(tall * pxPerWu);
   const ctx = c.getContext('2d')!;
-  const o = { faction: FACTION[side], shadowTint: AGE_PALETTE.stone.shadowTint };
+  const fac = factionOverride ? { base: factionOverride, shadow: factionOverride, light: factionOverride } : FACTION[side];
+  const o = { faction: fac, shadowTint: AGE_PALETTE.stone.shadowTint };
   const overrides = pose(spec);
   const k = spec.scale ?? 1;
   for (const layer of ['ink', 'fill'] as const) {
@@ -48,7 +54,7 @@ export function paintRig(spec: RigSpec, side: Side, pxPerWu: number): string {
     walk(spec.root);
     ctx.restore();
   }
-  return c.toDataURL('image/png');
+  return c;
 }
 
 export function bakePortraits() {

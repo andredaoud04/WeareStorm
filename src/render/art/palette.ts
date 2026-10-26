@@ -57,7 +57,7 @@ export interface AgePalette {
 }
 
 export const AGE_PALETTE: Record<AgeId, AgePalette> = {
-  stone: { skyTop: '#6EC6F5', skyHorizon: '#FFE6B0', sunGlow: '#FFF3C4', far: '#A7C4E0', mid: '#79BF5A', near: '#5DA845', lane: '#D9A86A', laneDark: '#B5824E', fgProp: '#3F8F3C', accentA: '#E8C85A', accentB: '#9B6A3F', shadowTint: '#4B3D7A', ambient: '#FFFFFF' },
+  stone: { skyTop: '#6EC6F5', skyHorizon: '#FFE6B0', sunGlow: '#FFF3C4', far: '#A7C4E0', mid: '#79BF5A', near: '#5DA845', lane: '#EBC793', laneDark: '#C4955F', fgProp: '#3F8F3C', accentA: '#E8C85A', accentB: '#9B6A3F', shadowTint: '#4B3D7A', ambient: '#FFFFFF' },
   ancient: { skyTop: '#58B9F0', skyHorizon: '#FFE2A6', sunGlow: '#FFF7D6', far: '#E9C88E', mid: '#C9A46A', near: '#EBCB8B', lane: '#D7A863', laneDark: '#B9874B', fgProp: '#4FA36B', accentA: '#2BB3A6', accentB: '#C9883A', shadowTint: '#6A4A8E', ambient: '#FFE9B8' },
   medieval: { skyTop: '#5DAEF2', skyHorizon: '#DDF2FF', sunGlow: '#FFFFFF', far: '#8FA9D6', mid: '#6CB352', near: '#58A146', lane: '#C29A6B', laneDark: '#9C7650', fgProp: '#3D8B3F', accentA: '#E6E1D3', accentB: '#5B6B8F', shadowTint: '#3E4A86', ambient: '#FFFFFF' },
   gunpowder: { skyTop: '#4F8FD9', skyHorizon: '#FFC98A', sunGlow: '#FFE0A3', far: '#3FA3C6', mid: '#8DB860', near: '#A9B86A', lane: '#CDA978', laneDark: '#A9845A', fgProp: '#6E9E4A', accentA: '#C8664A', accentB: '#F2EAD8', shadowTint: '#5A3F7E', ambient: '#E8E2D8' },

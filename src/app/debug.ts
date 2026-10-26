@@ -28,6 +28,7 @@ export function installDebug() {
     /** Advance the running battle by `seconds` of sim time with a simple deploy policy (screenshots / e2e). */
     play: (seconds: number, deploy = true) => session.value && fastForward(session.value, seconds, deploy),
     setSave: (s: Partial<SaveV1>) => commit({ ...newSave(), ...s }),
+    artLint: async () => (await import('../render/art/artLint')).artLint(),
   };
 }
 
