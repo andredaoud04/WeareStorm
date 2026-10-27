@@ -57,7 +57,9 @@
 .coach.below .coach-tail { top: calc(6 * var(--pt)); }
 
 /* what the coach points at pulses (scale composes with the element's own transform) */
-[data-coached].btn, [data-coached].tab, [data-coached].ring, [data-coached].card { animation: coach-pulse 1s ease-in-out infinite; }
+[data-coached].btn, [data-coached].tab, [data-coached].ring { animation: coach-pulse 1s ease-in-out infinite; }
+/* deck cards keep their own READY pop / deploy squash / nope shake: they get a steady gold ring instead */
+[data-coached].card { box-shadow: 0 0 0 var(--line) var(--c-ink), 0 0 0 calc(4 * var(--pt)) var(--c-gold400), 0 0 calc(18 * var(--pt)) rgba(255, 207, 61, .8); }
 [data-coached].btn { filter: drop-shadow(0 0 calc(8 * var(--pt)) rgba(255, 220, 110, .85)); }
 [data-coached].food { box-shadow: inset 0 0 0 var(--line) rgba(0, 0, 0, .35), 0 0 0 calc(3 * var(--pt)) var(--c-gold400), 0 0 calc(16 * var(--pt)) rgba(255, 207, 61, .7); }
 @keyframes coach-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.07; } }
@@ -117,7 +119,7 @@
   position: absolute; left: 50%; top: 50%; width: 160vmax; height: 300vmax; margin-top: -150vmax;
   transform-origin: 0 50%;
   background: linear-gradient(90deg, #3A4A7A 0%, var(--c-night800) 40%, var(--c-night900) 100%);
-  animation: wipe-off 440ms cubic-bezier(.5, 0, .4, 1) forwards;
+  animation: wipe-off 380ms cubic-bezier(.5, 0, .4, 1) forwards;
 }
 /* the leading edge: two rows of ink-outlined cloud puffs */
 .wipe-band::before, .wipe-band::after { content: ''; position: absolute; top: 0; bottom: 0; }
@@ -130,7 +132,7 @@
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60'%3E%3Cpath d='M40 0H20A15 15 0 0 0 20 30A15 15 0 0 0 20 60H40Z' fill='%23E8EDF7'/%3E%3Cpath d='M20 0A15 15 0 0 0 20 30A15 15 0 0 0 20 60' fill='none' stroke='%231D1830' stroke-width='2.5'/%3E%3C/svg%3E") 0 0 / 100% min(21vmax, 210px) repeat-y;
 }
 @keyframes wipe-off { from { transform: rotate(-16deg) translateX(-64vmax); } to { transform: rotate(-16deg) translateX(76vmax); } }
-.wipe-bolt { position: absolute; left: 50%; top: 50%; width: calc(90 * var(--pt)); height: calc(90 * var(--pt)); margin: calc(-45 * var(--pt)) 0 0 calc(-45 * var(--pt)); animation: wipe-bolt 300ms var(--ease-in) forwards; }
+.wipe-bolt { position: absolute; left: 50%; top: 50%; width: calc(90 * var(--pt)); height: calc(90 * var(--pt)); margin: calc(-45 * var(--pt)) 0 0 calc(-45 * var(--pt)); animation: wipe-bolt 220ms var(--ease-in) forwards; }
 .wipe-bolt .icon { width: 100%; height: 100%; }
 @keyframes wipe-bolt { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
@@ -155,6 +157,9 @@
 .results-primary-wrap { position: relative; display: flex; }
 .results-primary-wrap > .btn { flex: 1; }
 .results-skip { position: absolute; inset: 0; }
+button.results-tip { width: 100%; min-height: calc(48 * var(--pt)); border: 0; text-align: left; font-family: var(--font-ui); color: var(--c-ink); cursor: pointer; touch-action: manipulation; transition: transform 90ms ease-out; }
+button.results-tip span { flex: 1; }
+button.results-tip:active { transform: scale(.97); }
 
 /* ---------------------------------------------------------------- Army: purchase and unlock moments */
 .track.bought { animation: row-bounce 420ms var(--ease-back); }
@@ -180,10 +185,16 @@
 .track .tip-badge { margin-left: calc(4 * var(--pt)); animation: pop-in 320ms var(--ease-back) 300ms both; }
 .unit-card .tip-badge { position: absolute; z-index: 2; top: calc(-9 * var(--pt)); left: 50%; transform: translateX(-50%); }
 
+/* ---------------------------------------------------------------- title: Nimbus peeks from behind the logo (UX §1) */
+.logo-we, .logo-storm { position: relative; z-index: 1; }
+.logo-nimbus { position: absolute; z-index: 0; right: calc(50% - 150 * var(--pt)); top: calc(-46 * var(--pt)); animation: nimbus-peek 3.2s ease-in-out infinite; }
+.logo-nimbus .nimbus { display: block; width: calc(74 * var(--pt)); height: calc(67 * var(--pt)); }
+@keyframes nimbus-peek { 0%, 100% { translate: 0 calc(10 * var(--pt)); rotate: 6deg; } 45%, 60% { translate: calc(-4 * var(--pt)) 0; rotate: -4deg; } }
+
 /* ---------------------------------------------------------------- Reduce Motion: no shakes, slides, loops or flights; fades stay */
 :root[data-rm] .btn.hl, :root[data-rm] .btn.hl .shine::after, :root[data-rm] .tap, :root[data-rm] .logo, :root[data-rm] .pip.cur,
 :root[data-rm] .ring.ready, :root[data-rm] .ward, :root[data-rm] .bust, :root[data-rm] .results-rays, :root[data-rm] .coach-hand svg,
-:root[data-rm] .nimbus, :root[data-rm] [data-coached], :root[data-rm] .card.popready, :root[data-rm] .card.deploypop,
+:root[data-rm] .nimbus, :root[data-rm] .logo-nimbus, :root[data-rm] [data-coached], :root[data-rm] .card.popready, :root[data-rm] .card.deploypop,
 :root[data-rm] .pill.bumpA, :root[data-rm] .pill.bumpB, :root[data-rm] .lvl.flipA, :root[data-rm] .lvl.flipB, :root[data-rm] .track.bought,
 :root[data-rm] .unit-card.bounce, :root[data-rm] .unit-card.reveal-out, :root[data-rm] .track-effect.glow b {
   animation: none !important;

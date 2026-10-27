@@ -43,10 +43,10 @@ export function Results() {
   }, [active, r?.battleId]);
   const phase = resultsPhase.value;
   if (!active || !r || phase === 'hidden') return null;
-  return <Sheet r={r} phase={phase} />;
+  return <ResultsSheet r={r} phase={phase} />;
 }
 
-function Sheet({ r, phase }: { r: ResultsView; phase: ResultsPhase }) {
+function ResultsSheet({ r, phase }: { r: ResultsView; phase: ResultsPhase }) {
   const win = r.result === 'victory';
   const st = save.value;
   const panelOn = at(phase) >= at('panel');
@@ -111,13 +111,13 @@ function Sheet({ r, phase }: { r: ResultsView; phase: ResultsPhase }) {
           <span>{win ? 'Total' : 'You keep'}</span>
           <Total value={r.settlement.total} start={panelOn} fast={fast} ref_={total} />
         </div>
-        {!win && r.next && <Tip rec={r.next} />}
+        {!win && r.next && <Tip rec={r.next} onPress={() => upgrade(r)} />}
         <div class="results-actions">
-          <div class="results-primary-wrap act" style={{ ['--d' as string]: fast ? '0ms' : '1200ms' }}>
+          <div class="results-primary-wrap act" style={{ ['--d' as string]: fast ? '0ms' : '1000ms' }}>
             <Button size="l" tone={primary.tone} icon={primary.icon} label={primary.label} highlight onPress={primary.act} testId="results-primary" />
             {kind === 'upgrade' && affordable.value > 0 && <span class="badge results-badge" data-testid="results-badge">{affordable.value}</span>}
           </div>
-          <div class="results-secondary act" style={{ ['--d' as string]: fast ? '0ms' : '1350ms' }}>
+          <div class="results-secondary act" style={{ ['--d' as string]: fast ? '0ms' : '1120ms' }}>
             <Button tone="dark" icon="home" label="Home" onPress={() => done('hub')} testId="results-home" />
             {kind === 'upgrade' && <Button tone="blue" icon="battle" label={win ? 'Next' : 'Retry'} onPress={() => again(win ? nextId : r.stageId)} testId="results-again" />}
           </div>
@@ -186,7 +186,8 @@ function Total({ value, start, fast, ref_ }: { value: number; start: boolean; fa
 
 const TRACK_NAME = { food: 'Food', walls: 'Walls', melee: 'Melee training', ranged: 'Ranged training', tank: 'Tank training' } as const;
 
-function Tip({ rec }: { rec: Recommendation }) {
+/** The defeat tip (UX §4): what to buy, as a deep link into the Army. */
+function Tip({ rec, onPress }: { rec: Recommendation; onPress: () => void }) {
   const st = save.value;
   const text =
     rec.kind === 'unlock'
@@ -195,9 +196,10 @@ function Tip({ rec }: { rec: Recommendation }) {
         ? `${TRACK_NAME[rec.track]} Lv ${st.levels[rec.track] + 1} for ${priceFor(st, rec.track)} Gold`
         : 'Evolve your army';
   return (
-    <div class="results-tip">
+    <button class="results-tip" onClick={onPress} data-testid="results-tip" disabled={rec.kind === 'evolve'}>
       <Icon name="up" size={24} />
       <span>{text}</span>
-    </div>
+      {rec.kind !== 'evolve' && <Icon name="next" size={18} />}
+    </button>
   );
 }

@@ -5,10 +5,10 @@ import { reduceMotion } from '../../app/motion';
 import { route } from '../../app/store';
 import { Icon } from '../kit/icons';
 
-const WIPE_MS = 520;
+const WIPE_MS = 440;
 
 /**
- * The storm wipe (ART_BIBLE §5.14, Home → Battle): a band of ink-outlined clouds sweeps off the screen while the next
+ * The storm wipe (ART_BIBLE §5.14, Home → Battle; ~380 ms): a band of ink-outlined clouds sweeps off the screen while the next
  * scene is already live behind it, and the world pushes in from 1.06. It plays on every switch into or out of a
  * battle (and battle → next battle). It never delays the switch and is click-through, so a tap is never lost; under
  * Reduce Motion it is a quick fade.

@@ -79,7 +79,7 @@ export interface CoachFacts {
   sheetOpen: boolean;
   save: SaveV1;
   battle: BattleFacts | null;
-  results: { phase: ResultsPhase; primary: ResultsPrimary } | null;
+  results: { phase: ResultsPhase; primary: ResultsPrimary; win: boolean } | null;
 }
 
 /** The coach covers the Stone Age only (Battles 1–5 and the first Evolve). */
@@ -91,7 +91,8 @@ export function selectCoach(f: CoachFacts): CoachStep | null {
   const ftue = s.ftue;
   if (f.route === 'battle') {
     if (f.results && f.results.phase !== 'hidden') {
-      if (f.results.phase !== 'done' || f.results.primary !== 'upgrade') return null;
+      // after a loss the sheet's own tip says what to buy; the hand would only cover it
+      if (f.results.phase !== 'done' || f.results.primary !== 'upgrade' || !f.results.win) return null;
       const camp = campCoach(s, 'army');
       return camp && camp.id !== 'back' ? COACH.upgradeResults : null;
     }
@@ -100,7 +101,7 @@ export function selectCoach(f: CoachFacts): CoachStep | null {
     if (b.stageId === 1 && !ftue.deploy1) return b.meleeReady ? COACH.deploy : b.deploys === 0 ? COACH.food : null;
     if (b.stormReady && !ftue.stormcall) return COACH.stormcall;
     if (b.warlordIntroAt !== null && !ftue.warlord && b.seconds - b.warlordIntroAt < WARLORD_COACH_SEC) return COACH.warlord;
-    if (b.speedShown && !ftue.speedUsed && !ftue.speedSeen && b.seconds >= 0.8 && b.seconds < SPEED_COACH_SEC) return COACH.speed;
+    if (b.speedShown && !ftue.speedUsed && !ftue.speedSeen && !ftue.speed && b.seconds >= 0.8 && b.seconds < SPEED_COACH_SEC) return COACH.speed;
     if (b.rangedOwned && !ftue.ranged && b.seconds >= 1.5) return COACH.ranged;
     return null;
   }
@@ -154,7 +155,7 @@ export const coachStep = computed<CoachStep | null>(() => {
     sheetOpen: sheet.value !== null,
     save: st,
     battle,
-    results: r && s && r.battleId === s.id ? { phase: resultsPhase.value, primary: resultsPrimary(r, st) } : null,
+    results: r && s && r.battleId === s.id ? { phase: resultsPhase.value, primary: resultsPrimary(r, st), win: r.result === 'victory' } : null,
   });
 });
 

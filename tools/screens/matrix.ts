@@ -27,11 +27,14 @@ const SIZES: [number, number, string, string][] = [
 ];
 
 export const SCENES = [
-  'title', 'hub', 'hub-boss', 'hub-evolve', 'army', 'army-new', 'ages', 'ages-evolve', 'settings',
-  'battle-start', 'battle', 'battle-warlord', 'pause', 'victory', 'defeat',
+  'title', 'hub', 'hub-boss', 'hub-evolve', 'army', 'army-new', 'army-focus', 'ages', 'ages-evolve', 'settings',
+  'battle-start', 'battle', 'battle-warlord', 'battle-rm', 'pause', 'victory', 'defeat',
+  // FTUE coach steps (GDD §1.5)
+  'coach-food', 'coach-deploy', 'coach-results', 'coach-recruit', 'coach-recruit-army', 'coach-back', 'coach-ranged',
+  'coach-food-up', 'coach-speed', 'coach-tank', 'coach-storm', 'coach-warlord',
 ];
 
-const SLOW = new Set(['victory', 'defeat']);
+const SLOW = new Set(['victory', 'defeat', 'coach-results']);
 
 async function main() {
   const [base = 'http://127.0.0.1:5173', out = 'screens-out', ...scenes] = process.argv.slice(2);
@@ -61,7 +64,8 @@ async function main() {
             document.getAnimations().every((a) => {
               if (a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity) return true;
               const t = (a.effect as KeyframeEffect | null)?.target;
-              return !!t && !!t.closest('.toasts, .deck, .food, .boss-bar');
+              // live effects (coin flights, banners) keep coming while a battle runs
+              return !!t && !!t.closest('.toasts, .deck, .food, .boss-bar, .fx-layer, .banner');
             }),
           null,
           { timeout: 12000 },

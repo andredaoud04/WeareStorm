@@ -57,8 +57,9 @@ describe('FTUE coach step selection (GDD §1.5)', () => {
     expect(selectCoach(facts(after1, { route: 'army' }))).toBe(COACH.recruitArmy);
     expect(id(facts({ ...after1, gold: 10 }, { route: 'hub' }))).toBeNull(); // nothing to point at without the Gold
     // Results points the hand at Upgrade once the tally is done
-    expect(selectCoach(facts(after1, { results: { phase: 'done', primary: 'upgrade' } }))).toBe(COACH.upgradeResults);
-    expect(id(facts(after1, { results: { phase: 'panel', primary: 'upgrade' } }))).toBeNull();
+    expect(selectCoach(facts(after1, { results: { phase: 'done', primary: 'upgrade', win: true } }))).toBe(COACH.upgradeResults);
+    expect(id(facts(after1, { results: { phase: 'panel', primary: 'upgrade', win: true } }))).toBeNull();
+    expect(id(facts(after1, { results: { phase: 'done', primary: 'upgrade', win: false } }))).toBeNull(); // the defeat tip says it
 
     const bought = { ...after1, gold: 10, owned: { ranged: true, tank: false }, ftue: { deploy1: true, recruit: true } };
     expect(selectCoach(facts(bought, { route: 'army' }))).toBe(COACH.backArmy);
