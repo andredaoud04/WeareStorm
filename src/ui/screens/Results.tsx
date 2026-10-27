@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import { countTick } from '../../app/audio';
 import { session, startBattle } from '../../app/battleController';
 import { go, results, save } from '../../app/store';
 import { canEvolve, canPlayStage, mustEvolve, priceFor, type Recommendation } from '../../meta/progress';
@@ -85,6 +86,7 @@ function Row({ icon, label, value, delay, plain }: { icon: 'coin' | 'star' | 'sk
     return () => clearTimeout(t);
   }, [delay]);
   const v = useCountUp(on ? value : 0, 500);
+  useEffect(() => void (plain || countTick(v, value)), [v]);
   return (
     <div class={`results-row ${on ? 'on' : ''}`}>
       <Icon name={icon} size={30} />
@@ -101,6 +103,7 @@ function Total({ value }: { value: number }) {
     return () => clearTimeout(t);
   }, []);
   const v = useCountUp(on ? value : 0, 600);
+  useEffect(() => countTick(v, value), [v]);
   return (
     <span class="results-total-v t-display">
       <Icon name="coin" size={30} />+{v}
