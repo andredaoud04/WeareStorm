@@ -10,8 +10,11 @@ import { clamp, semis, type Ctx } from './synth';
  *                                                                           ▼
  *                              master ─► compressor (limiter) ─► soft clipper ─► destination
  *
- * The compressor holds the sum under about -3 dBFS; the soft clipper after it is a safety net that is transparent
- * below 0.7 and can never output more than 0.92, so the output cannot clip whatever piles up.
+ * The compressor (threshold -6 dBFS, 20:1, 2 ms attack) holds sustained sums near -5 dBFS; transients that slip
+ * through its attack meet a soft clipper that is transparent below 0.7 and can never output more than 0.92
+ * (-0.7 dBFS), so the output cannot clip whatever piles up. Solo sounds are calibrated by category (sample-exact
+ * offline renders): stings about -6 dBFS, impacts and player feedback -9 to -12, combat chatter -13 to -18,
+ * UI -16 to -20, ambience below; the music bed sits around -27 dBFS RMS in battle.
  *
  * The context is created lazily on the first user gesture (the title tap). With no Web Audio at all (SSR, tests, old
  * browsers) every call is a silent no-op.
@@ -115,8 +118,8 @@ export function softClipCurve(n = 2048, knee = 0.7, ceiling = 0.92): Float32Arra
   return c;
 }
 
-export const LIMITER = { threshold: -9, knee: 4, ratio: 16, attack: 0.002, release: 0.2 } as const;
-export const LEVELS = { master: 0.9, sfx: 0.85, music: 0.42 } as const;
+export const LIMITER = { threshold: -6, knee: 3, ratio: 20, attack: 0.002, release: 0.2 } as const;
+export const LEVELS = { master: 0.9, sfx: 1, music: 0.36 } as const;
 
 // ---------------------------------------------------------------------------------------------------------------
 // The mixer
@@ -318,23 +321,25 @@ export class Mixer {
     n.level.gain.setTargetAtTime(level, c.currentTime, timeConst);
   }
 
-  /** Dips the music for a big moment. Overlapping ducks keep the deepest level and the latest end. */
-  duck(depth: number, hold: number, release: number) {
+  /**
+   * Dips the music for a big moment, starting `delay` seconds from now (with the sound that asked for it).
+   * Overlapping ducks keep the deepest level and the latest end.
+   */
+  duck(depth: number, hold: number, release: number, delay = 0) {
     const n = this.nodes;
     const c = this._ctx;
     if (!n || !c) return;
-    const now = c.currentTime;
-    let end = now + hold;
-    if (now < this.duckEnd) {
+    const start = c.currentTime + Math.max(0, delay);
+    let end = start + hold;
+    if (start < this.duckEnd) {
       depth = Math.min(depth, this.duckDepth);
       end = Math.max(end, this.duckEnd);
     }
     this.duckDepth = depth;
     this.duckEnd = end;
     const p = n.duck.gain;
-    p.cancelScheduledValues(now);
-    p.setValueAtTime(p.value, now);
-    p.setTargetAtTime(Math.max(0.0001, depth), now, 0.03);
+    p.cancelScheduledValues(start);
+    p.setTargetAtTime(Math.max(0.0001, depth), start, 0.03);
     p.setTargetAtTime(1, end, Math.max(0.05, release / 3));
   }
 
@@ -377,7 +382,7 @@ export class Mixer {
         if (head !== g) head.disconnect();
       }, done);
     }
-    if (def.duck) this.duck(def.duck.depth, def.duck.hold + (o.delay ?? 0), def.duck.release);
+    if (def.duck) this.duck(def.duck.depth, def.duck.hold, def.duck.release, o.delay ?? 0);
     this.stats.played++;
     return true;
   }
@@ -387,95 +392,9 @@ export class Mixer {
     return false;
   }
 
-  /** Debug metering (the audio verification script): taps on the bus, the limiter output and the final output. */
-  meter(): AudioMeter | null {
-    const c = this._ctx;
+  /** Debug: the points a meter can tap (the audio verification script measures peak/RMS here). */
+  debugTaps(): { ctx: Ctx; bus: AudioNode; limiter: DynamicsCompressorNode; out: AudioNode } | null {
     const n = this.nodes;
-    if (!c || !n) return null;
-    return new AudioMeter(c, { pre: n.master, comp: n.comp, out: n.clip }, n.comp);
-  }
-}
-
-/** Polls analysers on three taps and keeps peak and RMS (debug only). */
-export class AudioMeter {
-  private taps: { name: 'pre' | 'comp' | 'out'; a: AnalyserNode; buf: Float32Array<ArrayBuffer> }[] = [];
-  private timer: ReturnType<typeof setInterval> | null = null;
-  readonly peak = { pre: 0, comp: 0, out: 0 };
-  private sumSq = 0;
-  private count = 0;
-  private loudSumSq = 0;
-  private loudCount = 0;
-  minReduction = 0;
-  over1 = 0;
-
-  constructor(
-    ctx: Ctx,
-    nodes: Record<'pre' | 'comp' | 'out', AudioNode>,
-    private comp: DynamicsCompressorNode,
-  ) {
-    const sink = ctx.createGain();
-    sink.gain.value = 0;
-    sink.connect(ctx.destination);
-    for (const name of ['pre', 'comp', 'out'] as const) {
-      const a = ctx.createAnalyser();
-      a.fftSize = 2048;
-      nodes[name].connect(a);
-      a.connect(sink);
-      this.taps.push({ name, a, buf: new Float32Array(a.fftSize) });
-    }
-  }
-
-  start(intervalMs = 10) {
-    this.stop();
-    this.timer = setInterval(() => this.sample(), intervalMs);
-  }
-
-  stop() {
-    if (this.timer) clearInterval(this.timer);
-    this.timer = null;
-  }
-
-  private sample() {
-    for (const t of this.taps) {
-      t.a.getFloatTimeDomainData(t.buf);
-      let pk = 0;
-      let ss = 0;
-      for (let i = 0; i < t.buf.length; i++) {
-        const v = t.buf[i]!;
-        const a = v < 0 ? -v : v;
-        if (a > pk) pk = a;
-        ss += v * v;
-      }
-      if (pk > this.peak[t.name]) this.peak[t.name] = pk;
-      if (t.name === 'out') {
-        if (pk > 1) this.over1++;
-        this.sumSq += ss;
-        this.count += t.buf.length;
-        if (pk > 0.003) {
-          this.loudSumSq += ss;
-          this.loudCount += t.buf.length;
-        }
-      }
-    }
-    this.minReduction = Math.min(this.minReduction, this.comp.reduction);
-  }
-
-  report() {
-    const db = (v: number) => (v > 0 ? Math.round(20 * Math.log10(v) * 10) / 10 : -Infinity);
-    const rms = this.count ? Math.sqrt(this.sumSq / this.count) : 0;
-    const loud = this.loudCount ? Math.sqrt(this.loudSumSq / this.loudCount) : 0;
-    return {
-      peakOut: this.peak.out,
-      peakOutDb: db(this.peak.out),
-      peakLimiter: this.peak.comp,
-      peakBus: this.peak.pre,
-      peakBusDb: db(this.peak.pre),
-      rms,
-      rmsDb: db(rms),
-      rmsActive: loud,
-      rmsActiveDb: db(loud),
-      maxGainReductionDb: Math.round(this.minReduction * 10) / 10,
-      windowsOver1: this.over1,
-    };
+    return n && this._ctx ? { ctx: this._ctx, bus: n.master, limiter: n.comp, out: n.clip } : null;
   }
 }

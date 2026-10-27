@@ -17,7 +17,9 @@ import { results, route, save, sheet, toasts } from './store';
 
 export const mixer = new Mixer();
 export const music = new MusicDirector(mixer);
-export const haptics = new Haptics({ enabled: () => save.value.settings.haptics });
+/** Set by the first real gesture: browsers refuse (and log) vibration before the user has touched the page. */
+let gestured = false;
+export const haptics = new Haptics({ enabled: () => gestured && save.value.settings.haptics });
 
 export function uiSound(id: SoundId, o?: PlayOpts) {
   mixer.play(id, o);
@@ -141,6 +143,7 @@ export function initAudio() {
 
   // Unlock: create the context inside the first gesture, resume on any later one until it runs.
   const gesture = () => {
+    gestured = true;
     const first = !mixer.ctx;
     mixer.unlock();
     if (first && mixer.ctx) music.start();
@@ -237,7 +240,7 @@ function installDebugAudio() {
     haptics,
     ids: SOUND_IDS,
     play: (id: SoundId, o?: PlayOpts) => mixer.play(id, o),
-    meter: () => mixer.meter(),
+    taps: () => mixer.debugTaps(),
     state: () => ({
       ctx: mixer.ctx ? (mixer.ctx as AudioContext).state : 'none',
       music: { playing: music.seq.playing, level: music.seq.currentLevel, scheduled: music.seq.scheduled, ...music.current },

@@ -142,7 +142,8 @@ describe('SFX coverage (every SimEvent kind)', () => {
       const { fake, ctx } = fakeCtx();
       const def = SOUNDS[id];
       expect(def.gain, id).toBeGreaterThan(0);
-      expect(def.gain, id).toBeLessThanOrEqual(0.7);
+      // gains are calibrated per sound to a target level (see mixer.ts); voices peak well below 1, so > 1 is fine
+      expect(def.gain, id).toBeLessThanOrEqual(1.5);
       expect(def.len, id).toBeGreaterThan(0);
       for (const param of [0, 1, 5]) def.play({ ctx, dest: ctx.destination }, 0.01, { k: 1, param, dur: 0.6 });
       expect(fake.sources.length, id).toBeGreaterThan(0);

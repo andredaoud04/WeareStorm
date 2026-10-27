@@ -39,6 +39,9 @@ export class Haptics {
   /** Returns true if a pulse was sent. */
   pulse(kind: HapticKind): boolean {
     if (!this.vibrate || !this.o.enabled()) return false;
+    // where the browser tells us, never vibrate before a user activation (Chrome logs an error otherwise)
+    const ua = typeof navigator !== 'undefined' ? (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation : undefined;
+    if (ua && !ua.hasBeenActive) return false;
     const t = this.now();
     if (t - this.last[kind] < HAPTIC_GAP_MS[kind]) return false;
     this.last[kind] = t;
