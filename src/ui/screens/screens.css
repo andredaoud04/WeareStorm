@@ -132,7 +132,6 @@
 @keyframes nope2 { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
 .card-queue { position: absolute; top: calc(6 * var(--pt)); right: calc(6 * var(--pt)); z-index: 2; display: flex; gap: calc(3 * var(--pt)); }
 .card-queue i { width: calc(8 * var(--pt)); height: calc(8 * var(--pt)); border-radius: 50%; background: #fff; box-shadow: 0 0 0 calc(2 * var(--pt)) var(--c-ink); }
-.card.coached { animation: breathe 1s ease-in-out infinite; }
 /* Sits fully above the cards so a tap on its lower edge can never deploy a Rockhide instead. */
 .storm-ring { position: absolute; z-index: 6; right: calc(14 * var(--pt) + var(--safe-right)); top: calc(-58 * var(--pt)); pointer-events: auto; }
 .storm-ring.nopeA { animation: nope 240ms ease-out; }
@@ -142,15 +141,6 @@
 .storm-ring .icon { width: calc(40 * var(--pt)); height: calc(40 * var(--pt)); }
 
 .card-slot { position: relative; }
-.coach { position: absolute; z-index: 7; left: 50%; bottom: calc(100% + 4 * var(--pt)); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-.coach-bubble {
-  padding: calc(10 * var(--pt)) calc(16 * var(--pt)); border-radius: calc(18 * var(--pt)); background: var(--c-paper); color: var(--c-ink);
-  box-shadow: 0 0 0 var(--line) var(--c-ink), 0 calc(5 * var(--pt)) 0 rgba(20, 27, 51, .35);
-  font-family: var(--font-display); font-size: calc(19 * var(--pt)); white-space: nowrap; animation: pop-in 320ms cubic-bezier(.34,1.56,.64,1);
-}
-.coach-hand { margin-top: calc(6 * var(--pt)); animation: hand-bob 0.7s ease-in-out infinite alternate; }
-.coach-hand svg { width: calc(56 * var(--pt)); height: calc(56 * var(--pt)); transform: rotate(180deg); }
-@keyframes hand-bob { from { transform: translateY(0); } to { transform: translateY(calc(10 * var(--pt))); } }
 
 .sheet-col { display: flex; flex-direction: column; gap: calc(10 * var(--pt)); align-items: stretch; }
 .sheet-col > .btn { width: 100%; }

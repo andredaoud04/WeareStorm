@@ -66,6 +66,9 @@ export class BattleSession {
   private hudUrgent = false;
   private pendingGold = 0;
   private pendingTick = 0;
+  /** The battle's Gold split by source, summed from the sim's own events (Results rows; never fed back to the sim). */
+  killGold = 0;
+  baseGold = 0;
   readonly hud = signal<HudState>(null as unknown as HudState);
   readonly ended$ = signal(false);
 
@@ -174,6 +177,10 @@ export class BattleSession {
     const cmds = this.queued;
     this.queued = [];
     const events = stepMut(this.state, cmds);
+    for (const e of events) {
+      if (e.kind === 'death' && e.side === 'enemy') this.killGold += e.gold;
+      else if (e.kind === 'baseChunk') this.baseGold += e.gold;
+    }
     this.prev = this.curr;
     this.curr = snapshot({ state: this.state });
     if (events.length) for (const s of this.eventSinks) s(events, this.state.tick);
@@ -190,7 +197,8 @@ export class BattleSession {
         result: end.result,
         goldEarned: end.goldEarned,
         kills: end.stats.kills,
-        baseGold: end.stats.baseChunks,
+        killGold: this.killGold,
+        baseGold: this.baseGold,
         seconds: end.stats.durationTicks / TICKS_PER_SECOND,
       });
       this.ended$.value = true;

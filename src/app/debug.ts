@@ -1,7 +1,9 @@
 import type { Slot } from '../contracts';
+import { recommendUpgrade } from '../meta/progress';
 import { newSave, type SaveV1 } from '../meta/save';
 import { session, startBattle, type BattleSession } from './battleController';
-import { commit, go, results, route, save, sheet } from './store';
+import { FTUE_DONE, coachStep } from './ftue';
+import { armyFocus, commit, go, results, resultsPhase, route, save, sheet } from './store';
 
 /**
  * Test and screenshot hooks. `window.__ws` drives the real game (Playwright e2e, UX §10 matrix); `?scene=` puts the
@@ -21,7 +23,7 @@ const enabled = import.meta.env.DEV || params.has('debug') || params.has('scene'
 export function installDebug() {
   if (!enabled) return;
   window.__ws = {
-    state: () => ({ route: route.value, save: save.value, hud: session.value?.hud.value ?? null, results: results.value }),
+    state: () => ({ route: route.value, save: save.value, hud: session.value?.hud.value ?? null, results: results.value, resultsPhase: resultsPhase.value, coach: coachStep.value?.id ?? null }),
     deploy: (slot: Slot) => session.value?.deploy(slot),
     stormcall: () => session.value?.command({ kind: 'stormcall' }),
     setSpeed: (n: number) => session.value && (session.value.speed = n),
@@ -55,8 +57,15 @@ const STONE_MID: Partial<SaveV1> = {
   owned: { ranged: true, tank: true },
   levels: { food: 3, walls: 2, melee: 3, ranged: 2, tank: 1 },
   stats: { battles: 6, victories: 3, goldEarned: 260, playSeconds: 420 },
-  ftue: { deploy1: true },
+  ftue: FTUE_DONE, // the regular screens are shot without Nimbus; the coach-* scenes show each step
 };
+
+/** FTUE fixtures (GDD §1.5): the save right after Battle N, with the coach flags a real player would have by then. */
+const AFTER_1: Partial<SaveV1> = { gold: 40, campaignStage: 2, clearedStages: [1], stats: { battles: 1, victories: 1, goldEarned: 40, playSeconds: 45 }, ftue: { deploy1: true } };
+const AFTER_1_BOUGHT: Partial<SaveV1> = { ...AFTER_1, gold: 10, owned: { ranged: true, tank: false }, ftue: { deploy1: true, recruit: true } };
+const AFTER_2: Partial<SaveV1> = { ...AFTER_1_BOUGHT, gold: 34, campaignStage: 3, clearedStages: [1, 2], stats: { battles: 2, victories: 2, goldEarned: 88, playSeconds: 140 }, ftue: { deploy1: true, recruit: true, back: true, ranged: true } };
+const AFTER_3: Partial<SaveV1> = { ...AFTER_2, gold: 84, campaignStage: 4, clearedStages: [1, 2, 3], levels: { food: 2, walls: 1, melee: 2, ranged: 1, tank: 1 }, ftue: { ...AFTER_2.ftue, speedUsed: true, speedSeen: true, 'food-upSeen': true } };
+const AFTER_4: Partial<SaveV1> = { ...AFTER_3, gold: 30, campaignStage: 5, clearedStages: [1, 2, 3, 4], owned: { ranged: true, tank: true }, levels: { food: 3, walls: 2, melee: 3, ranged: 2, tank: 1 }, ftue: { ...AFTER_3.ftue, tankSeen: true, stormcall: true } };
 
 /** Named states for the screenshot matrix (UX §10). */
 export function loadScene() {
@@ -69,6 +78,15 @@ export function loadScene() {
     fastForward(s, seconds, deploy);
     return s;
   };
+  /** A battle frozen at a moment (presentation and sim both hold), for coach screenshots. */
+  const frozen = (stageId: number, seconds: number, deploy = false) => {
+    const s = battle(stageId, seconds, deploy);
+    s.frame(100); // publish the HUD at that moment
+    s.paused = true;
+    return s;
+  };
+  const later = (ms: number, fn: () => void) => setTimeout(fn, ms);
+  const click = (id: string) => (document.querySelector(`[data-testid="${id}"]`) as HTMLElement | null)?.click();
   switch (scene) {
     case 'gallery':
       fixture({});
@@ -97,8 +115,97 @@ export function loadScene() {
       go('army');
       break;
     case 'army-new':
-      fixture({ gold: 36, campaignStage: 2, clearedStages: [1], stats: { battles: 1, victories: 1, goldEarned: 36, playSeconds: 40 }, ftue: { deploy1: true } });
+      fixture({ ...AFTER_1, gold: 36, ftue: FTUE_DONE });
       go('army');
+      break;
+    case 'army-focus': {
+      // Results → Upgrade: the Army opens on the recommended row
+      fixture({ ...STONE_MID, gold: 90 });
+      const rec = recommendUpgrade(save.value);
+      armyFocus.value = rec && rec.kind !== 'evolve' ? rec : null;
+      go('army');
+      break;
+    }
+    case 'purchase':
+      fixture({ ...STONE_MID, gold: 120 });
+      go('army');
+      later(700, () => click('buy-food'));
+      break;
+    case 'unlock-reveal':
+      fixture({ ...AFTER_1, ftue: FTUE_DONE });
+      go('army');
+      later(700, () => click('unlock-ranged'));
+      break;
+    // ---- FTUE coach steps (GDD §1.5)
+    case 'coach-food':
+      fixture({ ftue: {} });
+      frozen(1, 2.2);
+      break;
+    case 'coach-deploy':
+      fixture({ ftue: {} });
+      frozen(1, 5.2);
+      break;
+    case 'coach-results':
+      fixture({ ftue: {} });
+      battle(1, 400);
+      break;
+    case 'coach-recruit':
+      fixture(AFTER_1);
+      go('hub');
+      break;
+    case 'coach-recruit-army':
+      fixture(AFTER_1);
+      go('army');
+      break;
+    case 'coach-back':
+      fixture(AFTER_1_BOUGHT);
+      go('army');
+      break;
+    case 'coach-ranged':
+      fixture(AFTER_1_BOUGHT);
+      frozen(2, 2.4);
+      break;
+    case 'coach-food-up':
+      fixture(AFTER_2);
+      go('army');
+      break;
+    case 'coach-speed':
+      fixture({ ...AFTER_2, levels: { food: 2, walls: 1, melee: 1, ranged: 1, tank: 1 } });
+      frozen(3, 2.4);
+      break;
+    case 'coach-tank':
+      fixture(AFTER_3);
+      go('hub');
+      break;
+    case 'coach-storm':
+      fixture({ ...AFTER_3, owned: { ranged: true, tank: true }, ftue: { ...AFTER_3.ftue, tankSeen: true } });
+      frozen(4, 25.5, true);
+      break;
+    case 'coach-warlord':
+      fixture(AFTER_4);
+      frozen(5, 13.5, true);
+      break;
+    // ---- battle choreography
+    case 'intro-banner':
+      fixture(STONE_MID);
+      battle(4, 0);
+      break;
+    case 'intro-warlord':
+      fixture({ ...STONE_MID, campaignStage: 5, clearedStages: [1, 2, 3, 4] });
+      battle(5, 0);
+      break;
+    case 'warlord-banner':
+      fixture({ ...STONE_MID, campaignStage: 5, clearedStages: [1, 2, 3, 4], levels: { food: 4, walls: 3, melee: 4, ranged: 3, tank: 2 } });
+      battle(5, 11.6);
+      break;
+    case 'wipe':
+      fixture(STONE_MID);
+      go('hub');
+      later(900, () => click('battle'));
+      break;
+    case 'battle-rm':
+      fixture({ ...STONE_MID, settings: { ...newSave().settings, reduceMotion: true } });
+      battle(4, 24);
       break;
     case 'ages':
       fixture({ ...STONE_MID, gold: 200 });

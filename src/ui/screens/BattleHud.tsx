@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Slot } from '../../contracts';
+import { uiSound } from '../../app/audio';
 import { SPEED_UNLOCK_STAGE, session, type BattleSession } from '../../app/battleController';
+import { CoinBatcher } from '../../app/coinBatch';
+import { reduceMotion } from '../../app/motion';
 import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
-import { rosterOf } from '../../data/units';
+import { worldToScreen } from '../../app/world';
+import { rosterOf, unitDef } from '../../data/units';
 import { portraits } from '../../render/art/portraits';
 import type { SaveV1 } from '../../meta/save';
+import { BANNER_MS, Banner, type BannerSpec } from '../kit/coach';
+import { centerOf, flyCoin, replayClass } from '../kit/fx';
 import { Icon, type IconName } from '../kit/icons';
 import { Bar, Button, Pill, Sheet } from '../kit/kit';
 
@@ -26,13 +32,10 @@ function Hud({ s }: { s: BattleSession }) {
   const [speed, setSpeed] = useState(s.speed);
   const ended = s.ended$.value;
   useBattleToasts(s);
-  const coach = stage.id === 1 && !st.ftue['deploy1'];
+  const banner = useBanners(s);
+  const pill = useRef<HTMLDivElement>(null);
+  const coins = useCoinFlights(s, pill);
   const canSpeed = stage.id >= SPEED_UNLOCK_STAGE;
-  useEffect(() => {
-    if (!canSpeed || save.value.ftue['speed']) return;
-    markFtue('speed');
-    toast('NEW: ×2 SPEED, TOP RIGHT', 'good', 2600);
-  }, [canSpeed]);
   return (
     <div class="screen battle" data-testid="battle-hud">
       <header class="topbar">
@@ -41,7 +44,10 @@ function Hud({ s }: { s: BattleSession }) {
           s.paused = true;
           sheet.value = 'pause';
         }} />
-        <Pill icon="coin" value={hud.gold} testId="battle-gold" />
+        <div class="pill-anchor" ref={pill}>
+          {/* Gold counts when its coin lands (coinPop), so the pill never runs ahead of the coins in the air */}
+          <Pill icon="coin" value={s.state.goldEarned - coins.inFlight} testId="battle-gold" />
+        </div>
         <div class="stage-chip t-display" data-testid="stage-chip">
           {stage.warlord && <Icon name="crown" size={22} />}
           BATTLE {stage.id}
@@ -80,12 +86,12 @@ function Hud({ s }: { s: BattleSession }) {
         <div class="cards">
           {owned.map((slot) => (
             <div key={slot} class="card-slot">
-              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} coach={coach && slot === 'melee'} disabled={ended} />
-              {coach && !ended && slot === 'melee' && <Coach />}
+              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} disabled={ended} />
             </div>
           ))}
         </div>
       </div>
+      {banner && <Banner key={banner.id} b={banner} />}
       {sheet.value === 'pause' && <PauseSheet s={s} />}
       {sheet.value === 'retreat' && <RetreatSheet s={s} />}
     </div>
@@ -118,7 +124,7 @@ function FoodPanel({ s, food, rate }: { s: BattleSession; food: number; rate: nu
   );
 }
 
-function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; coach: boolean; disabled: boolean }) {
+function DeckCard({ s, slot, queued, full, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; disabled: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
   const def = rosterOf(s.state.input.armyAge)[slot];
   const [shake, setShake] = useState(0);
@@ -132,8 +138,8 @@ function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession
       const ready = s.state.food >= def.cost * 1000;
       const f = ready ? 1 : Math.min(0.97, s.foodNow() / def.cost);
       el.style.setProperty('--fill', f.toFixed(3));
+      el.classList.toggle('ready', ready); // every frame: a re-render that rewrites `class` must not drop it
       if (ready !== wasReady) {
-        el.classList.toggle('ready', ready);
         if (ready) {
           el.classList.remove('popready');
           void el.offsetWidth; // restart the one-shot "ready" pop
@@ -158,12 +164,12 @@ function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession
       return;
     }
     s.deploy(slot);
-    if (slot === 'melee' && s.stage.id === 1) markFtue('deploy1');
+    replayClass(ref.current, 'deploypop'); // squash → spring (ART_BIBLE §5.14 Deploy)
   };
   return (
     <button
       ref={ref}
-      class={`card ${slot} ${full ? 'full' : ''} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''} ${coach ? 'coached' : ''}`}
+      class={`card ${slot} ${full ? 'full' : ''} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''}`}
       data-testid={`card-${slot}`}
       aria-label={`${def.name}, ${def.cost} Food`}
       onPointerDown={press}
@@ -215,19 +221,6 @@ function StormRing({ s }: { s: BattleSession }) {
   );
 }
 
-function Coach() {
-  return (
-    <div class="coach" aria-live="polite">
-      <div class="coach-bubble">Tap to send a Clubber!</div>
-      <div class="coach-hand">
-        <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true">
-          <path d="M20 44c-6 0-10-5-10-10v-8a3 3 0 0 1 6 0v-14a3.5 3.5 0 0 1 7 0v10a3.5 3.5 0 0 1 7 0v2a3.5 3.5 0 0 1 7 0v2a3.5 3.5 0 0 1 7 0v8c0 6-5 10-11 10z" fill="#F7D0A8" stroke="#1D1830" stroke-width="2.5" stroke-linejoin="round" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
 function useBattleToasts(s: BattleSession) {
   useEffect(
     () =>
@@ -236,12 +229,87 @@ function useBattleToasts(s: BattleSession) {
           if (e.kind === 'rally') toast('ENEMY RALLY!', 'bad');
           else if (e.kind === 'wardBroken') toast('WARD BROKEN!', 'good');
           else if (e.kind === 'stormRising') toast(e.level === 1 ? 'STORM RISING' : `STORM RISING ${e.level}`, 'storm');
-          else if (e.kind === 'warlordIntro') toast(`WARLORD: ${s.stage.title.toUpperCase()}`, 'bad', 2600);
           else if (e.kind === 'stormcallCharged') toast('STORMCALL READY', 'storm', 1400);
         }
       }),
     [s],
   );
+}
+
+/**
+ * Momentary banners (≤ 1.2 s, click-through, over the sky): the stage intro when the battle starts — "WARLORD!" on boss
+ * stages — and the Warlord's entrance (GDD §1.5 "CHIEF GRUMBO APPROACHES!").
+ */
+function useBanners(s: BattleSession): BannerSpec | null {
+  const [b, setB] = useState<BannerSpec | null>(null);
+  useEffect(() => {
+    let seq = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const show = (spec: Omit<BannerSpec, 'id'>, delay = 0) => {
+      timers.push(
+        setTimeout(() => {
+          const id = ++seq;
+          setB({ ...spec, id });
+          uiSound('sheetOpen', { gain: 0.5 });
+          timers.push(setTimeout(() => setB((cur) => (cur?.id === id ? null : cur)), BANNER_MS + 40));
+        }, delay),
+      );
+    };
+    const st = s.stage;
+    // only for a battle that is just starting (debug fixtures fast-forward past it)
+    if (s.state.tick < 4) {
+      show(st.warlord ? { title: 'WARLORD!', sub: `Battle ${st.id} · ${st.title}`, tone: 'red', icon: 'crown' } : { title: `BATTLE ${st.id}`, sub: st.title, tone: 'blue' }, 280);
+    }
+    const off = s.onEvents((ev) => {
+      if (ev.some((e) => e.kind === 'warlordIntro')) show({ title: st.title.toUpperCase(), sub: 'APPROACHES!', tone: 'red', icon: 'crown' });
+    });
+    return () => {
+      off();
+      timers.forEach(clearTimeout);
+    };
+  }, [s]);
+  return b;
+}
+
+/**
+ * Battle Gold flies from where it was earned to the Gold pill (ART_BIBLE §5.11 coinPop), batched so a busy fight keeps
+ * at most 12 coins in the air. The pill shows the Gold that has landed; Reduce Motion skips the flights.
+ */
+function useCoinFlights(s: BattleSession, pill: { current: HTMLDivElement | null }): CoinBatcher {
+  const batch = useMemo(() => new CoinBatcher(12), [s]);
+  const [, landed] = useState(0);
+  useEffect(
+    () =>
+      s.onEvents((ev) => {
+        if (reduceMotion()) return;
+        for (const e of ev) {
+          let value = 0;
+          let x = 0;
+          let h = 0;
+          if (e.kind === 'death' && e.gold > 0) [value, x, h] = [e.gold, e.x, unitDef(e.def).role === 'warlord' ? 300 : 120];
+          else if (e.kind === 'baseChunk' && e.gold > 0) {
+            const w = e.source === 'warlord' ? s.curr.units.find((u) => u.role === 'warlord') : undefined;
+            [value, x, h] = [e.gold, w ? w.x : 1060, w ? 300 : 250];
+          }
+          if (!value) continue;
+          const from = worldToScreen(x, h);
+          const f = batch.add(value, from.x, from.y, performance.now());
+          if (!f) continue;
+          const to = centerOf(pill.current?.querySelector('.icon')) ?? { x: 60, y: 30 };
+          flyCoin(from, to, {
+            style: 'pop',
+            onLand: () => {
+              if (batch.land(f.id)) {
+                landed((n) => n + 1);
+                uiSound('coinTick', { param: 0.7, gain: 0.6 });
+              }
+            },
+          });
+        }
+      }),
+    [s, batch],
+  );
+  return batch;
 }
 
 function PauseSheet({ s }: { s: BattleSession }) {
