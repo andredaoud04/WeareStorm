@@ -7,6 +7,7 @@ import {
   type Recommendation, type Settlement,
 } from '../meta/progress';
 import { newSave, type SaveV1 } from '../meta/save';
+import { nextAgeInBuild } from './build';
 import { loadSave, writeSave } from './storage';
 
 /** App-wide state as signals. Screens read these; only the actions below change them. */
@@ -48,7 +49,7 @@ export const results = signal<ResultsView | null>(null);
 export const nextStage = computed(() => Math.min(STAGE_COUNT, save.value.campaignStage));
 export const campaignComplete = computed(() => save.value.campaignStage > STAGE_COUNT);
 export const affordable = computed(() => affordableCount(save.value));
-export const evolveReady = computed(() => canEvolve(save.value) && (mustEvolve(save.value) || evolvePrice(save.value) === 0));
+export const evolveReady = computed(() => nextAgeInBuild(save.value) && canEvolve(save.value) && (mustEvolve(save.value) || evolvePrice(save.value) === 0));
 
 export function boot() {
   const s = loadSave();

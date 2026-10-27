@@ -97,6 +97,7 @@
   --fill: 0;
   position: relative; width: calc(84 * var(--pt)); height: calc(120 * var(--pt)); padding: 0; border: 0;
   border-radius: calc(14 * var(--pt)); overflow: hidden; cursor: pointer; touch-action: none;
+  background: var(--tint);
   background: radial-gradient(120% 90% at 50% 30%, color-mix(in srgb, var(--tint) 75%, white), var(--tint) 60%, color-mix(in srgb, var(--tint) 70%, black));
   box-shadow: 0 0 0 var(--line) var(--c-ink), 0 calc(5 * var(--pt)) 0 rgba(0, 0, 0, .35);
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
@@ -129,7 +130,12 @@
 .card-queue { position: absolute; top: calc(6 * var(--pt)); right: calc(6 * var(--pt)); z-index: 2; display: flex; gap: calc(3 * var(--pt)); }
 .card-queue i { width: calc(8 * var(--pt)); height: calc(8 * var(--pt)); border-radius: 50%; background: #fff; box-shadow: 0 0 0 calc(2 * var(--pt)) var(--c-ink); }
 .card.coached { animation: breathe 1s ease-in-out infinite; }
-.storm-ring { position: absolute; right: calc(14 * var(--pt) + var(--safe-right)); top: calc(-40 * var(--pt)); pointer-events: auto; }
+/* Sits fully above the cards so a tap on its lower edge can never deploy a Rockhide instead. */
+.storm-ring { position: absolute; z-index: 6; right: calc(14 * var(--pt) + var(--safe-right)); top: calc(-58 * var(--pt)); pointer-events: auto; }
+.storm-ring.nopeA { animation: nope 240ms ease-out; }
+.storm-ring.nopeB { animation: nope2 240ms ease-out; }
+.card-cost.max { font-size: calc(16 * var(--pt)); letter-spacing: .04em; }
+.speed-slot { flex: none; width: calc(48 * var(--pt)); height: calc(48 * var(--pt)); }
 .storm-ring .icon { width: calc(40 * var(--pt)); height: calc(40 * var(--pt)); }
 
 .card-slot { position: relative; }
@@ -187,6 +193,7 @@
 .unit-card {
   --tint: var(--c-roleMelee);
   position: relative; width: calc(108 * var(--pt)); height: calc(146 * var(--pt)); border-radius: calc(16 * var(--pt));
+  background: var(--tint);
   background: radial-gradient(120% 90% at 50% 25%, color-mix(in srgb, var(--tint) 75%, white), var(--tint) 62%, color-mix(in srgb, var(--tint) 70%, black));
   box-shadow: 0 0 0 var(--line) var(--c-ink), 0 calc(5 * var(--pt)) 0 rgba(0, 0, 0, .35);
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: calc(4 * var(--pt)); padding-bottom: calc(10 * var(--pt));
@@ -194,8 +201,8 @@
 }
 .unit-card.ranged { --tint: var(--c-roleRanged); }
 .unit-card.tank { --tint: var(--c-roleTank); }
-.unit-card.locked { filter: saturate(.25) brightness(.85); }
-.unit-card.locked .btn { filter: none; }
+/* Locked cards go grey through their tint, not a filter, so the gold Unlock button inside keeps its colour. */
+.unit-card.locked { --tint: var(--c-grey600); }
 .unit-portrait { position: absolute; top: calc(12 * var(--pt)); }
 .unit-portrait .icon { width: calc(56 * var(--pt)); height: calc(56 * var(--pt)); }
 .unit-lvl { position: absolute; top: calc(6 * var(--pt)); left: calc(6 * var(--pt)); }
@@ -225,12 +232,12 @@
 
 /* ------------------------------------------------------------------ ages */
 .ages .topbar .pill { margin-left: auto; }
-.medals { position: absolute; left: 0; right: 0; top: calc(var(--safe-top) + 64 * var(--pt)); display: flex; justify-content: center; gap: calc(6 * var(--pt)); padding: 0 calc(8 * var(--pt)); }
-.medal { display: flex; flex-direction: column; align-items: center; gap: calc(4 * var(--pt)); width: calc(56 * var(--pt)); }
+.medals { position: absolute; left: 0; right: 0; top: calc(var(--safe-top) + 64 * var(--pt)); display: flex; justify-content: center; gap: calc(2 * var(--pt)); padding: 0 calc(4 * var(--pt)); }
+.medal { display: flex; flex-direction: column; align-items: center; gap: calc(4 * var(--pt)); width: calc(58 * var(--pt)); min-width: 0; }
 .medal-disc { width: calc(48 * var(--pt)); height: calc(48 * var(--pt)); border-radius: 50%; display: grid; place-items: center; background: var(--c-night800); box-shadow: 0 0 0 var(--line) var(--c-ink); }
 .medal.cur .medal-disc { background: var(--c-purple500); transform: scale(1.15); box-shadow: 0 0 0 var(--line) var(--c-ink), 0 0 calc(14 * var(--pt)) rgba(139, 92, 246, .8); }
 .medal.past .medal-disc { background: var(--c-paper); }
-.medal-name { font-family: var(--font-display); font-size: calc(12 * var(--pt)); color: var(--c-paper); paint-order: stroke fill; -webkit-text-stroke: calc(var(--line) * 1) var(--c-ink); white-space: nowrap; }
+.medal-name { font-family: var(--font-display); font-size: calc(11 * var(--pt)); letter-spacing: -.01em; color: var(--c-paper); paint-order: stroke fill; -webkit-text-stroke: calc(var(--line) * 1) var(--c-ink); white-space: nowrap; }
 .medal.future .medal-name { color: var(--c-grey400); }
 .age-panel { position: absolute; left: 50%; transform: translateX(-50%); top: calc(var(--safe-top) + 150 * var(--pt)); width: min(calc(100% - 24 * var(--pt)), calc(420 * var(--pt))); }
 .age-body { padding: calc(14 * var(--pt)); display: flex; flex-direction: column; gap: calc(12 * var(--pt)); align-items: center; }

@@ -30,6 +30,9 @@ interface UnitSprite {
   lungeUntil: number; // ms
   dying: number; // ms since death, -1 alive
   lastX: number;
+  /** Eased rank offset and depth, so a unit never jumps sideways when the crowd around it changes. */
+  sdx: number;
+  sdepth: number;
   hpFrac: number;
 }
 
@@ -106,6 +109,7 @@ export class BattleScene {
   private bolts: { g: Graphics; until: number }[] = [];
   private idle: UnitSprite[] = [];
   private animDt = 0; // seconds of animation this frame (0 while paused)
+  private ease = 1; // per-frame easing factor for rank offsets
 
   constructor(private host: PixiHost, private opts: SceneOptions) {
     this.cam = makeCamera({ w: host.width, h: host.height, uiTop: opts.uiTop() });
@@ -138,7 +142,7 @@ export class BattleScene {
 
   destroy() {
     for (const f of this.off) f();
-    this.root.destroy({ children: true });
+    this.root.destroy({ children: true, context: true });
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -216,17 +220,17 @@ export class BattleScene {
     hp.visible = !!hpH;
     root.addChild(shadow, body, hp);
     this.unitsLayer.addChild(root);
-    return { id, side, role, root, body, flash, legA, legB, hp, phase: 0, attackFrom: -1, impactTick: -1, flashUntil: 0, lungeUntil: 0, dying: -1, lastX: 0, hpFrac: 1 };
+    return { id, side, role, root, body, flash, legA, legB, hp, phase: 0, attackFrom: -1, impactTick: -1, flashUntil: 0, lungeUntil: 0, dying: -1, lastX: 0, hpFrac: 1, sdx: Number.NaN, sdepth: 0 };
   }
 
   private clearUnits() {
-    for (const u of this.units.values()) u.root.destroy({ children: true });
-    for (const u of this.idle) u.root.destroy({ children: true });
-    for (const p of this.projs.values()) p.g.destroy();
-    for (const p of this.particles) p.g.destroy();
+    for (const u of this.units.values()) u.root.destroy({ children: true, context: true });
+    for (const u of this.idle) u.root.destroy({ children: true, context: true });
+    for (const p of this.projs.values()) p.g.destroy({ context: true });
+    for (const p of this.particles) p.g.destroy({ context: true });
     for (const n of this.numbers) n.t.destroy();
-    for (const m of this.markers) m.g.destroy();
-    for (const b of this.bolts) b.g.destroy();
+    for (const m of this.markers) m.g.destroy({ context: true });
+    for (const b of this.bolts) b.g.destroy({ context: true });
     this.units.clear();
     this.projs.clear();
     this.idle = [];
@@ -287,7 +291,7 @@ export class BattleScene {
         case 'projectileEnd': {
           const p = this.projs.get(e.projId);
           if (p) {
-            p.g.destroy();
+            p.g.destroy({ context: true });
             this.projs.delete(e.projId);
           }
           if (e.result === 'fizzle') this.puff(e.x, 8, 0xdce3ef, 3);
@@ -383,6 +387,7 @@ export class BattleScene {
     const s = this.session;
     if (s?.paused) dtMs = 0; // the whole world holds still under the pause sheet
     this.time += dtMs;
+    this.ease = 1 - Math.exp(-(dtMs / 1000) * 9);
     this.animDt = (dtMs / 1000) * (s?.speed ?? 1);
     const k = this.cam.ptPerWu;
     const gy = this.cam.groundY;
@@ -413,7 +418,7 @@ export class BattleScene {
         u.body.rotation = (u.side === 'player' ? -1 : 1) * t * 1.35;
         u.root.alpha = 1 - t;
         if (t >= 1) {
-          u.root.destroy({ children: true });
+          u.root.destroy({ children: true, context: true });
           this.units.delete(id);
         }
       }
@@ -440,7 +445,7 @@ export class BattleScene {
         m.g.ellipse(sx(wx), gy, wr * k * (0.4 + 0.6 * f), 14 * k + 6).fill({ color: col, alpha: 0.18 + 0.2 * f });
         m.g.ellipse(sx(wx), gy, wr * k, 14 * k + 6).stroke({ width: 2.5, color: col, alpha: 0.9 });
         if (tickTime >= m.until) {
-          m.g.destroy();
+          m.g.destroy({ context: true });
           return false;
         }
         return true;
@@ -468,7 +473,7 @@ export class BattleScene {
       p.g.scale.set(k * 2 * (p.fade ? 1 - p.life / p.max : 1) + 0.2);
       if (p.fade) p.g.alpha = Math.max(0, 1 - p.life / p.max);
       if (p.life >= p.max) {
-        p.g.destroy();
+        p.g.destroy({ context: true });
         return false;
       }
       return true;
@@ -489,7 +494,7 @@ export class BattleScene {
     this.bolts = this.bolts.filter((b) => {
       b.g.alpha = Math.max(0, (b.until - this.time) / 180);
       if (this.time >= b.until) {
-        b.g.destroy();
+        b.g.destroy({ context: true });
         return false;
       }
       return true;
@@ -508,11 +513,19 @@ export class BattleScene {
 
   private placeUnit(u: UnitSprite, v: UnitView, x: number, spread: { dx: number; depth: number } | undefined, tickTime: number) {
     const k = this.cam.ptPerWu;
-    const dx = spread?.dx ?? 0;
+    const tdx = spread?.dx ?? 0;
     const depth = spread?.depth ?? 0;
+    if (Number.isNaN(u.sdx)) {
+      u.sdx = tdx;
+      u.sdepth = depth;
+    } else {
+      u.sdx += (tdx - u.sdx) * this.ease;
+      u.sdepth += (depth - u.sdepth) * this.ease;
+    }
+    const dx = u.sdx;
     const facing = u.side === 'player' ? 1 : -1;
     const lunge = this.time < u.lungeUntil ? 10 * facing : 0;
-    u.root.position.set(this.cam.sx(x + dx + lunge), this.cam.groundY + depth * k * 0.35);
+    u.root.position.set(this.cam.sx(x + dx + lunge), this.cam.groundY + u.sdepth * k * 0.35);
     u.root.scale.set(k * facing, k);
     u.root.zIndex = depth;
     // walk cycle vs windup lean

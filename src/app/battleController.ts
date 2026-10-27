@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals';
 import type { BattleSnapshot, SimCommand, SimEvent, Slot } from '../contracts';
 import { TICK_MS, TICKS_PER_SECOND } from '../contracts';
+import { FIELD_CAP } from '../data/economy';
 import { stageDef, type StageDef } from '../data/stages';
 import { rosterOf } from '../data/units';
 import { battleInput } from '../meta/progress';
@@ -27,12 +28,19 @@ export interface HudState {
   gold: number;
   stormLevel: number;
   seconds: number;
+  /** The army is at the field cap: cards show MAX (UX §3). */
+  full: boolean;
 }
 
 type EventSink = (events: readonly SimEvent[], tick: number) => void;
 type FrameSink = (c: BattleSession) => void;
 
 const MAX_TICKS_PER_FRAME = 4;
+const HUD_MS = 100;
+/** Gold earned is saved at most every half second of sim time (and on hide / pagehide via savePending). */
+const PENDING_TICKS = 10;
+/** ×2 speed appears at Battle 3 (GDD §2.13). */
+export const SPEED_UNLOCK_STAGE = 3;
 
 let battleSeq = 0;
 
@@ -53,7 +61,11 @@ export class BattleSession {
   private eventSinks = new Set<EventSink>();
   private frameSinks = new Set<FrameSink>();
   private ended = false;
-  private lastHud = -1;
+  private hudMs = 0;
+  private hudDirty = false;
+  private hudUrgent = false;
+  private pendingGold = 0;
+  private pendingTick = 0;
   readonly hud = signal<HudState>(null as unknown as HudState);
   readonly ended$ = signal(false);
 
@@ -65,7 +77,16 @@ export class BattleSession {
     this.prev = snapshot({ state: this.state });
     this.curr = this.prev;
     this.hud.value = this.makeHud();
+    this.speed = save.value.settings.fast && stageId >= SPEED_UNLOCK_STAGE ? 2 : 1;
     markPending(this.id, stageId, 0);
+  }
+
+  /** Saves the Gold earned so far, so a reload or a killed tab still pays it (settled as a retreat on boot). */
+  savePending() {
+    if (this.ended || this.state.goldEarned === this.pendingGold) return;
+    this.pendingGold = this.state.goldEarned;
+    this.pendingTick = this.state.tick;
+    markPending(this.id, this.stage.id, this.state.goldEarned);
   }
 
   onEvents(fn: EventSink) {
@@ -137,6 +158,13 @@ export class BattleSession {
       if (n >= MAX_TICKS_PER_FRAME * this.speed) this.acc = Math.min(this.acc, TICK_MS); // slow down, never skip
       if (this.ended) this.acc = 0;
     }
+    // HUD numbers refresh at 10 Hz of real time whatever the speed (TECH §4), or at once for things the player acts on.
+    this.hudMs += dt;
+    if (this.hudUrgent || (this.hudDirty && this.hudMs >= HUD_MS)) {
+      this.hudUrgent = this.hudDirty = false;
+      this.hudMs = 0;
+      this.hud.value = this.makeHud();
+    }
     this.alpha = Math.max(0, Math.min(1, this.acc / TICK_MS));
     for (const f of this.frameSinks) f(this);
   }
@@ -149,18 +177,13 @@ export class BattleSession {
     this.prev = this.curr;
     this.curr = snapshot({ state: this.state });
     if (events.length) for (const s of this.eventSinks) s(events, this.state.tick);
-    // HUD numbers refresh at 10 Hz (TECH §4), or immediately when something the player acts on changes.
-    const urgent = events.some((e) => e.kind === 'deployQueued' || e.kind === 'stormcallCharged' || e.kind === 'stormcallCast' || e.kind === 'end');
-    if (urgent || this.state.tick - this.lastHud >= 2) {
-      this.lastHud = this.state.tick;
-      this.hud.value = this.makeHud();
-    }
-    if (events.some((e) => e.kind === 'death' || e.kind === 'baseChunk')) {
-      if (this.state.tick % 20 === 0 || events.some((e) => e.kind === 'baseChunk')) markPending(this.id, this.stage.id, this.state.goldEarned);
-    }
+    this.hudDirty = true;
+    if (events.some((e) => e.kind === 'deployQueued' || e.kind === 'stormcallCharged' || e.kind === 'stormcallCast' || e.kind === 'end')) this.hudUrgent = true;
+    if (this.state.tick - this.pendingTick >= PENDING_TICKS) this.savePending();
     const end = events.find((e) => e.kind === 'end');
     if (end && end.kind === 'end') {
       this.ended = true;
+      this.hud.value = this.makeHud();
       finishBattle({
         battleId: this.id,
         stageId: this.stage.id,
@@ -191,6 +214,7 @@ export class BattleSession {
       gold: c.goldEarned,
       stormLevel: c.stormLevel,
       seconds: c.tick / TICKS_PER_SECOND,
+      full: this.state.units.filter((u) => u.side === 'player').length + this.state.queue.length >= FIELD_CAP,
     };
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Slot } from '../../contracts';
-import { session, type BattleSession } from '../../app/battleController';
+import { SPEED_UNLOCK_STAGE, session, type BattleSession } from '../../app/battleController';
 import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
 import { rosterOf } from '../../data/units';
 import type { SaveV1 } from '../../meta/save';
@@ -26,6 +26,12 @@ function Hud({ s }: { s: BattleSession }) {
   const ended = s.ended$.value;
   useBattleToasts(s);
   const coach = stage.id === 1 && !st.ftue['deploy1'];
+  const canSpeed = stage.id >= SPEED_UNLOCK_STAGE;
+  useEffect(() => {
+    if (!canSpeed || save.value.ftue['speed']) return;
+    markFtue('speed');
+    toast('NEW: ×2 SPEED, TOP RIGHT', 'good', 2600);
+  }, [canSpeed]);
   return (
     <div class="screen battle" data-testid="battle-hud">
       <header class="topbar">
@@ -39,10 +45,16 @@ function Hud({ s }: { s: BattleSession }) {
           {stage.warlord && <Icon name="crown" size={22} />}
           BATTLE {stage.id}
         </div>
-        <Button size="s" tone={speed > 1 ? 'gold' : 'dark'} icon="speed" iconOnly ariaLabel="Speed" testId="speed" onPress={() => {
-          s.speed = s.speed > 1 ? 1 : 2;
-          setSpeed(s.speed);
-        }} />
+        {canSpeed ? (
+          <Button size="s" tone={speed > 1 ? 'gold' : 'dark'} icon="speed" iconOnly ariaLabel={speed > 1 ? 'Speed ×2' : 'Speed ×1'} testId="speed" highlight={!st.ftue['speedUsed']} onPress={() => {
+            s.speed = s.speed > 1 ? 1 : 2;
+            setSpeed(s.speed);
+            setSetting('fast', s.speed > 1);
+            markFtue('speedUsed');
+          }} />
+        ) : (
+          <span class="speed-slot" aria-hidden="true" />
+        )}
       </header>
       <div class="bars">
         <div class="bar-wrap">
@@ -67,7 +79,7 @@ function Hud({ s }: { s: BattleSession }) {
         <div class="cards">
           {owned.map((slot) => (
             <div key={slot} class="card-slot">
-              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} coach={coach && slot === 'melee'} disabled={ended} />
+              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} coach={coach && slot === 'melee'} disabled={ended} />
               {coach && !ended && slot === 'melee' && <Coach />}
             </div>
           ))}
@@ -105,7 +117,7 @@ function FoodPanel({ s, food, rate }: { s: BattleSession; food: number; rate: nu
   );
 }
 
-function DeckCard({ s, slot, queued, coach, disabled }: { s: BattleSession; slot: Slot; queued: number; coach: boolean; disabled: boolean }) {
+function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; coach: boolean; disabled: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
   const def = rosterOf(s.state.input.armyAge)[slot];
   const [shake, setShake] = useState(0);
@@ -114,9 +126,11 @@ function DeckCard({ s, slot, queued, coach, disabled }: { s: BattleSession; slot
     const offFrame = s.onFrame(() => {
       const el = ref.current;
       if (!el) return;
-      const f = Math.min(1, s.foodNow() / def.cost);
+      // READY and the press check use the sim's exact Food, so a card that says READY is always accepted; the fill
+      // is interpolated for smoothness but holds just short of full until the sim agrees.
+      const ready = s.state.food >= def.cost * 1000;
+      const f = ready ? 1 : Math.min(0.97, s.foodNow() / def.cost);
       el.style.setProperty('--fill', f.toFixed(3));
-      const ready = f >= 1;
       if (ready !== wasReady) {
         el.classList.toggle('ready', ready);
         if (ready) {
@@ -128,7 +142,7 @@ function DeckCard({ s, slot, queued, coach, disabled }: { s: BattleSession; slot
       }
     });
     const offEv = s.onEvents((ev) => {
-      if (ev.some((e) => e.kind === 'deployRejected' && e.slot === slot && e.reason !== 'food')) setShake((n) => n + 1);
+      if (ev.some((e) => e.kind === 'deployRejected' && e.slot === slot)) setShake((n) => n + 1);
     });
     return () => {
       offFrame();
@@ -138,7 +152,7 @@ function DeckCard({ s, slot, queued, coach, disabled }: { s: BattleSession; slot
   const press = (e: PointerEvent) => {
     e.preventDefault();
     if (disabled) return;
-    if (s.foodNow() < def.cost) {
+    if (s.state.food < def.cost * 1000 || full) {
       setShake((n) => n + 1);
       return;
     }
@@ -157,10 +171,14 @@ function DeckCard({ s, slot, queued, coach, disabled }: { s: BattleSession; slot
         <Icon name={ROLE_ICON[slot]} size={54} />
       </span>
       <span class="card-name">{def.name}</span>
-      <span class="card-cost">
-        <Icon name="food" size={18} />
-        {def.cost}
-      </span>
+      {full ? (
+        <span class="card-cost max t-display">MAX</span>
+      ) : (
+        <span class="card-cost">
+          <Icon name="food" size={18} />
+          {def.cost}
+        </span>
+      )}
       <span class="card-veil" />
       {queued > 0 && (
         <span class="card-queue">
@@ -176,9 +194,13 @@ function DeckCard({ s, slot, queued, coach, disabled }: { s: BattleSession; slot
 function StormRing({ s }: { s: BattleSession }) {
   const hud = s.hud.value;
   const sc = hud.stormcall;
+  const [nope, setNope] = useState(0);
+  useEffect(() => s.onEvents((ev) => {
+    if (ev.some((e) => e.kind === 'stormcallNoTarget')) setNope((n) => n + 1);
+  }), [s]);
   return (
     <button
-      class={`ring storm-ring ${sc.ready ? 'ready' : ''}`}
+      class={`ring storm-ring ${sc.ready ? 'ready' : ''} ${nope ? (nope % 2 ? 'nopeA' : 'nopeB') : ''}`}
       style={{ ['--p' as string]: sc.ready ? 1 : sc.charge }}
       data-testid="stormcall"
       aria-label={sc.ready ? 'Stormcall ready' : 'Stormcall charging'}
@@ -230,6 +252,9 @@ function PauseSheet({ s }: { s: BattleSession }) {
   return (
     <Sheet title="PAUSED" onClose={resume} testId="pause-sheet">
       <div class="sheet-col">
+        <p class="sheet-copy" data-testid="pause-stage">
+          Battle {s.stage.id} · <b>{s.stage.title}</b>
+        </p>
         <Button size="l" tone="green" icon="play" label="Resume" onPress={resume} testId="resume" />
         <Toggles set={set} />
         <Button tone="red" icon="flag" label="Retreat" onPress={() => (sheet.value = 'retreat')} testId="retreat" />

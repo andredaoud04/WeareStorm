@@ -56,6 +56,8 @@
 /* face: gradient with a gloss band */
 .btn::after {
   top: 0; bottom: var(--lip);
+  /* Plain face first: browsers without color-mix() (Safari < 16.2) drop the gradient below and keep this. */
+  background: linear-gradient(180deg, rgba(255, 255, 255, .24) 0 46%, transparent 46%) padding-box, var(--face);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, .24) 0 46%, transparent 46%) padding-box,
     linear-gradient(180deg, color-mix(in srgb, var(--face) 84%, white) 0%, var(--face) 100%);
@@ -236,6 +238,8 @@
   font-family: var(--font-display); font-size: calc(18 * var(--pt)); letter-spacing: .03em;
   box-shadow: 0 calc(4 * var(--pt)) 0 rgba(0,0,0,.25); animation: drop-in 420ms cubic-bezier(.34,1.56,.64,1);
 }
+/* Under the Warlord bar while it is shown, so a toast never hides the boss's name or HP. */
+#ui:has(.boss-bar) .toasts { top: calc(var(--safe-top) + 136 * var(--pt)); }
 .toast.bad { background: var(--c-red700); box-shadow: 0 0 0 var(--line) var(--c-ink); }
 .toast.good { background: var(--c-green700); box-shadow: 0 0 0 var(--line) var(--c-ink); }
 .toast.storm { background: var(--c-purple700); box-shadow: 0 0 0 var(--line) var(--c-ink), 0 0 calc(16 * var(--pt)) rgba(139,92,246,.8); }

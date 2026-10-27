@@ -14,7 +14,7 @@ export interface SaveV1 {
   owned: { ranged: boolean; tank: boolean };
   levels: Record<Track, number>;
   ftue: Record<string, boolean>;
-  settings: { sound: boolean; music: boolean; haptics: boolean; reduceMotion: boolean; damageNumbers: boolean };
+  settings: { sound: boolean; music: boolean; haptics: boolean; reduceMotion: boolean; damageNumbers: boolean; fast: boolean };
   lossStreak: number; // consecutive losses on the current stage (drives the lose-forward assist)
   lastSettledBattleId: string | null;
   /** The last few settled battle ids, so a battle can never be paid twice (even out of order). */
@@ -40,7 +40,7 @@ export function newSave(): SaveV1 {
     owned: { ranged: false, tank: false },
     levels: freshLevels(),
     ftue: {},
-    settings: { sound: true, music: true, haptics: true, reduceMotion: false, damageNumbers: true },
+    settings: { sound: true, music: true, haptics: true, reduceMotion: false, damageNumbers: true, fast: false },
     lossStreak: 0,
     lastSettledBattleId: null,
     recentBattleIds: [],
@@ -96,6 +96,7 @@ export function migrate(raw: unknown): SaveV1 {
       haptics: bool(settings.haptics, true),
       reduceMotion: bool(settings.reduceMotion, false),
       damageNumbers: bool(settings.damageNumbers, true),
+      fast: bool(settings.fast, false),
     },
     lossStreak: int(r.lossStreak, 0, 1000, 0),
     lastSettledBattleId: typeof r.lastSettledBattleId === 'string' ? r.lastSettledBattleId : null,

@@ -51,6 +51,10 @@ async function main() {
       });
       await page.goto(`${base}/?scene=${scene}${insets ? `&insets=${insets}` : ''}`);
       await page.waitForTimeout(SLOW.has(scene) ? 4500 : 1200);
+      // Measure only once one-shot entrances (sheet slide-ups, pops) have finished; looping idles never finish.
+      await page
+        .waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity), null, { timeout: 5000 })
+        .catch(() => problems.push(`${tag}/${scene}: entrance animations still running after 5 s`));
       const layout = await page.evaluate(() => {
         const css = getComputedStyle(document.documentElement);
         const top = parseFloat(css.getPropertyValue('--safe-top')) || 0;
