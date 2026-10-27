@@ -39,14 +39,22 @@ addEventListener('resize', () => {
   relayoutWorld();
 });
 
-// Auto-pause when the app is hidden (UX §0)
-document.addEventListener('visibilitychange', () => {
+// Auto-pause when the app is hidden or loses focus (UX §0). An open Retreat confirm stays open.
+function autoPause() {
   const s = session.value;
-  if (document.hidden && s && route.value === 'battle' && !s.ended$.value) {
-    s.paused = true;
-    sheet.value = 'pause';
-  }
+  if (!s || route.value !== 'battle' || s.ended$.value) return;
+  s.savePending();
+  s.paused = true;
+  if (sheet.value !== 'retreat') sheet.value = 'pause';
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) autoPause();
 });
+addEventListener('blur', autoPause);
+// iOS may kill a backgrounded tab without another event: save the battle's Gold on the way out.
+addEventListener('pagehide', () => session.value?.savePending());
+// iOS Safari only applies :active (the pressed look) when the page has a touch listener.
+document.addEventListener('touchstart', () => {}, { passive: true });
 
 boot();
 installDebug();

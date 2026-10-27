@@ -1,3 +1,4 @@
+import { MAX_AGE } from '../../app/build';
 import { doEvolve, go, save, toast } from '../../app/store';
 import { AGE_ORDER } from '../../contracts';
 import { AGES, ageDef } from '../../data/ages';
@@ -7,8 +8,7 @@ import { portraits } from '../../render/art/portraits';
 import { Icon } from '../kit/icons';
 import { Button, Panel, Pill } from '../kit/kit';
 
-/** Ages playable in this build. All six run on placeholder art; the G1 owner build sets VITE_MAX_AGE=1 (Stone). */
-export const MAX_AGE = Math.max(1, Math.min(6, Number(import.meta.env.VITE_MAX_AGE ?? 6)));
+export { MAX_AGE } from '../../app/build';
 
 /**
  * Ages (UX §6): the six-Age track and the Evolve button. Evolve is free once this Age's Warlord is beaten; before
