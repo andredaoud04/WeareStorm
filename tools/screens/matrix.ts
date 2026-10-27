@@ -51,9 +51,19 @@ async function main() {
       });
       await page.goto(`${base}/?scene=${scene}${insets ? `&insets=${insets}` : ''}`);
       await page.waitForTimeout(SLOW.has(scene) ? 4500 : 1200);
-      // Measure only once one-shot entrances (sheet slide-ups, pops) have finished; looping idles never finish.
+      // Measure only once one-shot entrances (sheet slide-ups, pops) have finished. Looping idles never finish, and a
+      // live battle keeps firing toasts and card pops, so those are not waited for.
       await page
-        .waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity), null, { timeout: 5000 })
+        .waitForFunction(
+          () =>
+            document.getAnimations().every((a) => {
+              if (a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity) return true;
+              const t = (a.effect as KeyframeEffect | null)?.target;
+              return !!t && !!t.closest('.toasts, .deck, .food, .boss-bar');
+            }),
+          null,
+          { timeout: 5000 },
+        )
         .catch(() => problems.push(`${tag}/${scene}: entrance animations still running after 5 s`));
       const layout = await page.evaluate(() => {
         const css = getComputedStyle(document.documentElement);
