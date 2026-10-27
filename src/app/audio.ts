@@ -120,7 +120,7 @@ function onPointerDown(ev: PointerEvent) {
   if (custom && custom in SOUNDS) return uiSound(custom as SoundId);
   const cl = el.classList;
   if (cl.contains('card')) {
-    if (cl.contains('ready')) cardTapTick();
+    if (cl.contains('ready') && !cl.contains('full')) cardTapTick(); // a full army refuses the tap
     else uiSound('nope');
     return;
   }

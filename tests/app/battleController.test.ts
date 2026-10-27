@@ -48,6 +48,46 @@ describe('battle controller clock (TECH §4)', () => {
     expect(s.state.tick).toBeLessThanOrEqual(4);
   });
 
+  it('saves the Gold earned so far within half a second of sim time (a reload pays it)', () => {
+    const s = new BattleSession(1, 7);
+    const history: number[] = [];
+    let checked = 0;
+    for (let i = 0; i < 20 * 120 && !s.ended$.value; i++) {
+      if (i % 10 === 0 && s.foodNow() >= s.cost('melee')) s.deploy('melee');
+      s.frame(50);
+      history[s.state.tick] = s.state.goldEarned;
+      const p = save.value.pendingBattle;
+      if (!p || p.battleId !== s.id || s.state.tick < 11) continue;
+      // the saved figure is never older than 10 ticks
+      expect(history.slice(s.state.tick - 10, s.state.tick + 1)).toContain(p.goldEarned);
+      checked++;
+    }
+    expect(Math.max(...history.filter((g) => g !== undefined))).toBeGreaterThan(0);
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it('refreshes the HUD at 10 Hz of real time at x1 and x2 alike', () => {
+    for (const speed of [1, 2]) {
+      const s = new BattleSession(1, 7);
+      s.speed = speed;
+      let updates = 0;
+      const off = s.hud.subscribe(() => updates++);
+      updates = 0;
+      for (let i = 0; i < 60; i++) s.frame(1000 / 60); // one second at 60 fps
+      off();
+      expect(updates).toBeGreaterThanOrEqual(9);
+      expect(updates).toBeLessThanOrEqual(11);
+    }
+  });
+
+  it('starts at x2 only when the player chose it and the stage allows it (GDD §2.13)', () => {
+    save.value = { ...newSave(), settings: { ...newSave().settings, fast: true } };
+    expect(new BattleSession(1, 7).speed).toBe(1);
+    expect(new BattleSession(3, 7).speed).toBe(2);
+    save.value = newSave();
+    expect(new BattleSession(3, 7).speed).toBe(1);
+  });
+
   it('settles a retreat at once: Gold kept, results shown, pending battle cleared', () => {
     const s = new BattleSession(1, 7);
     for (let i = 0; i < 40; i++) s.frame(50);

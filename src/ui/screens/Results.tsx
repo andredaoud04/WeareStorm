@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { countTick } from '../../app/audio';
 import { session, startBattle } from '../../app/battleController';
+import { nextAgeInBuild } from '../../app/build';
 import { go, results, save } from '../../app/store';
 import { canEvolve, canPlayStage, mustEvolve, priceFor, type Recommendation } from '../../meta/progress';
 import { Icon } from '../kit/icons';
@@ -26,7 +27,7 @@ export function Results() {
   if (!r || !s || r.battleId !== s.id || !shown) return null;
   const win = r.result === 'victory';
   const st = save.value;
-  const evolveNow = win && r.warlord && canEvolve(st);
+  const evolveNow = win && r.warlord && canEvolve(st) && nextAgeInBuild(st);
   const nextId = Math.min(30, st.campaignStage);
   const primary = evolveNow
     ? { label: 'EVOLVE!', tone: 'purple' as const, icon: 'bolt' as const, act: () => done('ages') }
@@ -72,7 +73,7 @@ function done(to: 'hub' | 'army' | 'ages') {
 function again(stageId: number) {
   results.value = null;
   if (!canPlayStage(save.value, stageId)) {
-    leaveBattle(mustEvolve(save.value) ? 'ages' : 'hub'); // the next battle needs an Evolve first
+    leaveBattle(mustEvolve(save.value) && nextAgeInBuild(save.value) ? 'ages' : 'hub'); // the next battle needs an Evolve first
     return;
   }
   startBattle(stageId);

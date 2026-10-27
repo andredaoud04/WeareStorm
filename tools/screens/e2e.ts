@@ -41,7 +41,8 @@ async function main() {
   if (await page.getByTestId('card-ranged').count()) fail('a new player should own only the Clubber');
   step('first tap goes straight into Battle 1 with one card');
 
-  await page.getByTestId('speed').click();
+  if (await page.getByTestId('speed').count()) fail('x2 speed should stay hidden until Battle 3');
+  await page.evaluate(() => (window.__ws as { setSpeed(n: number): void }).setSpeed(2));
   const started = Date.now();
   while (!(await page.getByTestId('results').count())) {
     if (Date.now() - started > 120_000) fail('Battle 1 did not end within 120 s of real time');

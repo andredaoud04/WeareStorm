@@ -40,7 +40,9 @@ async function main() {
   const { chromium } = loadPlaywright();
   const browser = await chromium.launch();
   const problems: string[] = [];
-  for (const [w, h, tag, insets] of SIZES) {
+  // MATRIX_SIZES=ipad,ipadpro limits a run to some sizes (e.g. to re-check one device class).
+  const only = process.env.MATRIX_SIZES?.split(',').filter(Boolean);
+  for (const [w, h, tag, insets] of SIZES.filter(([, , t]) => !only?.length || only.includes(t))) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: true, isMobile: w < 800 });
     await ctx.addInitScript('window.__name = (f) => f'); // tsx keeps function names via a helper the page lacks
     for (const scene of list) {
@@ -51,6 +53,20 @@ async function main() {
       });
       await page.goto(`${base}/?scene=${scene}${insets ? `&insets=${insets}` : ''}`);
       await page.waitForTimeout(SLOW.has(scene) ? 4500 : 1200);
+      // Measure only once one-shot entrances (sheet slide-ups, pops) have finished. Looping idles never finish, and a
+      // live battle keeps firing toasts and card pops, so those are not waited for.
+      await page
+        .waitForFunction(
+          () =>
+            document.getAnimations().every((a) => {
+              if (a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity) return true;
+              const t = (a.effect as KeyframeEffect | null)?.target;
+              return !!t && !!t.closest('.toasts, .deck, .food, .boss-bar');
+            }),
+          null,
+          { timeout: 12000 },
+        )
+        .catch(() => problems.push(`${tag}/${scene}: entrance animations still running after 12 s`));
       const layout = await page.evaluate(() => {
         const css = getComputedStyle(document.documentElement);
         const top = parseFloat(css.getPropertyValue('--safe-top')) || 0;
