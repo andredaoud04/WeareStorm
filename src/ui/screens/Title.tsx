@@ -1,38 +1,30 @@
-import { color, motion } from '../style/tokens';
+import { startBattle } from '../../app/battleController';
+import { go, save } from '../../app/store';
+import { Icon } from '../kit/icons';
 
-/** Placeholder title for the scaffold; the final animated title arrives with the Stone art slice (BUILD_PLAN 1D/1E). */
-export function Title({ onStart }: { onStart: () => void }) {
+/** Title (UX §1). A brand-new player taps straight into Battle 1: no menus before the first fight (GDD FTUE). */
+export function Title() {
+  const start = () => {
+    if (save.value.stats.battles === 0) {
+      startBattle(1);
+      go('battle');
+    } else go('hub');
+  };
   return (
-    <div
-      class="safe"
-      onPointerUp={onStart}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 28,
-        background: `linear-gradient(180deg, #6EC6F5 0%, #BFE6FA 55%, #FFE6B0 100%)`,
-        position: 'fixed',
-        inset: 0,
-      }}
-    >
-      <h1 class="display" style={{ margin: 0, fontSize: 52, lineHeight: 1, color: color.paper, textAlign: 'center' }}>
-        WE ARE
-        <br />
-        <span style={{ color: color.gold400, fontSize: 64 }}>STORM</span>
-      </h1>
-      <div
-        class="display"
-        style={{
-          fontSize: 24,
-          color: color.paper,
-          animation: `breathe 1.6s ${motion.easeOut} infinite`,
-        }}
-      >
-        TAP TO PLAY
+    <div class="title-screen" onClick={start} data-testid="title">
+      <div class="title-sky" />
+      <div class="title-hills" />
+      <div class="logo">
+        <div class="logo-we t-display">WE ARE</div>
+        <div class="logo-storm t-display">
+          ST
+          <span class="logo-bolt">
+            <Icon name="bolt" size={74} />
+          </span>
+          RM
+        </div>
       </div>
-      <style>{`@keyframes breathe { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.06); opacity: .85 } }`}</style>
+      <div class="tap t-display">TAP TO PLAY</div>
     </div>
   );
 }
