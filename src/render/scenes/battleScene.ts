@@ -10,6 +10,7 @@ import { AGE_PALETTE } from '../art/palette';
 import { RigLibrary, UnitArt, type DeathKind } from '../art/unitArt';
 import { vfxInk, vfxTextures, type VfxName } from '../vfx/textures';
 import { makeCamera, rankSpread, type Camera } from '../pixi/camera';
+import { TRAUMA, Trauma, coverScale } from '../pixi/trauma';
 import type { PixiHost } from '../pixi/app';
 import { HEIGHT, INK, STONE, drawFigure, drawLeg, sideColors } from './stoneArt';
 
@@ -124,7 +125,9 @@ export class BattleScene {
   private session: BattleSession | null = null;
   private off: (() => void)[] = [];
   private time = 0; // ms, presentation clock
-  private trauma = 0;
+  private trauma = new Trauma();
+  private warlordId = 0;
+  private slamTick = -1;
   private flashWhite = 0;
   private stormLevel = 0;
   private warded = false;
@@ -150,6 +153,8 @@ export class BattleScene {
     this.session = session;
     this.warded = !!session?.curr.enemyBase.warded;
     this.stormLevel = 0;
+    this.trauma.value = 0;
+    this.warlordId = 0;
     if (session) {
       this.off.push(session.onEvents((ev, tick) => this.onEvents(ev, tick)));
     } else {
@@ -391,6 +396,7 @@ export class BattleScene {
           if (e.result === 'explode') {
             this.spark(e.x, 26, true);
             this.puff(e.x, 26, 10, true);
+            this.shake(TRAUMA.splash);
           }
           break;
         }
@@ -404,7 +410,7 @@ export class BattleScene {
             const x = e.targetSide === 'enemy' ? 1000 + 40 : -40;
             this.spark(x, 90 + ((e.sourceId * 37) % 80), e.heavy);
             if (e.heavy) this.puff(x, 60, 3, true);
-            if (e.targetSide === 'player') this.shake(e.heavy ? 0.22 : 0.08);
+            if (e.targetSide === 'player' && e.amount > 0) this.shake(TRAUMA.baseHit);
             if (e.targetSide === 'enemy') this.number('base', x, 200, e.amount);
             break;
           }
@@ -420,7 +426,10 @@ export class BattleScene {
             const dir = src.side === 'player' ? 1 : -1;
             this.fx('smear', src.lastX + dir * 50, HEIGHT[src.role] * 0.6, { ink: false, max: 90, s0: 1, s1: 1.1, mirror: dir, tint: 0xfffbe8 });
           }
-          if (e.heavy && !rm) this.shake(u.role === 'warlord' ? 0.12 : 0.05);
+          if (src && src.id === this.warlordId) {
+            if (this.slamTick !== tick) this.shake(TRAUMA.warlordSlam); // one slam hits many: shake once
+            this.slamTick = tick;
+          } else if (e.heavy && (u.role === 'tank' || u.role === 'warlord' || src?.role === 'tank')) this.shake(TRAUMA.tankHit);
           if (e.targetSide === 'enemy') this.number(e.targetId, u.lastX, HEIGHT[u.role] + 20, e.amount);
           break;
         }
@@ -433,22 +442,26 @@ export class BattleScene {
             u.art?.onDeath(kind);
           }
           this.puff(e.x, 30, 7);
-          if (e.gold > 0) this.coins(e.x, Math.min(5, e.gold));
-          if (u?.role === 'warlord' || u?.role === 'tank') this.shake(0.3);
+          // with motion on, the UI flies the coins to the Gold pill (coinPop); the world only shows them under Reduce Motion
+          if (e.gold > 0 && rm) this.coins(e.x, Math.min(5, e.gold));
+          if (u?.role === 'warlord') this.shake(TRAUMA.warlordKill);
+          else if (u?.role === 'tank') this.shake(TRAUMA.tankKill);
           break;
         }
         case 'baseChunk':
-          if (e.source === 'base') this.coins(1000 + 60, Math.min(3, e.gold));
+          if (e.source === 'base' && rm) this.coins(1000 + 60, Math.min(3, e.gold));
           break;
         case 'wardBroken':
           this.warded = false;
           this.redrawWard();
           for (let i = 0; i < 12; i++) this.fx('spark', 1130 + Math.cos(i) * 120, 200 + Math.sin(i) * 160, { tint: 0xc9b6ff, vy: 120, max: 520, s0: 0.8, s1: 0.2, spin: 6 });
-          this.shake(0.4);
+          this.shake(TRAUMA.wardBreak);
           if (!rm) this.session?.hitStop(80);
           break;
         case 'warlordIntro':
-          this.shake(0.35);
+          this.warlordId = e.id;
+          this.shake(TRAUMA.warlordIntro);
+          if (!rm) this.session?.slowMo(1000, 0.4); // boss intro slow-motion (ART_BIBLE §5.15)
           break;
         case 'stormRising':
           this.stormLevel = e.level;
@@ -463,8 +476,8 @@ export class BattleScene {
         }
         case 'stormcallStrike':
           this.bolt(e.x);
-          this.flashWhite = rm ? 0 : 0.55;
-          this.shake(0.55);
+          this.flashWhite = rm ? 0 : 0.35; // ≤ 35 % (ART_BIBLE §5.15)
+          this.shake(TRAUMA.stormcall);
           if (!rm) this.session?.hitStop(70);
           this.puff(e.x, 30, 10, true);
           this.fx('scorch', e.x, 0, { ink: false, max: 2400, s0: 1.4, s1: 1.5 }).g.alpha = 0.6;
@@ -475,7 +488,7 @@ export class BattleScene {
           if (e.result === 'victory') for (const u of this.units.values()) if (u.side === 'player' && u.dying < 0) u.art?.cheer();
           const x = loser === 'enemy' ? 1130 : -130;
           for (let i = 0; i < 4; i++) this.puff(x + (i - 1.5) * 60, 60 + i * 40, 8, i % 2 === 0);
-          this.shake(0.7);
+          this.shake(TRAUMA.collapse);
           if (!rm && e.result === 'victory') {
             this.session?.hitStop(120);
             this.session?.slowMo(900, 0.3);
@@ -630,9 +643,7 @@ export class BattleScene {
       }
       return true;
     });
-    this.trauma = Math.max(0, this.trauma - dt * 1.6);
-    const shake = rm ? 0 : this.trauma * this.trauma * 14;
-    this.lane.position.set((Math.sin(this.time * 0.09) + Math.sin(this.time * 0.053)) * shake * 0.5, Math.cos(this.time * 0.077) * shake * 0.5);
+    this.applyShake(dt, rm);
     this.overlay.clear();
     const dark = Math.min(0.32, this.stormLevel * 0.08);
     if (dark > 0) this.overlay.rect(0, 0, this.host.width, this.host.height).fill({ color: 0x141b33, alpha: dark });
@@ -802,7 +813,35 @@ export class BattleScene {
   }
 
   private shake(amount: number) {
-    this.trauma = Math.min(1, this.trauma + amount);
+    this.trauma.add(amount);
+  }
+
+  /**
+   * Trauma shake on the world container only (the DOM HUD never moves): offset and roll from smooth noise, scaled by
+   * trauma², with a matching zoom so no canvas edge shows. Far layers (sky, clouds, ambient life) move at 40 %
+   * (parallax depth). Off under Reduce Motion.
+   */
+  private applyShake(dtSec: number, rm: boolean) {
+    this.trauma.update(dtSec);
+    const w = this.host.width;
+    const h = this.host.height;
+    const sh = rm ? null : this.trauma.sample(this.time / 1000);
+    if (!sh || (!sh.x && !sh.y && !sh.angle)) {
+      if (this.root.rotation || this.root.scale.x !== 1 || this.root.pivot.x) {
+        this.root.pivot.set(0, 0);
+        this.root.position.set(0, 0);
+        this.root.rotation = 0;
+        this.root.scale.set(1);
+        for (const l of [this.backdrop, this.clouds, this.ambient]) l.position.set(0, 0);
+      }
+      return;
+    }
+    const env = this.trauma.envelope();
+    this.root.pivot.set(w / 2, h / 2);
+    this.root.position.set(w / 2 + sh.x, h / 2 + sh.y);
+    this.root.rotation = sh.angle;
+    this.root.scale.set(coverScale(w, h, env.x, env.y, env.angle));
+    for (const l of [this.backdrop, this.clouds, this.ambient]) l.position.set(-sh.x * 0.6, -sh.y * 0.6);
   }
 
   /** Screen position of a world point, for DOM overlays (coin flights, coach marks). */

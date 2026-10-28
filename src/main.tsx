@@ -4,13 +4,17 @@ import '@fontsource/nunito/900.css';
 import './ui/style/global.css';
 import './ui/kit/kit.css';
 import './ui/screens/screens.css';
+import './ui/kit/motion.css';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { initAudio } from './app/audio';
 import { session } from './app/battleController';
 import { installDebug, loadScene } from './app/debug';
+import { initFtue } from './app/ftue';
+import { installMotion } from './app/motion';
 import { boot, route, sheet } from './app/store';
 import { relayoutWorld, startWorld } from './app/world';
+import { CoachLayer } from './ui/kit/coach';
 import { Toasts } from './ui/kit/kit';
 import { Ages } from './ui/screens/Ages';
 import { Army } from './ui/screens/Army';
@@ -18,6 +22,7 @@ import { BattleHud } from './ui/screens/BattleHud';
 import { Hub, MainTabs } from './ui/screens/Hub';
 import { Results } from './ui/screens/Results';
 import { SettingsSheet } from './ui/screens/Sheets';
+import { StormWipe } from './ui/screens/StormWipe';
 import { Title } from './ui/screens/Title';
 import { applyCssTokens, uiScale } from './ui/style/tokens';
 
@@ -59,7 +64,9 @@ document.addEventListener('touchstart', () => {}, { passive: true });
 
 boot();
 installDebug();
+installMotion();
 initAudio();
+initFtue();
 
 function App() {
   const r = route.value;
@@ -77,6 +84,9 @@ function App() {
       {(r === 'hub' || r === 'army' || r === 'ages') && <MainTabs />}
       {sheet.value === 'settings' && <SettingsSheet />}
       <Toasts />
+      <CoachLayer />
+      <div id="fx" class="fx-layer" aria-hidden="true" />
+      <StormWipe />
     </div>
   );
 }

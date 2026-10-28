@@ -1,0 +1,218 @@
+/*
+ * Motion (ART_BIBLE §5.14): the coach, banners, the storm wipe, battle and Results choreography, purchase moments and
+ * the DOM effect layer. Celebrations overshoot, information eases out, errors shake. Everything that moves has a
+ * Reduce Motion fallback at the bottom of this file, keyed on <html data-rm> (the in-game toggle or the OS setting).
+ */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-back: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-in: cubic-bezier(.55, 0, .85, .36);
+}
+
+/* ---------------------------------------------------------------- effect layer (coins, sparkles, confetti) */
+.fx-layer { position: fixed; inset: 0; z-index: 38; pointer-events: none; overflow: hidden; }
+.fx-coin, .fx-spark, .fx-confetti, .fx-float { position: absolute; left: 0; top: 0; will-change: transform; }
+.fx-coin .icon { display: block; filter: drop-shadow(0 calc(2 * var(--pt)) 0 rgba(20, 27, 51, .35)); }
+.fx-spark svg { display: block; }
+.fx-confetti { border-radius: calc(2 * var(--pt)); box-shadow: 0 0 0 calc(1.5 * var(--pt)) rgba(29, 24, 48, .5); }
+.fx-float { font-size: calc(22 * var(--pt)); white-space: nowrap; color: var(--c-green500); -webkit-text-stroke: calc(var(--line) * 1.6) var(--c-ink); }
+.fx-float.gold { color: var(--c-gold400); }
+.fx-float.bad { color: var(--c-red500); }
+
+/* ---------------------------------------------------------------- coach (Nimbus + hand) */
+.coach-layer { position: fixed; inset: 0; z-index: 36; pointer-events: none; }
+.coach { --hs: calc(52 * var(--pt)); position: absolute; left: 0; top: 0; width: 0; height: 0; transition: transform 180ms var(--ease-out); }
+.coach-hand { position: absolute; width: var(--hs); height: var(--hs); animation: coach-pop 300ms var(--ease-back) both; }
+.coach-hand svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 calc(3 * var(--pt)) 0 rgba(20, 27, 51, .3)); animation: hand-poke .7s ease-in-out infinite alternate; }
+/* the fingertip sits at (0.406, 0.177) of the box; above = rotated to point down at the target's top edge */
+.coach.above .coach-hand { left: calc(var(--hs) * -0.594); top: calc(var(--hs) * -0.823 + 4px); rotate: 180deg; }
+.coach.below .coach-hand { left: calc(var(--hs) * -0.406); top: calc(var(--hs) * -0.177 - 4px); }
+/* left = rotated to point right at the target's left edge */
+.coach.left .coach-hand { left: calc(var(--hs) * -0.823 + 4px); top: calc(var(--hs) * -0.406); rotate: 90deg; }
+@keyframes hand-poke { from { transform: translateY(0); } to { transform: translateY(calc(10 * var(--pt))); } }
+@keyframes coach-pop { 0% { scale: .4; opacity: 0; } 70% { scale: 1.06; opacity: 1; } 100% { scale: 1; } }
+
+.coach-bubble {
+  position: absolute; display: flex; align-items: center; gap: calc(8 * var(--pt));
+  width: max-content; max-width: min(calc(100vw - 20px), calc(300 * var(--pt)));
+  padding: calc(6 * var(--pt)) calc(14 * var(--pt)) calc(6 * var(--pt)) calc(8 * var(--pt));
+  border-radius: calc(18 * var(--pt)); background: var(--c-paper); color: var(--c-ink);
+  box-shadow: 0 0 0 var(--line) var(--c-ink), 0 calc(5 * var(--pt)) 0 rgba(20, 27, 51, .35);
+  font-family: var(--font-display); font-size: calc(17 * var(--pt)); line-height: 1.12; letter-spacing: .01em;
+  animation: coach-pop 320ms var(--ease-back) 60ms both;
+}
+.coach-bubble .nimbus { flex: none; width: calc(40 * var(--pt)); height: calc(36 * var(--pt)); animation: nimbus-bob 1.6s ease-in-out infinite; }
+@keyframes nimbus-bob { 0%, 100% { translate: 0 0; rotate: -3deg; } 50% { translate: 0 calc(-3 * var(--pt)); rotate: 3deg; } }
+.coach.above.with-hand:not(.side) .coach-bubble { bottom: calc(var(--hs) * 0.86 + 14 * var(--pt)); }
+.coach.below.with-hand:not(.side) .coach-bubble { top: calc(var(--hs) * 0.86 + 14 * var(--pt)); }
+.coach.above.no-hand .coach-bubble { bottom: calc(14 * var(--pt)); }
+.coach.below.no-hand .coach-bubble { top: calc(14 * var(--pt)); }
+.coach.side.above .coach-bubble { top: calc(var(--hs) * -0.36); translate: 0 -50%; }
+.coach.side.below .coach-bubble { top: calc(var(--hs) * 0.36); translate: 0 -50%; }
+.coach-bubble.detached { position: fixed; left: 50%; translate: -50% 0; z-index: 1; }
+.coach-bubble.detached.top { top: calc(var(--safe-top) + 146 * var(--pt)); }
+.coach-bubble.detached.bottom { bottom: calc(var(--safe-bottom) + 90 * var(--pt)); }
+.coach-tail { position: absolute; left: calc(-9 * var(--pt)); width: calc(18 * var(--pt)); height: calc(18 * var(--pt)); background: var(--c-paper); box-shadow: 0 0 0 var(--line) var(--c-ink); rotate: 45deg; animation: coach-pop 320ms var(--ease-back) 60ms both; }
+.coach.above .coach-tail { bottom: calc(6 * var(--pt)); }
+.coach.below .coach-tail { top: calc(6 * var(--pt)); }
+
+/* what the coach points at pulses (scale composes with the element's own transform) */
+[data-coached].btn, [data-coached].tab, [data-coached].ring { animation: coach-pulse 1s ease-in-out infinite; }
+/* deck cards keep their own READY pop / deploy squash / nope shake: they get a steady gold ring instead */
+[data-coached].card { box-shadow: 0 0 0 var(--line) var(--c-ink), 0 0 0 calc(4 * var(--pt)) var(--c-gold400), 0 0 calc(18 * var(--pt)) rgba(255, 207, 61, .8); }
+[data-coached].btn { filter: drop-shadow(0 0 calc(8 * var(--pt)) rgba(255, 220, 110, .85)); }
+[data-coached].food { box-shadow: inset 0 0 0 var(--line) rgba(0, 0, 0, .35), 0 0 0 calc(3 * var(--pt)) var(--c-gold400), 0 0 calc(16 * var(--pt)) rgba(255, 207, 61, .7); }
+@keyframes coach-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.07; } }
+
+/* ---------------------------------------------------------------- banners (stage intro, Warlord) */
+.banner {
+  position: fixed; left: 0; right: 0; z-index: 29; top: calc(var(--safe-top) + 22%);
+  display: flex; justify-content: center; pointer-events: none;
+  animation: banner-run 1200ms linear both;
+}
+.banner-band {
+  position: relative; min-width: min(78%, calc(420 * var(--pt))); max-width: calc(100% - 16px); padding: calc(8 * var(--pt)) calc(24 * var(--pt)) calc(10 * var(--pt));
+  display: flex; flex-direction: column; align-items: center; gap: calc(2 * var(--pt));
+  background: linear-gradient(180deg, var(--c-blue500), var(--c-blue700));
+  box-shadow: 0 0 0 var(--line) var(--c-ink), 0 calc(6 * var(--pt)) 0 rgba(20, 27, 51, .35), inset 0 calc(3 * var(--pt)) 0 rgba(255, 255, 255, .25);
+  transform: skewX(-10deg);
+}
+.banner-band > * { transform: skewX(10deg); }
+.banner.red .banner-band { background: linear-gradient(180deg, var(--c-red500), var(--c-red700)); }
+.banner.gold .banner-band { background: linear-gradient(180deg, var(--c-gold400), var(--c-gold600)); }
+.banner-title { display: flex; align-items: center; gap: calc(8 * var(--pt)); font-size: min(calc(40 * var(--pt)), 8.4vw); color: var(--c-gold400); -webkit-text-stroke: calc(var(--line) * 2.4) var(--c-ink); white-space: nowrap; }
+.banner.red .banner-title { color: var(--c-paper); }
+.banner-title .icon { width: calc(34 * var(--pt)); height: calc(34 * var(--pt)); }
+.banner-sub { font-size: min(calc(20 * var(--pt)), 5vw); -webkit-text-stroke: calc(var(--line) * 1.6) var(--c-ink); white-space: nowrap; }
+@keyframes banner-run {
+  0% { transform: translateX(-105vw); animation-timing-function: var(--ease-out); }
+  20% { transform: translateX(2vw); animation-timing-function: ease-out; }
+  28% { transform: translateX(0); }
+  80% { transform: translateX(0); animation-timing-function: var(--ease-in); }
+  100% { transform: translateX(105vw); }
+}
+@keyframes banner-fade { 0% { opacity: 0; } 15%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------------------------------------------------------------- battle entrance, deploy */
+.battle .deck { animation: deck-in 420ms var(--ease-out) 120ms both; }
+.battle .topbar, .battle .bars { animation: hud-drop 380ms var(--ease-back) 180ms both; }
+@keyframes deck-in { from { transform: translateY(calc(40 * var(--pt))); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes hud-drop { from { transform: translateY(calc(-28 * var(--pt))); opacity: 0; } to { transform: none; opacity: 1; } }
+/* squash on press, spring back on release (spring.pop), and a pop when the deploy is accepted */
+.card { transition: transform 240ms var(--ease-back); }
+.card:active { transition-duration: 60ms; transition-timing-function: ease-out; }
+.card.deploypop { animation: deploy-pop 300ms var(--ease-back); }
+@keyframes deploy-pop { 0% { transform: scale(.9, .94); } 45% { transform: scale(1.07, 1.03); } 100% { transform: scale(1); } }
+.card.deploypop::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #fff; pointer-events: none; animation: card-flash 220ms ease-out forwards; }
+@keyframes card-flash { from { opacity: .55; } to { opacity: 0; } }
+
+/* The HUD steps aside once the Results take over (the sheet has its own wallet pill). */
+#ui:has(.results) .battle .topbar, #ui:has(.results) .battle .bars, #ui:has(.results) .battle .boss-bar { animation: none; opacity: 0; transition: opacity 300ms ease-out; }
+
+/* ---------------------------------------------------------------- world mood (defeat desaturates the world only) */
+#world { transition: filter 600ms ease-out; }
+#world.mood-defeat { filter: saturate(.3) brightness(.9); }
+
+/* ---------------------------------------------------------------- storm wipe (Hub ↔ Battle) */
+.wipe { position: fixed; inset: 0; z-index: 45; pointer-events: none; overflow: hidden; }
+.wipe-band {
+  position: absolute; left: 50%; top: 50%; width: 160vmax; height: 300vmax; margin-top: -150vmax;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #3A4A7A 0%, var(--c-night800) 40%, var(--c-night900) 100%);
+  animation: wipe-off 380ms cubic-bezier(.5, 0, .4, 1) forwards;
+}
+/* the leading edge: two rows of ink-outlined cloud puffs */
+.wipe-band::before, .wipe-band::after { content: ''; position: absolute; top: 0; bottom: 0; }
+.wipe-band::before {
+  left: calc(-1 * min(9vmax, 90px)); width: min(14vmax, 140px);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60'%3E%3Cpath d='M40 0H20A15 15 0 0 0 20 30A15 15 0 0 0 20 60H40Z' fill='%237F8DB5'/%3E%3Cpath d='M20 0A15 15 0 0 0 20 30A15 15 0 0 0 20 60' fill='none' stroke='%231D1830' stroke-width='2.5'/%3E%3C/svg%3E") 0 30% / 100% min(21vmax, 210px) repeat-y;
+}
+.wipe-band::after {
+  left: calc(-1 * min(15vmax, 150px)); width: min(14vmax, 140px);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60'%3E%3Cpath d='M40 0H20A15 15 0 0 0 20 30A15 15 0 0 0 20 60H40Z' fill='%23E8EDF7'/%3E%3Cpath d='M20 0A15 15 0 0 0 20 30A15 15 0 0 0 20 60' fill='none' stroke='%231D1830' stroke-width='2.5'/%3E%3C/svg%3E") 0 0 / 100% min(21vmax, 210px) repeat-y;
+}
+@keyframes wipe-off { from { transform: rotate(-16deg) translateX(-64vmax); } to { transform: rotate(-16deg) translateX(76vmax); } }
+.wipe-bolt { position: absolute; left: 50%; top: 50%; width: calc(90 * var(--pt)); height: calc(90 * var(--pt)); margin: calc(-45 * var(--pt)) 0 0 calc(-45 * var(--pt)); animation: wipe-bolt 220ms var(--ease-in) forwards; }
+.wipe-bolt .icon { width: 100%; height: 100%; }
+@keyframes wipe-bolt { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* ---------------------------------------------------------------- Results choreography */
+.results { background: transparent; transition: background 300ms ease-out; }
+.results.panel-on { background: rgba(20, 27, 51, .5); }
+.results.lose.panel-on { background: rgba(20, 27, 51, .62); }
+.results-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 85% at 50% 45%, transparent 45%, rgba(20, 27, 51, .3) 100%); animation: fade-in 400ms ease-out both; }
+.results.lose .results-vignette { background: radial-gradient(120% 85% at 50% 45%, transparent 35%, rgba(20, 27, 51, .55) 100%); }
+.results .results-rays { animation: fade-in 400ms ease-out both, spin 5s linear infinite; }
+.results-banner { animation: drop-in 420ms var(--ease-back) both; }
+.results.lose .results-banner { animation: slide-in 420ms var(--ease-out) both; }
+@keyframes slide-in { from { transform: translateX(-60vw); opacity: 0; } to { transform: none; opacity: 1; } }
+.results-sub { position: relative; max-width: calc(330 * var(--pt)); text-align: center; font-family: var(--font-display); font-size: calc(19 * var(--pt)); color: var(--c-paper); -webkit-text-stroke: calc(var(--line) * 1.5) var(--c-ink); paint-order: stroke fill; animation: fade-in 300ms ease-out 200ms both; }
+.results .results-panel { animation: results-up 460ms var(--ease-out) both; }
+/* laid out (so the banner never jumps) but unseen until the sheet's beat */
+.results .results-panel.pending, .results .results-panel.pending * { visibility: hidden; animation: none; }
+@keyframes results-up { from { transform: translateY(60vh); } to { transform: none; } }
+.results-wallet { position: absolute; top: calc(var(--safe-top) + 8 * var(--pt)); left: calc(var(--safe-left) + 12 * var(--pt)); animation: fade-in 300ms ease-out both; }
+.results-actions .act { animation: pop-in 380ms var(--ease-back) both; animation-delay: var(--d, 0ms); }
+/* Until the count-up ends the buttons are still invisible (pop-in delay): taps fall through to the skip handler. */
+.results:not([data-phase="done"]) .results-actions .act { pointer-events: none; }
+.results-actions .results-badge { position: absolute; z-index: 3; top: calc(-8 * var(--pt)); right: calc(-6 * var(--pt)); }
+.results-primary-wrap { position: relative; display: flex; }
+.results-primary-wrap > .btn { flex: 1; }
+.results-skip { position: absolute; inset: 0; }
+button.results-tip { width: 100%; min-height: calc(48 * var(--pt)); border: 0; text-align: left; font-family: var(--font-ui); color: var(--c-ink); cursor: pointer; touch-action: manipulation; transition: transform 90ms ease-out; }
+button.results-tip span { flex: 1; }
+button.results-tip:active { transform: scale(.97); }
+
+/* ---------------------------------------------------------------- Army: purchase and unlock moments */
+.track.bought { animation: row-bounce 420ms var(--ease-back); }
+@keyframes row-bounce { 0% { transform: scale(1); } 40% { transform: scale(1.025, .97); } 70% { transform: scale(.99, 1.02); } 100% { transform: scale(1); } }
+.track-effect.glow { animation: stat-glow 800ms ease-out; border-radius: calc(6 * var(--pt)); }
+.track-effect.glow b { animation: stat-pop 420ms var(--ease-back); display: inline-block; }
+@keyframes stat-glow { 0% { background: rgba(70, 194, 90, .45); box-shadow: 0 0 calc(10 * var(--pt)) rgba(70, 194, 90, .7); } 100% { background: rgba(70, 194, 90, 0); box-shadow: 0 0 0 rgba(70, 194, 90, 0); } }
+@keyframes stat-pop { 0% { transform: scale(1); } 45% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.unit-card.bounce { animation: card-bounce 480ms var(--ease-back); }
+@keyframes card-bounce { 0% { transform: scale(1); } 35% { transform: scale(1.08, .94) translateY(calc(-4 * var(--pt))); } 70% { transform: scale(.97, 1.03); } 100% { transform: scale(1); } }
+.unit-card.reveal-out { animation: flip-out 200ms var(--ease-in) forwards; }
+.unit-card.reveal-in { animation: flip-in 520ms var(--ease-back) both; }
+@keyframes flip-out { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes flip-in { 0% { transform: scaleX(0); } 60% { transform: scaleX(1.1) scaleY(1.04); } 100% { transform: none; } }
+.unit-card.reveal-in .bust { animation: colour-pop 700ms ease-out both; }
+@keyframes colour-pop { 0% { filter: brightness(0) opacity(.45); } 30% { filter: brightness(2.2); } 100% { filter: none; } }
+.new-badge { position: absolute; z-index: 2; top: calc(-10 * var(--pt)); right: calc(-8 * var(--pt)); padding: calc(3 * var(--pt)) calc(8 * var(--pt)); border-radius: 999px; background: var(--c-red500); color: #fff; box-shadow: 0 0 0 var(--line) var(--c-ink); font-family: var(--font-display); font-size: calc(14 * var(--pt)); rotate: 8deg; animation: pop-in 380ms var(--ease-back) 300ms both; }
+/* the Results deep link: the recommended row is brought into view and marked */
+.track.focus { border-radius: calc(12 * var(--pt)); box-shadow: 0 0 0 calc(3 * var(--pt)) var(--c-gold400); background: rgba(255, 207, 61, .14); animation: focus-in 700ms var(--ease-out) both; }
+@keyframes focus-in { 0% { box-shadow: 0 0 0 calc(10 * var(--pt)) rgba(255, 207, 61, 0); } 100% { box-shadow: 0 0 0 calc(3 * var(--pt)) var(--c-gold400); } }
+.unit-card.focus { box-shadow: 0 0 0 var(--line) var(--c-ink), 0 0 0 calc(5 * var(--pt)) var(--c-gold400), 0 calc(5 * var(--pt)) 0 rgba(0, 0, 0, .35); }
+.tip-badge { display: inline-block; padding: calc(1 * var(--pt)) calc(7 * var(--pt)); border-radius: 999px; background: var(--c-gold400); color: var(--c-ink); box-shadow: 0 0 0 calc(2 * var(--pt)) var(--c-ink); font-family: var(--font-display); font-size: calc(12 * var(--pt)); letter-spacing: .04em; }
+.track .tip-badge { margin-left: calc(4 * var(--pt)); animation: pop-in 320ms var(--ease-back) 300ms both; }
+.unit-card .tip-badge { position: absolute; z-index: 2; top: calc(-9 * var(--pt)); left: 50%; transform: translateX(-50%); }
+
+/* ---------------------------------------------------------------- title: Nimbus peeks from behind the logo (UX §1) */
+.logo-we, .logo-storm { position: relative; z-index: 1; }
+.logo-nimbus { position: absolute; z-index: 0; right: calc(50% - 150 * var(--pt)); top: calc(-46 * var(--pt)); animation: nimbus-peek 3.2s ease-in-out infinite; }
+.logo-nimbus .nimbus { display: block; width: calc(74 * var(--pt)); height: calc(67 * var(--pt)); }
+@keyframes nimbus-peek { 0%, 100% { translate: 0 calc(10 * var(--pt)); rotate: 6deg; } 45%, 60% { translate: calc(-4 * var(--pt)) 0; rotate: -4deg; } }
+
+/* ---------------------------------------------------------------- Reduce Motion: no shakes, slides, loops or flights; fades stay */
+:root[data-rm] .btn.hl, :root[data-rm] .btn.hl .shine::after, :root[data-rm] .tap, :root[data-rm] .logo, :root[data-rm] .pip.cur,
+:root[data-rm] .ring.ready, :root[data-rm] .ward, :root[data-rm] .bust, :root[data-rm] .results-rays, :root[data-rm] .coach-hand svg,
+:root[data-rm] .nimbus, :root[data-rm] .logo-nimbus, :root[data-rm] [data-coached], :root[data-rm] .card.popready, :root[data-rm] .card.deploypop,
+:root[data-rm] .pill.bumpA, :root[data-rm] .pill.bumpB, :root[data-rm] .lvl.flipA, :root[data-rm] .lvl.flipB, :root[data-rm] .track.bought,
+:root[data-rm] .unit-card.bounce, :root[data-rm] .unit-card.reveal-out, :root[data-rm] .track-effect.glow b {
+  animation: none !important;
+}
+:root[data-rm] .btn.nope, :root[data-rm] .card.nopeA, :root[data-rm] .card.nopeB, :root[data-rm] .storm-ring.nopeA, :root[data-rm] .storm-ring.nopeB {
+  animation: rm-error 240ms ease-out !important;
+}
+@keyframes rm-error { 0%, 100% { filter: none; } 30% { filter: sepia(1) saturate(5) hue-rotate(-40deg) brightness(.95); } }
+:root[data-rm] .toast, :root[data-rm] .boss-bar, :root[data-rm] .badge, :root[data-rm] .coach-bubble, :root[data-rm] .coach-hand, :root[data-rm] .coach-tail,
+:root[data-rm] .results-banner, :root[data-rm] .results .results-panel, :root[data-rm] .sheet, :root[data-rm] .unit-card, :root[data-rm] .track,
+:root[data-rm] .battle .deck, :root[data-rm] .battle .topbar, :root[data-rm] .battle .bars, :root[data-rm] .results-actions .act,
+:root[data-rm] .unit-card.reveal-in, :root[data-rm] .new-badge, :root[data-rm] .badge {
+  animation-name: fade-in !important;
+}
+:root[data-rm] .banner { animation-name: banner-fade; }
+:root[data-rm] .coach, :root[data-rm] .card, :root[data-rm] .results-row { transition: none; }
+:root[data-rm] .wipe-band, :root[data-rm] .wipe-bolt { display: none; }
+:root[data-rm] .wipe { background: var(--c-night900); animation: fade-out 240ms ease-out forwards; }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }

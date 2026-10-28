@@ -14,6 +14,8 @@ import { loadSave, writeSave } from './storage';
 
 export type Route = 'title' | 'hub' | 'battle' | 'army' | 'ages';
 export type SheetKind = 'pause' | 'settings' | 'retreat' | null;
+/** What the Army screen should bring into view and highlight (the Results "Upgrade" deep link). */
+export type ArmyFocus = Exclude<Recommendation, { kind: 'evolve' }>;
 
 export const save = signal<SaveV1>(newSave());
 export const route = signal<Route>('title');
@@ -38,12 +40,28 @@ export interface ResultsView {
   result: BattleResult;
   settlement: Settlement;
   kills: number;
+  /** Gold from kills and from base (or Warlord) damage; together they are the battle's Gold kept. */
+  killGold: number;
   baseGold: number;
   seconds: number;
   warlord: boolean;
   next: Recommendation | null;
 }
 export const results = signal<ResultsView | null>(null);
+/** Where the Results choreography is (ART_BIBLE §5.14): banner first, then the sheet, then the counts are done. */
+export type ResultsPhase = 'hidden' | 'banner' | 'panel' | 'done';
+export const resultsPhase = signal<ResultsPhase>('hidden');
+export const armyFocus = signal<ArmyFocus | null>(null);
+
+export type ResultsPrimary = 'evolve' | 'upgrade' | 'next' | 'retry';
+
+/** The smart primary button on Results (GDD §1.3): Evolve after a Warlord, else Upgrade if affordable, else play on. */
+export function resultsPrimary(r: ResultsView, s: SaveV1): ResultsPrimary {
+  const win = r.result === 'victory';
+  if (win && r.warlord && canEvolve(s) && nextAgeInBuild(s)) return 'evolve';
+  if (r.next && r.next.kind !== 'evolve') return 'upgrade';
+  return win ? 'next' : 'retry';
+}
 
 /** The battle the Hub's big button starts: the frontier stage (the last stage once the campaign is complete). */
 export const nextStage = computed(() => Math.min(STAGE_COUNT, save.value.campaignStage));
@@ -62,7 +80,7 @@ export function boot() {
 }
 
 export function commit(next: SaveV1) {
-  if (next === save.value) return;
+  if (next === save.peek()) return;
   save.value = next;
   writeSave(next);
 }
@@ -99,9 +117,11 @@ export function setSetting<K extends keyof SaveV1['settings']>(k: K, v: SaveV1['
   commit({ ...save.value, settings: { ...save.value.settings, [k]: v } });
 }
 
+/** Safe to call inside effects: it reads the save untracked, so the caller doesn't re-run on every save write. */
 export function markFtue(flag: string) {
-  if (save.value.ftue[flag]) return;
-  commit({ ...save.value, ftue: { ...save.value.ftue, [flag]: true } });
+  const s = save.peek();
+  if (s.ftue[flag]) return;
+  commit({ ...s, ftue: { ...s.ftue, [flag]: true } });
 }
 
 /** Records the running battle so a crash or a closed tab still pays the Gold earned so far. */
@@ -120,6 +140,7 @@ export function finishBattle(v: Omit<ResultsView, 'settlement' | 'next' | 'warlo
     result: v.result,
     settlement,
     kills: v.kills,
+    killGold: v.killGold,
     baseGold: v.baseGold,
     seconds: v.seconds,
     warlord: stageDef(v.stageId).warlord,

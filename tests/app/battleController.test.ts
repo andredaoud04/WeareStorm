@@ -108,4 +108,24 @@ describe('battle controller clock (TECH §4)', () => {
     s.frame(50);
     expect(s.curr.queue.melee + s.curr.units.filter((u) => u.side === 'player').length).toBe(0);
   });
+
+  it('splits the battle Gold into kills and base damage without touching the outcome (Results rows)', () => {
+    for (const stageId of [1, 5]) {
+      save.value = { ...newSave(), campaignStage: stageId, owned: { ranged: true, tank: true }, levels: { food: 6, walls: 5, melee: 7, ranged: 6, tank: 5 } };
+      const s = new BattleSession(stageId, 11);
+      const order = ['melee', 'ranged', 'tank'] as const;
+      for (let i = 0; i < 20 * 400 && !s.ended$.value; i++) {
+        const slot = order[i % 3]!;
+        if (i % 7 === 0 && s.foodNow() >= s.cost(slot)) s.deploy(slot);
+        s.frame(50);
+      }
+      expect(s.ended$.value).toBe(true);
+      expect(s.killGold).toBeGreaterThan(0);
+      expect(s.baseGold).toBeGreaterThan(0);
+      expect(s.killGold + s.baseGold).toBe(s.state.goldEarned);
+      expect(results.value?.killGold).toBe(s.killGold);
+      expect(results.value?.baseGold).toBe(s.baseGold);
+      expect(results.value!.killGold + results.value!.baseGold).toBe(results.value!.settlement.goldKept);
+    }
+  });
 });

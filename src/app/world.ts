@@ -3,6 +3,7 @@ import { pixiHost } from '../render/pixi/app';
 import { bakePortraits } from '../render/art/portraits';
 import { BattleScene } from '../render/scenes/battleScene';
 import { session } from './battleController';
+import { reduceMotion } from './motion';
 import { route, save } from './store';
 
 /**
@@ -11,23 +12,35 @@ import { route, save } from './store';
  */
 let scene: BattleScene | null = null;
 
-/** Top of the bottom UI (deck or the Hub's CTA block), measured from the DOM so world and UI never disagree. */
+/**
+ * Top of the bottom UI (deck or the Hub's CTA block), measured from the DOM so world and UI never disagree. It reads
+ * the layout box (offsetTop), not the painted one, so an entrance animation (the deck sliding up) can't shift the lane.
+ */
 function uiTop(): number {
-  const el = document.querySelector('[data-uitop]');
-  return el ? el.getBoundingClientRect().top : innerHeight * 0.78;
+  const el = document.querySelector<HTMLElement>('[data-uitop]');
+  if (!el) return innerHeight * 0.78;
+  let y = 0;
+  for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement | null) y += e.offsetTop;
+  return y;
+}
+
+/** Defeat desaturates the world (ART_BIBLE §5.14) — the canvas only, never the DOM HUD. */
+export function setWorldMood(mood: 'defeat' | null) {
+  document.getElementById('world')?.classList.toggle('mood-defeat', mood === 'defeat');
 }
 
 export async function startWorld() {
   const host = await pixiHost();
   scene = new BattleScene(host, {
     uiTop,
-    reduceMotion: () => save.value.settings.reduceMotion || matchMedia('(prefers-reduced-motion: reduce)').matches,
+    reduceMotion,
     damageNumbers: () => save.value.settings.damageNumbers,
   });
   effect(() => {
     const s = session.value;
     const r = route.value;
     scene?.attach(r === 'battle' ? s : null);
+    setWorldMood(null);
     host.world.visible = true; // the title sits over the living diorama
     // the DOM moves when the route changes; re-measure after it lays out
     requestAnimationFrame(() => scene?.layout());

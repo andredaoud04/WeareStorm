@@ -43,6 +43,11 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
+/** The raw SVG markup of an icon, for elements built outside Preact (coin flights, sparkles). */
+export function iconSvg(name: IconName, size: number): string {
+  return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${ICONS[name]}</svg>`;
+}
+
 export function Icon({ name, size = 28, class: cls = '' }: { name: IconName; size?: number; class?: string }) {
   return (
     <svg
