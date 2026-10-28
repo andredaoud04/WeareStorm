@@ -258,7 +258,7 @@ export class BattleScene {
   }
 
   private layoutClouds(w: number, gy: number, k: number, res: number) {
-    for (const c of this.cloudSprites) c.s.destroy({ texture: true });
+    for (const c of this.cloudSprites) c.s.destroy({ texture: true, textureSource: true }); // the source too: each cloud owns its canvas
     this.cloudSprites = [];
     const n = Math.max(3, Math.round(w / 160));
     for (let i = 0; i < n; i++) {
@@ -527,7 +527,7 @@ export class BattleScene {
           u.art.update(dtMs, 'idle', tickTime, 0);
           u.root.children[0]!.alpha = Math.max(0, 1 - u.dying / 500); // the ground shadow fades first
           if (u.art.done) {
-            u.root.destroy({ children: true });
+            u.root.destroy({ children: true, context: true });
             this.units.delete(id);
           }
           continue;
