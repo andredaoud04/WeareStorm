@@ -4,6 +4,7 @@ import { buyUnlock, buyUpgrade, save } from '../../app/store';
 import { ageDef } from '../../data/ages';
 import { MAX_LEVEL, UNLOCK_PRICE, foodRate, playerBaseHp, trainingMult, type Track } from '../../data/economy';
 import { rosterOf } from '../../data/units';
+import { portraits } from '../../render/art/portraits';
 import { canUnlock, canUpgrade, priceFor, trackAvailable } from '../../meta/progress';
 import { Icon, type IconName } from '../kit/icons';
 import { Button, Pill } from '../kit/kit';
@@ -29,7 +30,8 @@ export function Army() {
           return (
             <div key={slot} class={`unit-card ${slot} ${owned ? '' : 'locked'}`} data-testid={`unit-${slot}`}>
               <span class="unit-portrait">
-                <Icon name={owned ? (slot as IconName) : 'lock'} size={56} />
+                {portraits.value[def.id] ? <img class={`bust ${owned ? '' : 'shadowed'}`} src={portraits.value[def.id]} alt="" draggable={false} /> : <Icon name={owned ? (slot as IconName) : 'lock'} size={56} />}
+                {!owned && portraits.value[def.id] && <span class="lock-badge"><Icon name="lock" size={30} /></span>}
               </span>
               {owned && <span class="lvl unit-lvl">{s.levels[slot]}</span>}
               <span class="unit-name">{def.name}</span>

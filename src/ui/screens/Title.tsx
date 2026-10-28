@@ -12,8 +12,7 @@ export function Title() {
   };
   return (
     <div class="title-screen" onClick={start} data-testid="title">
-      <div class="title-sky" />
-      <div class="title-hills" />
+      <div class="title-veil" />
       <div class="logo">
         <div class="logo-we t-display">WE ARE</div>
         <div class="logo-storm t-display">

@@ -4,6 +4,7 @@ import { AGE_ORDER } from '../../contracts';
 import { AGES, ageDef } from '../../data/ages';
 import { rosterOf, warlordOf } from '../../data/units';
 import { canEvolve, evolvePrice, mustEvolve } from '../../meta/progress';
+import { portraits } from '../../render/art/portraits';
 import { Icon } from '../kit/icons';
 import { Button, Panel, Pill } from '../kit/kit';
 
@@ -44,7 +45,7 @@ export function Ages() {
           <div class="age-troops">
             {(['melee', 'ranged', 'tank'] as const).map((slot) => (
               <div key={slot} class={`age-troop ${slot}`}>
-                <Icon name={slot} size={40} />
+                {portraits.value[roster[slot].id] ? <img class="bust small" src={portraits.value[roster[slot].id]} alt="" draggable={false} /> : <Icon name={slot} size={40} />}
                 <span>{roster[slot].name}</span>
               </div>
             ))}

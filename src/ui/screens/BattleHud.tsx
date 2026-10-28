@@ -3,6 +3,7 @@ import type { Slot } from '../../contracts';
 import { SPEED_UNLOCK_STAGE, session, type BattleSession } from '../../app/battleController';
 import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
 import { rosterOf } from '../../data/units';
+import { portraits } from '../../render/art/portraits';
 import type { SaveV1 } from '../../meta/save';
 import { Icon, type IconName } from '../kit/icons';
 import { Bar, Button, Pill, Sheet } from '../kit/kit';
@@ -168,7 +169,7 @@ function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession
       onPointerDown={press}
     >
       <span class="card-portrait">
-        <Icon name={ROLE_ICON[slot]} size={54} />
+        {portraits.value[def.id] ? <img class="bust" src={portraits.value[def.id]} alt="" draggable={false} /> : <Icon name={ROLE_ICON[slot]} size={54} />}
       </span>
       <span class="card-name">{def.name}</span>
       {full ? (
