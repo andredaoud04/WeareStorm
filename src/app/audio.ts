@@ -1,4 +1,4 @@
-import { effect } from '@preact/signals';
+import { computed, effect } from '@preact/signals';
 import { Haptics } from '../audio/haptics';
 import { Mixer, type PlayOpts } from '../audio/mixer';
 import { MusicDirector, type MusicMode } from '../audio/music';
@@ -120,7 +120,7 @@ function onPointerDown(ev: PointerEvent) {
   if (custom && custom in SOUNDS) return uiSound(custom as SoundId);
   const cl = el.classList;
   if (cl.contains('card')) {
-    if (cl.contains('ready') && !cl.contains('full')) cardTapTick(); // a full army refuses the tap
+    if (cl.contains('ready') && !cl.contains('full') && !cl.contains('busy')) cardTapTick(); // a full army or queue refuses the tap
     else uiSound('nope');
     return;
   }
@@ -154,9 +154,12 @@ export function initAudio() {
   document.addEventListener('pointerdown', onPointerDown, { capture: true, passive: true });
   document.addEventListener('visibilitychange', () => (document.hidden ? mixer.suspend() : mixer.resume()));
 
-  effect(() => mixer.setSoundEnabled(save.value.settings.sound));
+  // Per-setting computeds: the effects re-run when that setting changes, not on every save write.
+  const soundOn = computed(() => save.value.settings.sound);
+  const musicOn = computed(() => save.value.settings.music);
+  effect(() => mixer.setSoundEnabled(soundOn.value));
   effect(() => {
-    mixer.setMusicEnabled(save.value.settings.music);
+    mixer.setMusicEnabled(musicOn.value);
     music.apply();
   });
 

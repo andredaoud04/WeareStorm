@@ -6,6 +6,7 @@ import { CoinBatcher } from '../../app/coinBatch';
 import { reduceMotion } from '../../app/motion';
 import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
 import { worldToScreen } from '../../app/world';
+import { QUEUE_CAP } from '../../data/economy';
 import { rosterOf, unitDef } from '../../data/units';
 import { portraits } from '../../render/art/portraits';
 import type { SaveV1 } from '../../meta/save';
@@ -86,7 +87,7 @@ function Hud({ s }: { s: BattleSession }) {
         <div class="cards">
           {owned.map((slot) => (
             <div key={slot} class="card-slot">
-              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} disabled={ended} />
+              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} busy={hud.queue.melee + hud.queue.ranged + hud.queue.tank >= QUEUE_CAP} disabled={ended} />
             </div>
           ))}
         </div>
@@ -124,7 +125,7 @@ function FoodPanel({ s, food, rate }: { s: BattleSession; food: number; rate: nu
   );
 }
 
-function DeckCard({ s, slot, queued, full, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; disabled: boolean }) {
+function DeckCard({ s, slot, queued, full, busy, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; busy: boolean; disabled: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
   const def = rosterOf(s.state.input.armyAge)[slot];
   const [shake, setShake] = useState(0);
@@ -159,7 +160,7 @@ function DeckCard({ s, slot, queued, full, disabled }: { s: BattleSession; slot:
   const press = (e: PointerEvent) => {
     e.preventDefault();
     if (disabled) return;
-    if (s.state.food < def.cost * 1000 || full) {
+    if (s.state.food < def.cost * 1000 || full || busy) {
       setShake((n) => n + 1);
       return;
     }
@@ -169,7 +170,7 @@ function DeckCard({ s, slot, queued, full, disabled }: { s: BattleSession; slot:
   return (
     <button
       ref={ref}
-      class={`card ${slot} ${full ? 'full' : ''} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''}`}
+      class={`card ${slot} ${full ? 'full' : ''} ${busy ? 'busy' : ''} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''}`}
       data-testid={`card-${slot}`}
       aria-label={`${def.name}, ${def.cost} Food`}
       onPointerDown={press}
