@@ -6,6 +6,7 @@ import './ui/kit/kit.css';
 import './ui/screens/screens.css';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
+import { initAudio } from './app/audio';
 import { session } from './app/battleController';
 import { installDebug, loadScene } from './app/debug';
 import { boot, route, sheet } from './app/store';
@@ -58,6 +59,7 @@ document.addEventListener('touchstart', () => {}, { passive: true });
 
 boot();
 installDebug();
+initAudio();
 
 function App() {
   const r = route.value;

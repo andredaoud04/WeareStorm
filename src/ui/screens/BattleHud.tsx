@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Slot } from '../../contracts';
 import { SPEED_UNLOCK_STAGE, session, type BattleSession } from '../../app/battleController';
 import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
+import { QUEUE_CAP } from '../../data/economy';
 import { rosterOf } from '../../data/units';
 import { portraits } from '../../render/art/portraits';
 import type { SaveV1 } from '../../meta/save';
@@ -80,7 +81,7 @@ function Hud({ s }: { s: BattleSession }) {
         <div class="cards">
           {owned.map((slot) => (
             <div key={slot} class="card-slot">
-              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} coach={coach && slot === 'melee'} disabled={ended} />
+              <DeckCard s={s} slot={slot} queued={hud.queue[slot]} full={hud.full} busy={hud.queue.melee + hud.queue.ranged + hud.queue.tank >= QUEUE_CAP} coach={coach && slot === 'melee'} disabled={ended} />
               {coach && !ended && slot === 'melee' && <Coach />}
             </div>
           ))}
@@ -118,7 +119,7 @@ function FoodPanel({ s, food, rate }: { s: BattleSession; food: number; rate: nu
   );
 }
 
-function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; coach: boolean; disabled: boolean }) {
+function DeckCard({ s, slot, queued, full, busy, coach, disabled }: { s: BattleSession; slot: Slot; queued: number; full: boolean; busy: boolean; coach: boolean; disabled: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
   const def = rosterOf(s.state.input.armyAge)[slot];
   const [shake, setShake] = useState(0);
@@ -153,7 +154,7 @@ function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession
   const press = (e: PointerEvent) => {
     e.preventDefault();
     if (disabled) return;
-    if (s.state.food < def.cost * 1000 || full) {
+    if (s.state.food < def.cost * 1000 || full || busy) {
       setShake((n) => n + 1);
       return;
     }
@@ -163,7 +164,7 @@ function DeckCard({ s, slot, queued, full, coach, disabled }: { s: BattleSession
   return (
     <button
       ref={ref}
-      class={`card ${slot} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''} ${coach ? 'coached' : ''}`}
+      class={`card ${slot} ${full ? 'full' : ''} ${busy ? 'busy' : ''} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''} ${coach ? 'coached' : ''}`}
       data-testid={`card-${slot}`}
       aria-label={`${def.name}, ${def.cost} Food`}
       onPointerDown={press}
