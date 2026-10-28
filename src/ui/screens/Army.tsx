@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Slot } from '../../contracts';
 import { coachStep, inTutorial } from '../../app/ftue';
+import { reduceMotion } from '../../app/motion';
 import { armyFocus, buyUnlock, buyUpgrade, markFtue, save } from '../../app/store';
 import { ageDef } from '../../data/ages';
 import { MAX_LEVEL, UNLOCK_PRICE, foodRate, playerBaseHp, trainingMult, type Track } from '../../data/economy';
@@ -100,7 +101,7 @@ function useFocus() {
     const f = armyFocus.peek();
     if (f) {
       const sel = f.kind === 'upgrade' ? `[data-testid="track-${f.track}"]` : `[data-testid="unit-${f.slot}"]`;
-      requestAnimationFrame(() => document.querySelector(sel)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+      requestAnimationFrame(() => document.querySelector(sel)?.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }));
     }
     return () => {
       armyFocus.value = null;

@@ -106,7 +106,7 @@ export function Coach({ step }: { step: CoachStep | null }) {
     if (step.side) left = anchor.x > innerWidth / 2 ? anchor.x - hand * 0.55 - w : anchor.x + hand * 0.55;
     left = Math.max(10, Math.min(innerWidth - 10 - w, left));
     setShift(Math.round(left - anchor.x));
-  }, [anchor?.x, step?.id, step?.text]);
+  }, [anchor?.x, step?.id, step?.text, step?.target]);
 
   if (!step || !anchor) return null;
   const cls = ['coach', step.place, step.hand ? 'with-hand' : 'no-hand', step.side ? 'side' : ''].join(' ');
@@ -139,15 +139,19 @@ export function Coach({ step }: { step: CoachStep | null }) {
 /** The app-wide coach: whatever step the FTUE selects for the current screen. */
 export function CoachLayer() {
   const step = coachStep.value;
-  const prev = useRef<string | null>(null);
+  // Pop once per step and app session: Battle 1's deploy hand comes and goes with the card's READY state.
+  const heard = useRef(new Set<string>());
   useEffect(() => {
-    const id = step?.id ?? null;
-    if (id && id !== prev.current && step?.text) uiSound('toastPop', { gain: 0.7 });
-    prev.current = id;
+    const id = step?.id;
+    if (id && step?.text && !heard.current.has(id)) {
+      heard.current.add(id);
+      uiSound('toastPop', { gain: 0.7 });
+    }
   }, [step?.id]);
   return (
     <div class="coach-layer">
-      <Coach key={step?.id ?? 'none'} step={step} />
+      {/* keyed by target too: one step can move between screens ("back" on Army, then on the Hub) */}
+      <Coach key={step ? `${step.id}:${step.target}` : 'none'} step={step} />
     </div>
   );
 }

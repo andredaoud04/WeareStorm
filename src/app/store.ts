@@ -80,7 +80,7 @@ export function boot() {
 }
 
 export function commit(next: SaveV1) {
-  if (next === save.value) return;
+  if (next === save.peek()) return;
   save.value = next;
   writeSave(next);
 }
@@ -117,9 +117,11 @@ export function setSetting<K extends keyof SaveV1['settings']>(k: K, v: SaveV1['
   commit({ ...save.value, settings: { ...save.value.settings, [k]: v } });
 }
 
+/** Safe to call inside effects: it reads the save untracked, so the caller doesn't re-run on every save write. */
 export function markFtue(flag: string) {
-  if (save.value.ftue[flag]) return;
-  commit({ ...save.value, ftue: { ...save.value.ftue, [flag]: true } });
+  const s = save.peek();
+  if (s.ftue[flag]) return;
+  commit({ ...s, ftue: { ...s.ftue, [flag]: true } });
 }
 
 /** Records the running battle so a crash or a closed tab still pays the Gold earned so far. */

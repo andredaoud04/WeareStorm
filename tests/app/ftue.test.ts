@@ -114,3 +114,21 @@ describe('FTUE runtime (battle events → flags)', () => {
     route.value = 'title';
   });
 });
+
+describe('FTUE flags written from inside effects', () => {
+  it('markFtue does not subscribe the calling effect to the save (QA 1E: the Warlord line was cut short)', async () => {
+    const { effect } = await import('@preact/signals');
+    const { markFtue } = await import('../../src/app/store');
+    save.value = newSave();
+    let runs = 0;
+    const dispose = effect(() => {
+      runs++;
+      markFtue('qaProbe');
+    });
+    save.value = { ...save.value, gold: save.value.gold + 7 }; // e.g. a pending-Gold write mid-battle
+    save.value = { ...save.value, gold: save.value.gold + 7 };
+    dispose();
+    expect(save.value.ftue['qaProbe']).toBe(true);
+    expect(runs).toBe(1);
+  });
+});

@@ -153,6 +153,8 @@
 @keyframes results-up { from { transform: translateY(60vh); } to { transform: none; } }
 .results-wallet { position: absolute; top: calc(var(--safe-top) + 8 * var(--pt)); left: calc(var(--safe-left) + 12 * var(--pt)); animation: fade-in 300ms ease-out both; }
 .results-actions .act { animation: pop-in 380ms var(--ease-back) both; animation-delay: var(--d, 0ms); }
+/* Until the count-up ends the buttons are still invisible (pop-in delay): taps fall through to the skip handler. */
+.results:not([data-phase="done"]) .results-actions .act { pointer-events: none; }
 .results-actions .results-badge { position: absolute; z-index: 3; top: calc(-8 * var(--pt)); right: calc(-6 * var(--pt)); }
 .results-primary-wrap { position: relative; display: flex; }
 .results-primary-wrap > .btn { flex: 1; }
