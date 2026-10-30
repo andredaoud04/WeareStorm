@@ -102,6 +102,7 @@ export class KitBase {
     this.glow.anchor.copyFrom(cur.anchor);
     this.glow.scale.copyFrom(cur.scale);
     this.glow.alpha = hitting ? 0.32 : Math.max(0, this.glow.alpha - dt / 200);
+    this.glow.visible = this.glow.alpha > 0;
   }
 
   destroy() {

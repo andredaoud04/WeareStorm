@@ -147,6 +147,7 @@ export class KitUnit {
     this.flash = Math.max(0, this.flash - dt);
     const peak = this.role === 'warlord' ? 0.35 : this.role === 'tank' ? 0.6 : 0.9;
     this.white.alpha = this.flash > 50 ? peak : (this.flash / 50) * peak;
+    this.white.visible = this.white.alpha > 0; // an invisible overlay still costs a draw
     // knockback spring back to rest
     // (sub-stepped: a slow frame must never make the spring blow up)
     for (let rem = s; rem > 0; rem -= 1 / 60) {
