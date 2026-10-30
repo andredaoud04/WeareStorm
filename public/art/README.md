@@ -44,9 +44,10 @@ Lanczos; atlas pages are ≤ 2048 × 2048 with 2 px padding.
 Sprites are pre-scaled to ~2× their on-screen size on the reference phone (soldier ≈ 240 px for ~76 pt, tank ≈ 360 px,
 Warlord ≈ 600 px, intact base 600 px), so a DPR-2 phone draws them slightly downscaled and an iPad still has pixels
 to spare. The sources are generated "pixel-art style" images with no exact pixel grid (≈ 3–5 source px per art pixel),
-so there is no integer scale to snap to. The runtime uses **linear filtering with mipmaps**: nearest sampling of a
-downscaled sprite drops and doubles pixels and shimmers as troops bob and walk (see the comparison screenshots in the
-M2 report). World sizes live in `src/render/kits/sizes.ts`; change sizes there, not here.
+so there is no integer scale to snap to. The runtime uses **bilinear filtering without mipmaps**. Compared at 390 × 844
+DPR 2 (`?sample=nearest|trilinear` switches the loader for this check): nearest is equally sharp but jags thin
+diagonals (sword edges, staffs) and shimmers on moving troops; trilinear mipmapping blends toward the half-size mip at
+the ~0.55× phone ratio and looks soft; bilinear keeps the detail without the jaggies. World sizes live in `src/render/kits/sizes.ts`; change sizes there, not here.
 
 ## Size
 

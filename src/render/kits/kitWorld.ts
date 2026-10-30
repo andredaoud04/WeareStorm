@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, TilingSprite } from 'pixi.js';
+import { Container, Sprite, Texture, TilingSprite } from 'pixi.js';
 import type { Kit } from './loader';
 import { LANE_HEIGHT } from './sizes';
 
@@ -43,7 +43,7 @@ export class KitWorld {
   private clouds = new Container();
   private horizon = new Container();
   /** Atmospheric haze at the horizon's foot: the far cliffs recede, the dark armour of the troops pops. */
-  private haze = new Graphics();
+  private haze = new Sprite();
   private ground: TilingSprite;
   private path: TilingSprite;
   private drift: { s: Sprite; v: number }[] = [];
@@ -56,6 +56,7 @@ export class KitWorld {
     this.ground = new TilingSprite({ texture: kit.image('ground') });
     this.path = new TilingSprite({ texture: kit.image('path') });
     // the far scenery sits back: a touch darker so the troops pop against it
+    this.haze.texture = hazeTexture(HAZE[kit.id] ?? '#4b4a8f');
     this.horizon.tint = 0xc4c4d6;
     this.ground.tint = 0x9a9aae;
     this.back.addChild(this.sky, this.clouds, this.horizon, this.haze, this.ground, this.path);
@@ -100,13 +101,8 @@ export class KitWorld {
     }
     const horizonTop = this.laneTop - hz.h * hs;
     const hazeTop = this.laneTop - hz.h * hs * 0.62;
-    const bands = 28;
-    this.haze.clear();
-    for (let i = 0; i < bands; i++) {
-      const f = (i + 1) / bands;
-      const y0 = hazeTop + ((this.laneTop - hazeTop) * i) / bands;
-      this.haze.rect(0, y0, w, (this.laneTop - hazeTop) / bands + 1).fill({ color: HAZE[this.kit.id] ?? 0x4b4a8f, alpha: 0.62 * f * f });
-    }
+    this.haze.position.set(0, hazeTop);
+    this.haze.setSize(w, this.laneTop - hazeTop);
 
     // ground: from just under the horizon's foot to the bottom of the screen
     const gs = k * 1.15;
@@ -159,7 +155,29 @@ export class KitWorld {
   }
 }
 
-const HAZE: Record<string, number> = { eldritch: 0x4d4796, future: 0x4f5c9c };
+const HAZE: Record<string, string> = { eldritch: '#4d4796', future: '#4f5c9c' };
+
+/** A 1 × 128 vertical ramp (transparent → 62 %, eased) for the haze; one tiny texture per colour. */
+const hazeCache = new Map<string, Texture>();
+function hazeTexture(col: string): Texture {
+  let t = hazeCache.get(col);
+  if (!t) {
+    const c = document.createElement('canvas');
+    c.width = 1;
+    c.height = 128;
+    const g = c.getContext('2d')!;
+    for (let y = 0; y < 128; y++) {
+      const f = (y + 1) / 128;
+      g.globalAlpha = 0.62 * f * f;
+      g.clearRect(0, y, 1, 1);
+      g.fillStyle = col;
+      g.fillRect(0, y, 1, 1);
+    }
+    t = Texture.from(c);
+    hazeCache.set(col, t);
+  }
+  return t;
+}
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));

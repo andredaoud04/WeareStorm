@@ -111,8 +111,8 @@ rigs and baked backgrounds of M1 are gone.
   `manifest.json` per kit into `public/art/<kit>/`. Sources are never committed.
 - **Age -> kit**: one table, `src/render/kits/ageKits.ts`. The field (stage) Age draws the world, effects and enemy base;
   each troop is drawn by its own Age's kit; your base by your army's. Presentation only: the sim never reads it.
-- **Loading**: `src/render/kits/loader.ts` loads a kit on demand (manifest, then pages via Pixi Assets, linear +
-  mipmaps). `app/world.ts` preloads the army, field and next-Age kits from the title/hub; a battle never waits: troops
+- **Loading**: `src/render/kits/loader.ts` loads a kit on demand (manifest, then pages via Pixi Assets, bilinear,
+  no mipmaps). `app/world.ts` preloads the army, field and next-Age kits from the title/hub; a battle never waits: troops
   show a dim placeholder and the world a plain night fill until their kit arrives, then swap in.
 - **Units** (`kitUnit.ts`): the full hero sprite per troop, animated procedurally from sim states and events (stepped
   walk bob + lean, anticipation -> lunge keyed to the impact tick, cast recoil + muzzle flash, white-silhouette hit flash

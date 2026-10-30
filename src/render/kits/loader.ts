@@ -4,9 +4,9 @@ import { validateManifest, type KitManifest } from './manifest';
 
 /**
  * Loads a kit's manifest and texture pages on demand (only the kits the current and next Age need) and slices the
- * frames. Sprites are pre-scaled by the art tool to ~2× their on-screen size, so they are drawn slightly downscaled:
- * linear filtering with mipmaps keeps them crisp without the shimmer nearest sampling gives a moving, downscaled
- * sprite (see public/art/README.md for the comparison).
+ * frames. Sprites are pre-scaled by the art tool to ~2× their on-screen size, so a phone draws them at ~0.5–0.9×:
+ * plain bilinear filtering (no mipmaps) keeps them as crisp as nearest sampling without its dropped/doubled pixels
+ * and shimmer on moving troops; trilinear mipmapping was visibly soft (comparison in public/art/README.md).
  */
 export interface Kit {
   id: KitId;
@@ -63,9 +63,9 @@ async function load(id: KitId): Promise<Kit> {
   const errs = validateManifest(manifest);
   if (errs.length) throw new Error(`manifest ${id}: ${errs.slice(0, 3).join('; ')}`);
 
-  // ?sample=nearest switches the sprite atlases to nearest sampling without mipmaps (for the sampling comparison only)
-  const nearest = typeof location !== 'undefined' && new URLSearchParams(location.search).get('sample') === 'nearest';
-  const sprite = nearest ? ({ scaleMode: 'nearest', autoGenerateMipmaps: false } as const) : ({ scaleMode: 'linear', autoGenerateMipmaps: true } as const);
+  // ?sample=nearest|trilinear switches the sprite atlases' sampling (for the sampling comparison only)
+  const mode = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('sample') : null;
+  const sprite = { scaleMode: mode === 'nearest' ? 'nearest' : 'linear', autoGenerateMipmaps: mode === 'trilinear' } as const;
   const jobs: Promise<void>[] = [];
   const pages: Record<string, TextureSource[]> = {};
   for (const [group, list] of Object.entries(manifest.atlases)) {

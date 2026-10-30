@@ -112,7 +112,7 @@ export function loadScene() {
       const stage = Number(params.get('stage') ?? 4);
       const state = params.get('state') ?? 'damaged';
       fixture({ ...(stage > 5 ? lateSave(stage) : STONE_MID), levels: { food: 8, walls: 8, melee: 1, ranged: stage > 5 ? 5 : 1, tank: 1 } }); // weak shots: the HP walks down gently
-      const limit = state === 'damaged' ? 0.6 : state === 'critical' ? 0.25 : 0;
+      const limit = state === 'damaged' ? 0.66 : state === 'critical' ? 0.33 : 0; // stop on entering the state
       const s = startBattle(stage);
       go('battle');
       // ranged troops only: they shoot from range, so the base stays in view
