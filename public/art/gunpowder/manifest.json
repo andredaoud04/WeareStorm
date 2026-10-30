@@ -1,0 +1,619 @@
+{
+ "atlases": {
+  "bases": [
+   {
+    "file": "bases-0.webp",
+    "h": 916,
+    "w": 1948
+   }
+  ],
+  "sprites": [
+   {
+    "file": "sprites-0.webp",
+    "h": 1280,
+    "w": 2048
+   }
+  ]
+ },
+ "baseAlignmentApplied": true,
+ "baseRefHeight": 690.5,
+ "bases": {
+  "ember.critical": "base/ember/critical",
+  "ember.damaged": "base/ember/damaged",
+  "ember.intact": "base/ember/intact",
+  "ember.ruins": "base/ember/ruins",
+  "storm.critical": "base/storm/critical",
+  "storm.damaged": "base/storm/damaged",
+  "storm.intact": "base/storm/intact",
+  "storm.ruins": "base/storm/ruins"
+ },
+ "frames": {
+  "base/ember/critical": {
+   "atlas": "bases",
+   "ax": 373.4,
+   "ay": 377.3,
+   "h": 378,
+   "page": 0,
+   "w": 643,
+   "x": 649,
+   "y": 395
+  },
+  "base/ember/damaged": {
+   "atlas": "bases",
+   "ax": 374.4,
+   "ay": 388.3,
+   "h": 389,
+   "page": 0,
+   "w": 646,
+   "x": 2,
+   "y": 2
+  },
+  "base/ember/intact": {
+   "atlas": "bases",
+   "ax": 374.4,
+   "ay": 386.0,
+   "h": 386,
+   "page": 0,
+   "w": 646,
+   "x": 652,
+   "y": 2
+  },
+  "base/ember/ruins": {
+   "atlas": "bases",
+   "ax": 374.4,
+   "ay": 129.1,
+   "h": 130,
+   "page": 0,
+   "w": 645,
+   "x": 2,
+   "y": 783
+  },
+  "base/storm/critical": {
+   "atlas": "bases",
+   "ax": 371.0,
+   "ay": 350.0,
+   "h": 351,
+   "page": 0,
+   "w": 641,
+   "x": 1296,
+   "y": 395
+  },
+  "base/storm/damaged": {
+   "atlas": "bases",
+   "ax": 372.0,
+   "ay": 383.3,
+   "h": 384,
+   "page": 0,
+   "w": 643,
+   "x": 2,
+   "y": 395
+  },
+  "base/storm/intact": {
+   "atlas": "bases",
+   "ax": 372.0,
+   "ay": 384.2,
+   "h": 385,
+   "page": 0,
+   "w": 642,
+   "x": 1302,
+   "y": 2
+  },
+  "base/storm/ruins": {
+   "atlas": "bases",
+   "ax": 372.0,
+   "ay": 123.1,
+   "h": 124,
+   "page": 0,
+   "w": 642,
+   "x": 651,
+   "y": 783
+  },
+  "fx/coin": {
+   "atlas": "sprites",
+   "ax": 45.5,
+   "ay": 51.5,
+   "h": 103,
+   "page": 0,
+   "w": 91,
+   "x": 561,
+   "y": 1135
+  },
+  "fx/dust": {
+   "atlas": "sprites",
+   "ax": 103.2,
+   "ay": 59.0,
+   "h": 118,
+   "page": 0,
+   "w": 206,
+   "x": 351,
+   "y": 1135
+  },
+  "fx/hit": {
+   "atlas": "sprites",
+   "ax": 69.2,
+   "ay": 61.0,
+   "h": 121,
+   "page": 0,
+   "w": 138,
+   "x": 209,
+   "y": 1135
+  },
+  "fx/impact": {
+   "atlas": "sprites",
+   "ax": 132.1,
+   "ay": 94.2,
+   "h": 188,
+   "page": 0,
+   "w": 264,
+   "x": 1548,
+   "y": 902
+  },
+  "fx/poof": {
+   "atlas": "sprites",
+   "ax": 114.0,
+   "ay": 79.0,
+   "h": 158,
+   "page": 0,
+   "w": 227,
+   "x": 1816,
+   "y": 902
+  },
+  "fx/projectile": {
+   "atlas": "sprites",
+   "ax": 17.0,
+   "ay": 19.0,
+   "blend": "normal",
+   "flash": false,
+   "h": 38,
+   "page": 0,
+   "size": 48,
+   "w": 34,
+   "x": 1178,
+   "y": 1135
+  },
+  "fx/scorch": {
+   "atlas": "sprites",
+   "ax": 104.2,
+   "ay": 35.5,
+   "h": 70,
+   "page": 0,
+   "w": 208,
+   "x": 716,
+   "y": 1135
+  },
+  "fx/strike": {
+   "atlas": "sprites",
+   "ax": 273.0,
+   "ay": 160.5,
+   "h": 321,
+   "page": 0,
+   "w": 546,
+   "x": 1398,
+   "y": 2
+  },
+  "fx/swoosh": {
+   "atlas": "sprites",
+   "ax": 101.0,
+   "ay": 69.8,
+   "h": 140,
+   "page": 0,
+   "w": 203,
+   "x": 2,
+   "y": 1135
+  },
+  "part/grenadier_ember/hat": {
+   "atlas": "sprites",
+   "ax": 28.0,
+   "ay": 13.0,
+   "h": 26,
+   "page": 0,
+   "w": 56,
+   "x": 1614,
+   "y": 1135
+  },
+  "part/grenadier_storm/hat": {
+   "atlas": "sprites",
+   "ax": 31.5,
+   "ay": 13.0,
+   "h": 26,
+   "page": 0,
+   "w": 63,
+   "x": 1547,
+   "y": 1135
+  },
+  "part/musketeer_ember/musket": {
+   "atlas": "sprites",
+   "ax": 47.5,
+   "ay": 10.5,
+   "h": 21,
+   "page": 0,
+   "w": 95,
+   "x": 1674,
+   "y": 1135
+  },
+  "part/musketeer_storm/musket": {
+   "atlas": "sprites",
+   "ax": 80.5,
+   "ay": 16.0,
+   "h": 32,
+   "page": 0,
+   "w": 161,
+   "x": 1382,
+   "y": 1135
+  },
+  "part/sabre_guard_ember/sabre": {
+   "atlas": "sprites",
+   "ax": 81.0,
+   "ay": 16.5,
+   "h": 33,
+   "page": 0,
+   "w": 162,
+   "x": 1216,
+   "y": 1135
+  },
+  "part/sabre_guard_ember/shield": {
+   "atlas": "sprites",
+   "ax": 24.0,
+   "ay": 29.0,
+   "h": 58,
+   "page": 0,
+   "w": 48,
+   "x": 928,
+   "y": 1135
+  },
+  "part/sabre_guard_storm/sabre": {
+   "atlas": "sprites",
+   "ax": 97.0,
+   "ay": 20.5,
+   "h": 41,
+   "page": 0,
+   "w": 194,
+   "x": 980,
+   "y": 1135
+  },
+  "part/sabre_guard_storm/shield": {
+   "atlas": "sprites",
+   "ax": 28.0,
+   "ay": 39.5,
+   "h": 79,
+   "page": 0,
+   "w": 56,
+   "x": 656,
+   "y": 1135
+  },
+  "unit/boss": {
+   "atlas": "sprites",
+   "ax": 472.6,
+   "ay": 580.9,
+   "h": 582,
+   "nominalH": 600.0,
+   "page": 0,
+   "w": 694,
+   "x": 2,
+   "y": 2
+  },
+  "unit/boss.white": {
+   "atlas": "sprites",
+   "ax": 472.6,
+   "ay": 580.9,
+   "h": 582,
+   "page": 0,
+   "w": 694,
+   "x": 700,
+   "y": 2
+  },
+  "unit/grenadier_ember": {
+   "atlas": "sprites",
+   "ax": 122.3,
+   "ay": 229.0,
+   "h": 230,
+   "muzzle": [
+    8.6,
+    28.1
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 238,
+   "x": 1474,
+   "y": 588
+  },
+  "unit/grenadier_ember.white": {
+   "atlas": "sprites",
+   "ax": 122.3,
+   "ay": 229.0,
+   "h": 230,
+   "page": 0,
+   "w": 238,
+   "x": 1716,
+   "y": 588
+  },
+  "unit/grenadier_storm": {
+   "atlas": "sprites",
+   "ax": 122.4,
+   "ay": 227.8,
+   "h": 229,
+   "muzzle": [
+    8.6,
+    27.1
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 238,
+   "x": 2,
+   "y": 902
+  },
+  "unit/grenadier_storm.white": {
+   "atlas": "sprites",
+   "ax": 122.4,
+   "ay": 227.8,
+   "h": 229,
+   "page": 0,
+   "w": 238,
+   "x": 244,
+   "y": 902
+  },
+  "unit/musketeer_ember": {
+   "atlas": "sprites",
+   "ax": 84.5,
+   "ay": 224.3,
+   "h": 225,
+   "muzzle": [
+    261.4,
+    50.2
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 263,
+   "x": 486,
+   "y": 902
+  },
+  "unit/musketeer_ember.white": {
+   "atlas": "sprites",
+   "ax": 84.5,
+   "ay": 224.3,
+   "h": 225,
+   "page": 0,
+   "w": 263,
+   "x": 753,
+   "y": 902
+  },
+  "unit/musketeer_storm": {
+   "atlas": "sprites",
+   "ax": 82.0,
+   "ay": 224.1,
+   "h": 225,
+   "muzzle": [
+    259.4,
+    50.2
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 260,
+   "x": 1020,
+   "y": 902
+  },
+  "unit/musketeer_storm.white": {
+   "atlas": "sprites",
+   "ax": 82.0,
+   "ay": 224.1,
+   "h": 225,
+   "page": 0,
+   "w": 260,
+   "x": 1284,
+   "y": 902
+  },
+  "unit/sabre_guard_ember": {
+   "atlas": "sprites",
+   "ax": 244.3,
+   "ay": 309.6,
+   "h": 310,
+   "muzzle": [
+    4.5,
+    206.5
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 364,
+   "x": 2,
+   "y": 588
+  },
+  "unit/sabre_guard_ember.white": {
+   "atlas": "sprites",
+   "ax": 244.3,
+   "ay": 309.6,
+   "h": 310,
+   "page": 0,
+   "w": 364,
+   "x": 370,
+   "y": 588
+  },
+  "unit/sabre_guard_storm": {
+   "atlas": "sprites",
+   "ax": 244.1,
+   "ay": 309.6,
+   "h": 310,
+   "muzzle": [
+    4.5,
+    206.5
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 364,
+   "x": 738,
+   "y": 588
+  },
+  "unit/sabre_guard_storm.white": {
+   "atlas": "sprites",
+   "ax": 244.1,
+   "ay": 309.6,
+   "h": 310,
+   "page": 0,
+   "w": 364,
+   "x": 1106,
+   "y": 588
+  }
+ },
+ "images": {
+  "distant": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "distant.webp",
+   "h": 370,
+   "w": 1152,
+   "y": 397.5
+  },
+  "fill": {
+   "file": "fill.webp",
+   "h": 200,
+   "repeat": "xy",
+   "w": 1536
+  },
+  "foreground": {
+   "file": "foreground.webp",
+   "h": 286,
+   "w": 1152
+  },
+  "ground": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "ground.webp",
+   "h": 234,
+   "laneY": 637.5,
+   "w": 1152,
+   "y": 534.0
+  },
+  "midground": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "midground.webp",
+   "h": 482,
+   "w": 1152,
+   "y": 285.8
+  },
+  "portrait-melee": {
+   "file": "portrait-melee.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-ranged": {
+   "file": "portrait-ranged.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-tank": {
+   "file": "portrait-tank.webp",
+   "h": 256,
+   "w": 256
+  },
+  "sky": {
+   "file": "sky.webp",
+   "focus": [
+    0.5,
+    0.3
+   ],
+   "h": 768,
+   "w": 1152
+  }
+ },
+ "kit": "gunpowder",
+ "schema": 1,
+ "sources": {
+  "ember/fortress_damaged.png": "894c317b9718fed6ee9150ea9ae83c278e8823e61519ca6c0dc32b25806db7be",
+  "ember/fortress_fallen.png": "566c052d2ed98f2f6e2bc8d0946449472d23c728f392a830f5b0ef473ea2ab6c",
+  "ember/fortress_intact.png": "5f430b358f9e82d876c7d74724d1f39f497d5f579dc38bdaccf9a851cc9dbec4",
+  "ember/fortress_nearly_destroyed.png": "3bd51e026773092071c8a3bb86c73c879b6a4ac87ba79181372c3847183ef476",
+  "ember/grenadier.png": "a999349e257d75bee0f810b0e631ea1b23191bd869d59eac8a0af7aa786e9f1c",
+  "ember/grenadier_parts.png": "7769b510595691b6f8dcf5b6a0998adfdb0b925456b5eef11f27b9025c557b0d",
+  "ember/musketeer.png": "d51b67889aca24cb31bc71cdee7f249b6224cc7af4b03b457b5aded04d844b30",
+  "ember/musketeer_parts.png": "3c4ab126b4e85a4361d3b8a793c7c829b1e297ef395bd63335ea46ee6a5f53aa",
+  "ember/sabre_guard.png": "dfaa313704f9d39499bbd3070d82aa42579235702e5c4ff256f17fbaf25c4e3b",
+  "ember/sabre_guard_parts.png": "e4db594ce4ac01cde17d8da169c97fabffab878467dd115e10603f7e2091ae7e",
+  "ember/warlord.png": "4843b40d6d4f12213f836298c17e959a00e450bd4ab59e47f2e890225b80d1f0",
+  "ember/warlord_parts.png": "8912811b5a4dec9b230006464e2200d6c71cedb2f83806715b88fd643bad043e",
+  "storm/fortress_damaged.png": "31f8f6ffc4f980a0c200e01feedb40ab7ec954145c781de0094e7d37ee5908c8",
+  "storm/fortress_fallen.png": "fbeb8992e9d9cfcc70291606c5a41358704be4a080a7f3be8a595d6d16046e48",
+  "storm/fortress_intact.png": "2dafaa1a5c7a29b6259d192ac0347121be99b3ca66a2f128ee5a5b27d1bb2d4a",
+  "storm/fortress_nearly_destroyed.png": "ccbbd96c01610ce690cba211f6826ae07570ea356da9286cb315094022fe2eb7",
+  "storm/grenadier.png": "747c29bc3f59a978247ad8c8906e17759235fe07f9ac3f63fd7e9a5332d41f44",
+  "storm/grenadier_parts.png": "8e08ec65483a1bcf132c40a395fd8f05d47cf65a00196af7a8daf58443de959b",
+  "storm/musketeer.png": "9b6bd57625c28f92d8371bc1f19c92a01beddf57686243654ffcb4d932457179",
+  "storm/musketeer_parts.png": "6e2f0a09431832663f7f2d66b085b9057a6275e6e2f8e006ab456ead7af0aa05",
+  "storm/sabre_guard.png": "3c2230a27c423902df2d094390e9a5b079aa527fae6aafe83061f62d81be6d23",
+  "storm/sabre_guard_parts.png": "52a9fce36c87e61bf043bb8e1caf32ae7eea8614d609e86898ca912844c57977",
+  "storm/warlord.png": "a65469e69a60b9ea59046d476d12b7c698fd40dc679104387136f4a50d0ddf49",
+  "storm/warlord_parts.png": "83dd810e0620f48d4247113c27b1ba85900ec5063c3e2540e6a4aaf9f63d9c49",
+  "world/distant.png": "5f4d06037a54fcf70762ad10e29e346b8ccad6eebe310ea7fa048606741a6ce3",
+  "world/foreground.png": "1aab13522af175166b7959ce03e6e7ca80994f1b84740eb4ad70b4ae8a96c2b9",
+  "world/ground.png": "35150a6a6ae8f5fad5ac6c3c77713fc6118576b9ac739e00501f1f26510d2136",
+  "world/midground.png": "3c2a6513b7a4b399f85df33f024fdcf67173e9ccec38774bce8628a839995848",
+  "world/sky.png": "0bea5b1be495c6e44d8222982ee5b058ca57ff6fe4ac0a7ddc3323615deb901c"
+ },
+ "title": "STORMGLASS \u2014 Gunpowder Era",
+ "units": {
+  "melee.ember": {
+   "debris": [
+    "part/musketeer_ember/musket"
+   ],
+   "frame": "unit/musketeer_ember",
+   "name": "musketeer",
+   "strike": "shot",
+   "white": "unit/musketeer_ember.white"
+  },
+  "melee.storm": {
+   "debris": [
+    "part/musketeer_storm/musket"
+   ],
+   "frame": "unit/musketeer_storm",
+   "name": "musketeer",
+   "strike": "shot",
+   "white": "unit/musketeer_storm.white"
+  },
+  "ranged.ember": {
+   "debris": [
+    "part/grenadier_ember/hat"
+   ],
+   "frame": "unit/grenadier_ember",
+   "name": "grenadier",
+   "white": "unit/grenadier_ember.white"
+  },
+  "ranged.storm": {
+   "debris": [
+    "part/grenadier_storm/hat"
+   ],
+   "frame": "unit/grenadier_storm",
+   "name": "grenadier",
+   "white": "unit/grenadier_storm.white"
+  },
+  "tank.ember": {
+   "debris": [
+    "part/sabre_guard_ember/sabre",
+    "part/sabre_guard_ember/shield"
+   ],
+   "frame": "unit/sabre_guard_ember",
+   "name": "sabre_guard",
+   "white": "unit/sabre_guard_ember.white"
+  },
+  "tank.storm": {
+   "debris": [
+    "part/sabre_guard_storm/sabre",
+    "part/sabre_guard_storm/shield"
+   ],
+   "frame": "unit/sabre_guard_storm",
+   "name": "sabre_guard",
+   "white": "unit/sabre_guard_storm.white"
+  },
+  "warlord.ember": {
+   "debris": [],
+   "frame": "unit/boss",
+   "name": "warlord",
+   "white": "unit/boss.white"
+  }
+ },
+ "world": "layers"
+}
