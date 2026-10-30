@@ -3,6 +3,7 @@ import { TICKS_PER_SECOND } from '../contracts';
 import { canUnlock, canUpgrade } from '../meta/progress';
 import type { SaveV1 } from '../meta/save';
 import { SPEED_UNLOCK_STAGE, session } from './battleController';
+import { slotName } from '../ui/skin';
 import {
   markFtue, results, resultsPhase, resultsPrimary, route, save, sheet,
   type ResultsPhase, type ResultsPrimary, type Route,
@@ -32,11 +33,17 @@ export interface CoachStep {
 
 const step = (s: CoachStep) => s;
 
+/** The coach teaches in the Stone Age, where troops wear their kit names (src/ui/skin.ts). */
+const MELEE = slotName('stone', 'melee');
+const RANGED = slotName('stone', 'ranged');
+const TANK = slotName('stone', 'tank');
+const an = (w: string) => (/^[AEIOU]/i.test(w) ? 'An' : 'A');
+
 /** GDD §1.5 copy where the GDD gives it. */
 export const COACH = {
   food: step({ id: 'food', text: 'Food fills up. Troops cost Food!', target: 'food', hand: false, place: 'above' }),
-  deploy: step({ id: 'deploy', text: 'Tap to send a Clubber!', target: 'card-melee', hand: true, place: 'above' }),
-  ranged: step({ id: 'ranged', text: 'Slingers shoot from behind your Clubbers.', target: 'card-ranged', hand: false, place: 'above' }),
+  deploy: step({ id: 'deploy', text: `Tap to send ${an(MELEE).toLowerCase()} ${MELEE}!`, target: 'card-melee', hand: true, place: 'above' }),
+  ranged: step({ id: 'ranged', text: `${RANGED}s shoot from behind your ${MELEE}s.`, target: 'card-ranged', hand: false, place: 'above' }),
   speed: step({ id: 'speed', text: 'Tap for ×2 speed!', target: 'speed', hand: true, place: 'below' }),
   stormcall: step({ id: 'stormcall', text: 'Call the storm!', target: 'stormcall', hand: true, place: 'above', side: true }),
   warlord: step({ id: 'warlord', text: 'Beat the Warlord to break the ward!', target: 'boss-bar', hand: false, place: 'below' }),
@@ -47,8 +54,8 @@ export const COACH = {
   backArmy: step({ id: 'back', text: 'Back to battle!', target: 'tab-hub', hand: true, place: 'above' }),
   foodTab: step({ id: 'food-up', text: 'More Food = more troops!', target: 'tab-army', hand: true, place: 'above', bubble: 'top' }),
   foodArmy: step({ id: 'food-up', text: 'More Food = more troops!', target: 'buy-food', hand: true, place: 'left', bubble: 'bottom' }),
-  tankTab: step({ id: 'tank', text: 'A Rockhide can join you!', target: 'tab-army', hand: true, place: 'above', bubble: 'top' }),
-  tankArmy: step({ id: 'tank', text: 'A Rockhide can join you!', target: 'unlock-tank', hand: true, place: 'above', bubble: 'bottom' }),
+  tankTab: step({ id: 'tank', text: `${an(TANK)} ${TANK} can join you!`, target: 'tab-army', hand: true, place: 'above', bubble: 'top' }),
+  tankArmy: step({ id: 'tank', text: `${an(TANK)} ${TANK} can join you!`, target: 'unlock-tank', hand: true, place: 'above', bubble: 'bottom' }),
 } as const;
 
 /** Every flag the coach writes; fixtures that should show no coach set them all. */

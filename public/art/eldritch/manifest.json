@@ -1,0 +1,778 @@
+{
+ "atlases": {
+  "bases": [
+   {
+    "file": "bases-0.webp",
+    "h": 1076,
+    "w": 1796
+   }
+  ],
+  "fx": [
+   {
+    "file": "fx-0.webp",
+    "h": 660,
+    "w": 1972
+   }
+  ],
+  "sprites": [
+   {
+    "file": "sprites-0.webp",
+    "h": 1324,
+    "w": 2000
+   }
+  ]
+ },
+ "baseAlignmentApplied": true,
+ "baseRefHeight": 600,
+ "bases": {
+  "ember.critical": "base/ember/critical",
+  "ember.damaged": "base/ember/damaged",
+  "ember.intact": "base/ember/intact",
+  "ember.ruins": "base/ember/ruins",
+  "storm.critical": "base/storm/critical",
+  "storm.damaged": "base/storm/damaged",
+  "storm.intact": "base/storm/intact",
+  "storm.ruins": "base/storm/ruins"
+ },
+ "frames": {
+  "base/ember/critical": {
+   "atlas": "bases",
+   "ax": 222.6,
+   "ay": 465.4,
+   "h": 466,
+   "page": 0,
+   "w": 445,
+   "x": 2,
+   "y": 608
+  },
+  "base/ember/damaged": {
+   "atlas": "bases",
+   "ax": 222.5,
+   "ay": 597.0,
+   "h": 598,
+   "page": 0,
+   "w": 445,
+   "x": 900,
+   "y": 2
+  },
+  "base/ember/intact": {
+   "atlas": "bases",
+   "ax": 222.9,
+   "ay": 587.3,
+   "h": 588,
+   "page": 0,
+   "w": 445,
+   "x": 1349,
+   "y": 2
+  },
+  "base/ember/ruins": {
+   "atlas": "bases",
+   "ax": 222.6,
+   "ay": 237.4,
+   "h": 238,
+   "page": 0,
+   "w": 445,
+   "x": 900,
+   "y": 608
+  },
+  "base/storm/critical": {
+   "atlas": "bases",
+   "ax": 222.6,
+   "ay": 464.6,
+   "h": 465,
+   "page": 0,
+   "w": 445,
+   "x": 451,
+   "y": 608
+  },
+  "base/storm/damaged": {
+   "atlas": "bases",
+   "ax": 222.5,
+   "ay": 601.7,
+   "h": 602,
+   "page": 0,
+   "w": 445,
+   "x": 2,
+   "y": 2
+  },
+  "base/storm/intact": {
+   "atlas": "bases",
+   "ax": 222.6,
+   "ay": 600.3,
+   "h": 601,
+   "page": 0,
+   "w": 445,
+   "x": 451,
+   "y": 2
+  },
+  "base/storm/ruins": {
+   "atlas": "bases",
+   "ax": 222.6,
+   "ay": 237.2,
+   "h": 238,
+   "page": 0,
+   "w": 445,
+   "x": 1349,
+   "y": 608
+  },
+  "cloud/1": {
+   "atlas": "fx",
+   "ax": 181.0,
+   "ay": 89.0,
+   "h": 178,
+   "page": 0,
+   "w": 362,
+   "x": 1496,
+   "y": 2
+  },
+  "cloud/2": {
+   "atlas": "fx",
+   "ax": 80.0,
+   "ay": 107.0,
+   "h": 214,
+   "page": 0,
+   "w": 160,
+   "x": 172,
+   "y": 2
+  },
+  "cloud/3": {
+   "atlas": "fx",
+   "ax": 132.5,
+   "ay": 91.0,
+   "h": 182,
+   "page": 0,
+   "w": 265,
+   "x": 1227,
+   "y": 2
+  },
+  "cloud/4": {
+   "atlas": "fx",
+   "ax": 223.5,
+   "ay": 93.0,
+   "h": 186,
+   "page": 0,
+   "w": 447,
+   "x": 553,
+   "y": 2
+  },
+  "cloud/5": {
+   "atlas": "fx",
+   "ax": 106.5,
+   "ay": 97.5,
+   "h": 195,
+   "page": 0,
+   "w": 213,
+   "x": 336,
+   "y": 2
+  },
+  "fx/coin": {
+   "atlas": "fx",
+   "ax": 45.5,
+   "ay": 51.5,
+   "h": 103,
+   "page": 0,
+   "w": 91,
+   "x": 105,
+   "y": 553
+  },
+  "fx/dust": {
+   "atlas": "fx",
+   "ax": 84.0,
+   "ay": 71.2,
+   "h": 141,
+   "page": 0,
+   "w": 167,
+   "x": 1210,
+   "y": 375
+  },
+  "fx/hit": {
+   "atlas": "fx",
+   "ax": 50.0,
+   "ay": 51.8,
+   "h": 104,
+   "page": 0,
+   "w": 99,
+   "x": 2,
+   "y": 553
+  },
+  "fx/impact": {
+   "atlas": "fx",
+   "ax": 109.5,
+   "ay": 92.8,
+   "h": 186,
+   "page": 0,
+   "w": 219,
+   "x": 1004,
+   "y": 2
+  },
+  "fx/poof": {
+   "atlas": "fx",
+   "ax": 106.5,
+   "ay": 74.2,
+   "h": 148,
+   "page": 0,
+   "w": 213,
+   "x": 850,
+   "y": 375
+  },
+  "fx/projectile": {
+   "atlas": "fx",
+   "ax": 112.2,
+   "ay": 38.8,
+   "h": 78,
+   "page": 0,
+   "w": 224,
+   "x": 278,
+   "y": 553
+  },
+  "fx/scorch": {
+   "atlas": "fx",
+   "ax": 126.5,
+   "ay": 52.0,
+   "h": 104,
+   "page": 0,
+   "w": 252,
+   "x": 1717,
+   "y": 375
+  },
+  "fx/strike": {
+   "atlas": "fx",
+   "ax": 83.0,
+   "ay": 184.5,
+   "h": 369,
+   "page": 0,
+   "w": 166,
+   "x": 2,
+   "y": 2
+  },
+  "fx/swoosh": {
+   "atlas": "fx",
+   "ax": 112.2,
+   "ay": 87.2,
+   "h": 174,
+   "page": 0,
+   "w": 225,
+   "x": 2,
+   "y": 375
+  },
+  "part/riftblade_ember/sword": {
+   "atlas": "sprites",
+   "ax": 37.5,
+   "ay": 23.3,
+   "h": 42,
+   "page": 0,
+   "w": 150,
+   "x": 838,
+   "y": 1231
+  },
+  "part/riftblade_storm/sword": {
+   "atlas": "sprites",
+   "ax": 37.5,
+   "ay": 23.3,
+   "h": 42,
+   "page": 0,
+   "w": 150,
+   "x": 992,
+   "y": 1231
+  },
+  "part/voidseer_ember/staff": {
+   "atlas": "sprites",
+   "ax": 42.9,
+   "ay": 23.5,
+   "h": 43,
+   "page": 0,
+   "w": 171,
+   "x": 488,
+   "y": 1231
+  },
+  "part/voidseer_storm/staff": {
+   "atlas": "sprites",
+   "ax": 42.7,
+   "ay": 23.0,
+   "h": 42,
+   "page": 0,
+   "w": 171,
+   "x": 663,
+   "y": 1231
+  },
+  "part/warden_ember/maul": {
+   "atlas": "sprites",
+   "ax": 59.8,
+   "ay": 49.2,
+   "h": 90,
+   "page": 0,
+   "w": 239,
+   "x": 245,
+   "y": 1231
+  },
+  "part/warden_ember/shield": {
+   "atlas": "sprites",
+   "ax": 42.5,
+   "ay": 113.2,
+   "h": 226,
+   "page": 0,
+   "w": 85,
+   "x": 1822,
+   "y": 973
+  },
+  "part/warden_storm/maul": {
+   "atlas": "sprites",
+   "ax": 59.7,
+   "ay": 50.2,
+   "h": 91,
+   "page": 0,
+   "w": 239,
+   "x": 2,
+   "y": 1231
+  },
+  "part/warden_storm/shield": {
+   "atlas": "sprites",
+   "ax": 42.2,
+   "ay": 112.7,
+   "h": 225,
+   "page": 0,
+   "w": 84,
+   "x": 1911,
+   "y": 973
+  },
+  "prop/alien_fern": {
+   "atlas": "fx",
+   "ax": 65.0,
+   "ay": 150.0,
+   "h": 150,
+   "page": 0,
+   "w": 130,
+   "x": 716,
+   "y": 375
+  },
+  "prop/column_stump": {
+   "atlas": "fx",
+   "ax": 56.5,
+   "ay": 133.0,
+   "h": 133,
+   "page": 0,
+   "w": 113,
+   "x": 1493,
+   "y": 375
+  },
+  "prop/crystal_cyan": {
+   "atlas": "fx",
+   "ax": 60.5,
+   "ay": 173.0,
+   "h": 173,
+   "page": 0,
+   "w": 121,
+   "x": 231,
+   "y": 375
+  },
+  "prop/crystal_violet": {
+   "atlas": "fx",
+   "ax": 62.5,
+   "ay": 162.0,
+   "h": 162,
+   "page": 0,
+   "w": 125,
+   "x": 474,
+   "y": 375
+  },
+  "prop/fossil_bone": {
+   "atlas": "fx",
+   "ax": 69.5,
+   "ay": 148.0,
+   "h": 148,
+   "page": 0,
+   "w": 139,
+   "x": 1067,
+   "y": 375
+  },
+  "prop/mask_relic": {
+   "atlas": "fx",
+   "ax": 54.5,
+   "ay": 153.0,
+   "h": 153,
+   "page": 0,
+   "w": 109,
+   "x": 603,
+   "y": 375
+  },
+  "prop/rock_large": {
+   "atlas": "fx",
+   "ax": 57.0,
+   "ay": 163.0,
+   "h": 163,
+   "page": 0,
+   "w": 114,
+   "x": 356,
+   "y": 375
+  },
+  "prop/rock_medium": {
+   "atlas": "fx",
+   "ax": 51.5,
+   "ay": 125.0,
+   "h": 125,
+   "page": 0,
+   "w": 103,
+   "x": 1610,
+   "y": 375
+  },
+  "prop/rock_small": {
+   "atlas": "fx",
+   "ax": 37.0,
+   "ay": 83.0,
+   "h": 83,
+   "page": 0,
+   "w": 74,
+   "x": 200,
+   "y": 553
+  },
+  "prop/void_flowers": {
+   "atlas": "fx",
+   "ax": 54.0,
+   "ay": 137.0,
+   "h": 137,
+   "page": 0,
+   "w": 108,
+   "x": 1381,
+   "y": 375
+  },
+  "unit/boss": {
+   "atlas": "sprites",
+   "ax": 451.7,
+   "ay": 600.8,
+   "h": 602,
+   "nominalH": 600.0,
+   "page": 0,
+   "w": 908,
+   "x": 2,
+   "y": 2
+  },
+  "unit/boss.white": {
+   "atlas": "sprites",
+   "ax": 451.7,
+   "ay": 600.8,
+   "h": 602,
+   "page": 0,
+   "w": 908,
+   "x": 914,
+   "y": 2
+  },
+  "unit/riftblade_ember": {
+   "atlas": "sprites",
+   "ax": 133.8,
+   "ay": 253.3,
+   "h": 254,
+   "muzzle": [
+    254.5,
+    16.2
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 270,
+   "x": 1634,
+   "y": 608
+  },
+  "unit/riftblade_ember.white": {
+   "atlas": "sprites",
+   "ax": 133.8,
+   "ay": 253.3,
+   "h": 254,
+   "page": 0,
+   "w": 270,
+   "x": 2,
+   "y": 973
+  },
+  "unit/riftblade_storm": {
+   "atlas": "sprites",
+   "ax": 132.8,
+   "ay": 253.1,
+   "h": 254,
+   "muzzle": [
+    253.5,
+    16.2
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 267,
+   "x": 276,
+   "y": 973
+  },
+  "unit/riftblade_storm.white": {
+   "atlas": "sprites",
+   "ax": 132.8,
+   "ay": 253.1,
+   "h": 254,
+   "page": 0,
+   "w": 267,
+   "x": 547,
+   "y": 973
+  },
+  "unit/voidseer_ember": {
+   "atlas": "sprites",
+   "ax": 115.8,
+   "ay": 248.9,
+   "h": 250,
+   "muzzle": [
+    43.6,
+    85.5
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 247,
+   "x": 818,
+   "y": 973
+  },
+  "unit/voidseer_ember.white": {
+   "atlas": "sprites",
+   "ax": 115.8,
+   "ay": 248.9,
+   "h": 250,
+   "page": 0,
+   "w": 247,
+   "x": 1069,
+   "y": 973
+  },
+  "unit/voidseer_storm": {
+   "atlas": "sprites",
+   "ax": 115.8,
+   "ay": 247.7,
+   "h": 249,
+   "muzzle": [
+    43.6,
+    84.5
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 247,
+   "x": 1320,
+   "y": 973
+  },
+  "unit/voidseer_storm.white": {
+   "atlas": "sprites",
+   "ax": 115.8,
+   "ay": 247.7,
+   "h": 249,
+   "page": 0,
+   "w": 247,
+   "x": 1571,
+   "y": 973
+  },
+  "unit/warden_ember": {
+   "atlas": "sprites",
+   "ax": 202.2,
+   "ay": 360.4,
+   "h": 361,
+   "muzzle": [
+    55.9,
+    230.8
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 404,
+   "x": 2,
+   "y": 608
+  },
+  "unit/warden_ember.white": {
+   "atlas": "sprites",
+   "ax": 202.2,
+   "ay": 360.4,
+   "h": 361,
+   "page": 0,
+   "w": 404,
+   "x": 410,
+   "y": 608
+  },
+  "unit/warden_storm": {
+   "atlas": "sprites",
+   "ax": 202.2,
+   "ay": 360.1,
+   "h": 360,
+   "muzzle": [
+    55.9,
+    230.8
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 404,
+   "x": 818,
+   "y": 608
+  },
+  "unit/warden_storm.white": {
+   "atlas": "sprites",
+   "ax": 202.2,
+   "ay": 360.1,
+   "h": 360,
+   "page": 0,
+   "w": 404,
+   "x": 1226,
+   "y": 608
+  }
+ },
+ "images": {
+  "ground": {
+   "file": "ground.webp",
+   "h": 896,
+   "repeat": "xy",
+   "w": 896
+  },
+  "horizon": {
+   "file": "horizon.webp",
+   "h": 692,
+   "w": 1152
+  },
+  "icons": {
+   "cell": 128,
+   "cols": 4,
+   "file": "icons.webp",
+   "h": 512,
+   "order": [
+    "credits",
+    "food",
+    "stormcall",
+    "battle",
+    "army",
+    "ages",
+    "walls",
+    "melee",
+    "ranged",
+    "tank",
+    "boss",
+    "crown",
+    "settings",
+    "pause",
+    "speed",
+    "locked"
+   ],
+   "w": 512
+  },
+  "logo": {
+   "file": "logo.webp",
+   "h": 190,
+   "w": 960
+  },
+  "path": {
+   "file": "path.webp",
+   "h": 110,
+   "repeat": "x",
+   "w": 1844
+  },
+  "portrait-melee": {
+   "file": "portrait-melee.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-ranged": {
+   "file": "portrait-ranged.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-tank": {
+   "file": "portrait-tank.webp",
+   "h": 256,
+   "w": 256
+  },
+  "sky": {
+   "file": "sky.webp",
+   "focus": [
+    0.72,
+    0.22
+   ],
+   "h": 1152,
+   "w": 768
+  }
+ },
+ "kit": "eldritch",
+ "schema": 1,
+ "sources": {
+  "assets/bases/ember/critical.png": "71caa99a61d6d03efa6b9f61c415841e23fd9d2b85e5cdc16c812af35146742f",
+  "assets/bases/ember/damaged.png": "eea162428daea469932187f9f063aca7530063526fb12fec68f700d76de9b3bd",
+  "assets/bases/ember/intact.png": "96fbd0ac77469c0ce8baf2f93497301aa448535abbf5467f788e41dab701a783",
+  "assets/bases/ember/ruins.png": "b481ac9d47b899bc1740c31c9be486632ea29b1970c1f747594bcb775b9efba6",
+  "assets/bases/storm/critical.png": "911c76c60a3c2f026e89492a5d935fd5fe078caf29985c81fcb53c84ec227d46",
+  "assets/bases/storm/damaged.png": "6f64347bc975b4e166d8c24a0413ba893269b6ad77c7b82500d2147bea8487f9",
+  "assets/bases/storm/intact.png": "02af98dee884855d60f67f5d039acc8b4f4465343ed9599c179a460473f51ce6",
+  "assets/bases/storm/ruins.png": "185e9cf61b995578d1b9d0f1186f5f2eb51c141a6cf1f6c9b8ed589dc6f10395",
+  "assets/boss/abyssal_strider_parts.png": "f68c4d3fd29118b889510ed84d0052ca1997b7e49a67cec6e06608bddbcc00b8",
+  "assets/boss/hollow_regent.png": "ff8c77034af47c12db79eae8af79dabd36ad71ee843e5170da27cc586310fb3a",
+  "assets/boss/hollow_regent_parts.png": "1905ffb0496767dd64a5cca101b127d379e6daa7f92fe4f053622eb62e9cd994",
+  "assets/effects/battle_effects.png": "375f82dbc6bfc271970c564906045d6b13d862d93875bb92ef2407aa134478cf",
+  "assets/environment/aether_wisps.png": "579df0b1eabca50e21ff57a6b43b4905850733203d31192fb73f424fed322188",
+  "assets/environment/foreground_props.png": "c5cfd9657cf9709dfd65ca748ea14ae5035fccc474ce7f059018a2bcd865d70a",
+  "assets/environment/ground_tile.png": "d9050acaff007e6f402ae19ecb859657e4611c3c4f600b129f8f9e27e71ee1fa",
+  "assets/environment/horizon.png": "72475ad7b29ba8064fd75b3acc6feb792bcd62dda5bf35b3d9bf389fdc321d92",
+  "assets/environment/path.png": "748199ed2caf7cc51e385685a482c046a319e32783d790e8eb3ff0b905ce8629",
+  "assets/environment/sky.png": "b4659cd9f0ddd5daa9190b8b8d9f4480e2168d4f3c2f40a7ed3cc472619aea9a",
+  "assets/ui/icons.png": "e8e0e3ecf4a6932d676fcca007759c313fa0acfdd5a0af886b51d412ccf29a09",
+  "assets/ui/logo.png": "ffb30679f0ff0f812a228d4d8683d3ca340073903e78297a88597823feb4ed7e",
+  "assets/units/ember/riftblade.png": "fdc441d0cf2e8bdcab466daee04f62a5c715297d447ae687adb75cd2c4b1558d",
+  "assets/units/ember/riftblade_parts.png": "8b1ec4ddd55b0336dd9f2191395aa99d6f55f366c49c1557aca7ba27af6efbc7",
+  "assets/units/ember/voidseer.png": "5ccc3f30af00ba30eec433f4593bccee7749302cb01e6be90397c9be4c1e9f93",
+  "assets/units/ember/voidseer_parts.png": "5a00c670e9ee79d36959e13ece970062d77f3c4584b804b6644ea366ecc11521",
+  "assets/units/ember/warden.png": "f74e4da5b9412db227f14bec6fbc7e590c40b2f0ed4054618545b86bb52e37fe",
+  "assets/units/ember/warden_parts.png": "f87b20a263b5b935f3966fb0630d54d164546c132dd05c6f1b14ae683846df38",
+  "assets/units/storm/riftblade.png": "a488e1bde598b8c7812f5a61284e246e4b510cf807a16a8e3676b37d0a5155bc",
+  "assets/units/storm/riftblade_parts.png": "1c2cb60f37f5b3d20333903dd2c8653a08b90bad3faaeea61ee4c1530ed28634",
+  "assets/units/storm/voidseer.png": "1a960306fc50fb7b5916162dff128760955330e99fc2fb10a815372b8b971a0e",
+  "assets/units/storm/voidseer_parts.png": "bc45d965de1f4c00916b0edb444207fc670353235ab8e463506438ae9146dcdf",
+  "assets/units/storm/warden.png": "e6a0ef970501e5c65f3da7a2be6b81fb388d51e18a1f8d56d13aecfc29cfcb06",
+  "assets/units/storm/warden_parts.png": "f8d142cb65a9154c9bc26093424c438dd74648a0528fc02275b9da8cac1565d4"
+ },
+ "title": "STORMGLASS \u2014 Eldritch Era",
+ "units": {
+  "melee.ember": {
+   "debris": [
+    "part/riftblade_ember/sword"
+   ],
+   "frame": "unit/riftblade_ember",
+   "name": "riftblade",
+   "white": "unit/riftblade_ember.white"
+  },
+  "melee.storm": {
+   "debris": [
+    "part/riftblade_storm/sword"
+   ],
+   "frame": "unit/riftblade_storm",
+   "name": "riftblade",
+   "white": "unit/riftblade_storm.white"
+  },
+  "ranged.ember": {
+   "debris": [
+    "part/voidseer_ember/staff"
+   ],
+   "frame": "unit/voidseer_ember",
+   "name": "voidseer",
+   "white": "unit/voidseer_ember.white"
+  },
+  "ranged.storm": {
+   "debris": [
+    "part/voidseer_storm/staff"
+   ],
+   "frame": "unit/voidseer_storm",
+   "name": "voidseer",
+   "white": "unit/voidseer_storm.white"
+  },
+  "tank.ember": {
+   "debris": [
+    "part/warden_ember/maul",
+    "part/warden_ember/shield"
+   ],
+   "frame": "unit/warden_ember",
+   "name": "warden",
+   "white": "unit/warden_ember.white"
+  },
+  "tank.storm": {
+   "debris": [
+    "part/warden_storm/maul",
+    "part/warden_storm/shield"
+   ],
+   "frame": "unit/warden_storm",
+   "name": "warden",
+   "white": "unit/warden_storm.white"
+  },
+  "warlord.ember": {
+   "debris": [],
+   "frame": "unit/boss",
+   "name": "boss_regent",
+   "white": "unit/boss.white"
+  }
+ }
+}

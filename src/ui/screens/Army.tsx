@@ -6,10 +6,10 @@ import { armyFocus, buyUnlock, buyUpgrade, markFtue, save } from '../../app/stor
 import { ageDef } from '../../data/ages';
 import { MAX_LEVEL, UNLOCK_PRICE, foodRate, playerBaseHp, trainingMult, type Track } from '../../data/economy';
 import { rosterOf } from '../../data/units';
-import { portraits } from '../../render/art/portraits';
 import { canUnlock, canUpgrade, priceFor, trackAvailable } from '../../meta/progress';
 import { centerOf, coinBurst, confetti, floatText, replayClass, sparkles } from '../kit/fx';
-import { Icon, type IconName } from '../kit/icons';
+import { Icon, Portrait, type IconName } from '../kit/icons';
+import { displayName, portraitUrl } from '../skin';
 import { Button, Pill } from '../kit/kit';
 
 /**
@@ -65,11 +65,11 @@ export function Army() {
               {focused && <span class="tip-badge">BEST</span>}
               {revealing === 'in' && <span class="new-badge">NEW!</span>}
               <span class="unit-portrait">
-                {portraits.value[def.id] ? <img class={`bust ${owned ? '' : 'shadowed'}`} src={portraits.value[def.id]} alt="" draggable={false} /> : <Icon name={owned ? (slot as IconName) : 'lock'} size={56} />}
-                {!owned && portraits.value[def.id] && <span class="lock-badge"><Icon name="lock" size={30} /></span>}
+                <Portrait src={portraitUrl(def.age, slot)} class={owned ? '' : 'shadowed'} fallback={owned ? (slot as IconName) : 'lock'} />
+                {!owned && <span class="lock-badge"><Icon name="lock" size={30} /></span>}
               </span>
               {owned && <span class="lvl unit-lvl">{s.levels[slot]}</span>}
-              <span class="unit-name">{def.name}</span>
+              <span class={`unit-name ${displayName(def.id).length > 11 ? 'long' : ''}`}>{displayName(def.id)}</span>
               {owned ? (
                 <span class="unit-stats">
                   <Icon name="heart" size={16} />

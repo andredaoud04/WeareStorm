@@ -6,6 +6,7 @@ import { mustEvolve } from '../../meta/progress';
 import { Icon } from '../kit/icons';
 import { Button, Pill, TabBar } from '../kit/kit';
 import { MAX_AGE } from './Ages';
+import { stageTitle, warlordName } from '../skin';
 
 /** Hub, the Battle tab (UX §2): the diorama lives in the Pixi world behind this layer. */
 export function Hub() {
@@ -37,7 +38,7 @@ export function Hub() {
         {campaignComplete.value ? (
           <>
             <div class="cta-sub t-display">CAMPAIGN COMPLETE</div>
-            <Button size="l" tone="gold" icon="star" label="Replay OMEGA Core" highlight onPress={() => play(30)} testId="battle" />
+            <Button size="l" tone="gold" icon="star" label={`Replay ${warlordName('future')}`} highlight onPress={() => play(30)} testId="battle" />
           </>
         ) : evolveFirst && age.index >= MAX_AGE ? (
           <>
@@ -52,7 +53,7 @@ export function Hub() {
         ) : (
           <>
             <Button size="l" tone={stage.warlord ? 'red' : 'blue'} icon={stage.warlord ? 'crown' : 'battle'} label={`BATTLE ${stage.id}`} highlight onPress={() => play(stage.id)} testId="battle" />
-            <div class="cta-sub">{stage.warlord ? `WARLORD: ${stage.title}` : stage.title}</div>
+            <div class="cta-sub">{stage.warlord ? `WARLORD: ${stageTitle(stage)}` : stage.title}</div>
           </>
         )}
       </div>

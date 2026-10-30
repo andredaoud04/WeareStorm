@@ -8,12 +8,12 @@ import { go, markFtue, save, setSetting, sheet, toast } from '../../app/store';
 import { worldToScreen } from '../../app/world';
 import { QUEUE_CAP } from '../../data/economy';
 import { rosterOf, unitDef } from '../../data/units';
-import { portraits } from '../../render/art/portraits';
 import type { SaveV1 } from '../../meta/save';
 import { BANNER_MS, Banner, type BannerSpec } from '../kit/coach';
 import { centerOf, flyCoin, replayClass } from '../kit/fx';
-import { Icon, type IconName } from '../kit/icons';
+import { Icon, Portrait, type IconName } from '../kit/icons';
 import { Bar, Button, Pill, Sheet } from '../kit/kit';
+import { displayName, portraitUrl, stageTitle } from '../skin';
 
 const SLOTS: Slot[] = ['melee', 'ranged', 'tank'];
 const ROLE_ICON: Record<Slot, IconName> = { melee: 'melee', ranged: 'ranged', tank: 'tank' };
@@ -77,7 +77,7 @@ function Hud({ s }: { s: BattleSession }) {
       {hud.warlord && hud.warlord.hp > 0 && (
         <div class="boss-bar" data-testid="boss-bar">
           <Icon name="crown" size={26} />
-          <div class="boss-name t-display">{stage.title.toUpperCase()}</div>
+          <div class="boss-name t-display">{stageTitle(stage).toUpperCase()}</div>
           <Bar value={hud.warlord.hp} max={hud.warlord.max} kind="boss" />
         </div>
       )}
@@ -172,13 +172,13 @@ function DeckCard({ s, slot, queued, full, busy, disabled }: { s: BattleSession;
       ref={ref}
       class={`card ${slot} ${full ? 'full' : ''} ${busy ? 'busy' : ''} ${shake ? (shake % 2 ? 'nopeA' : 'nopeB') : ''}`}
       data-testid={`card-${slot}`}
-      aria-label={`${def.name}, ${def.cost} Food`}
+      aria-label={`${displayName(def.id)}, ${def.cost} Food`}
       onPointerDown={press}
     >
       <span class="card-portrait">
-        {portraits.value[def.id] ? <img class="bust" src={portraits.value[def.id]} alt="" draggable={false} /> : <Icon name={ROLE_ICON[slot]} size={54} />}
+        <Portrait src={portraitUrl(def.age, slot)} fallback={ROLE_ICON[slot]} />
       </span>
-      <span class="card-name">{def.name}</span>
+      <span class={`card-name ${displayName(def.id).length > 11 ? 'long' : ''}`}>{displayName(def.id)}</span>
       {full ? (
         <span class="card-cost max t-display">MAX</span>
       ) : (
@@ -259,10 +259,10 @@ function useBanners(s: BattleSession): BannerSpec | null {
     const st = s.stage;
     // only for a battle that is just starting (debug fixtures fast-forward past it)
     if (s.state.tick < 4) {
-      show(st.warlord ? { title: 'WARLORD!', sub: `Battle ${st.id} · ${st.title}`, tone: 'red', icon: 'crown' } : { title: `BATTLE ${st.id}`, sub: st.title, tone: 'blue' }, 280);
+      show(st.warlord ? { title: 'WARLORD!', sub: `Battle ${st.id} · ${stageTitle(st)}`, tone: 'red', icon: 'crown' } : { title: `BATTLE ${st.id}`, sub: stageTitle(st), tone: 'blue' }, 280);
     }
     const off = s.onEvents((ev) => {
-      if (ev.some((e) => e.kind === 'warlordIntro')) show({ title: st.title.toUpperCase(), sub: 'APPROACHES!', tone: 'red', icon: 'crown' });
+      if (ev.some((e) => e.kind === 'warlordIntro')) show({ title: stageTitle(st).toUpperCase(), sub: 'APPROACHES!', tone: 'red', icon: 'crown' });
     });
     return () => {
       off();
@@ -287,7 +287,7 @@ function useCoinFlights(s: BattleSession, pill: { current: HTMLDivElement | null
           let value = 0;
           let x = 0;
           let h = 0;
-          if (e.kind === 'death' && e.gold > 0) [value, x, h] = [e.gold, e.x, unitDef(e.def).role === 'warlord' ? 300 : 120];
+          if (e.kind === 'death' && e.gold > 0) [value, x, h] = [e.gold, e.x, unitDef(e.def).role === 'warlord' ? 420 : 170];
           else if (e.kind === 'baseChunk' && e.gold > 0) {
             const w = e.source === 'warlord' ? s.curr.units.find((u) => u.role === 'warlord') : undefined;
             [value, x, h] = [e.gold, w ? w.x : 1060, w ? 300 : 250];
@@ -323,7 +323,7 @@ function PauseSheet({ s }: { s: BattleSession }) {
     <Sheet title="PAUSED" onClose={resume} testId="pause-sheet">
       <div class="sheet-col">
         <p class="sheet-copy" data-testid="pause-stage">
-          Battle {s.stage.id} · <b>{s.stage.title}</b>
+          Battle {s.stage.id} · <b>{stageTitle(s.stage)}</b>
         </p>
         <Button size="l" tone="green" icon="play" label="Resume" onPress={resume} testId="resume" />
         <Toggles set={set} />

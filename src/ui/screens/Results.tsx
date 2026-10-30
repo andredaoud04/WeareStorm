@@ -8,6 +8,7 @@ import { canPlayStage, mustEvolve, priceFor, type Recommendation } from '../../m
 import { centerOf, coinBurst, confetti } from '../kit/fx';
 import { Icon, type IconName } from '../kit/icons';
 import { Button, Pill, useCountUp } from '../kit/kit';
+import { slotName } from '../skin';
 import { leaveBattle } from './BattleHud';
 
 /**
@@ -191,7 +192,7 @@ function Tip({ rec, onPress }: { rec: Recommendation; onPress: () => void }) {
   const st = save.value;
   const text =
     rec.kind === 'unlock'
-      ? `Unlock the ${rec.slot === 'ranged' ? 'Slinger' : 'Rockhide'} for ${rec.price} Gold`
+      ? `Unlock the ${slotName(st.armyAge, rec.slot)} for ${rec.price} Gold`
       : rec.kind === 'upgrade'
         ? `${TRACK_NAME[rec.track]} Lv ${st.levels[rec.track] + 1} for ${priceFor(st, rec.track)} Gold`
         : 'Evolve your army';

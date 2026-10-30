@@ -34,8 +34,7 @@ src/
                     (accumulator loop, interpolation alpha, commands → sim, events → render/audio/ui)
   render/
     pixi/           Application, resize/camera (fit rules from GDD Reconciliation §1), layers, frame loop
-    art/            Painter (ShapeKit): primitives with ink outline + cel shadow + highlight; palette.ts; bake.ts
-                    (atlas per DPR); units/<age>/*.ts rigs; bases/*.ts; backgrounds/*.ts; icons.ts; nimbus.ts
+    kits/           Art kits: age->kit table, manifest types, loader, unit/base/world renderers, sizes
     anim/           Clip data + procedural modifiers (walk stride sync, springs, squash/stretch, blink)
     vfx/            recipes.ts, pools, particles, damage numbers (BitmapText), screen shake/hit-stop/slow-mo
     scenes/         battleScene.ts, hubDiorama.ts, evolutionCinematic.ts, gallery.ts (contact sheets)
@@ -102,17 +101,30 @@ snapshot(b: Battle): BattleSnapshot      // positions/hp/anim-relevant fields, s
 - UI signals updated at ≤ 10 Hz (food, gold, bars) or on events — never per frame through Preact.
 - Paused/hidden: no ticks, no Food, accumulator reset.
 
-## 5. Art pipeline (code-only)
+## 5. Art pipeline (art kits)
 
-- **Painter**: TS recipes draw parts with Canvas2D `Path2D` (or Pixi Graphics) using `ink` stroke-under, flat fill,
-  cel-shadow crescent via clip, optional highlight. Recipes take tokens (Age palette, faction palette, material).
-- **Bake**: at boot after fonts load, bake every part for the current Age (+ next Age lazily) × both factions into a
-  RenderTexture atlas at `resolution = min(devicePixelRatio, 3) × worldScale`; target ≤ 400 ms; cache by key
-  `age/unit/part/faction/dpr`. Hit-flash white silhouettes baked alongside.
-- **Rigs**: Container trees of part sprites with pivots per ART_BIBLE §5.7; clips are data; procedural modifiers.
-- **Backgrounds**: procedural layers from fixed seeds (identical every boot → screenshot-stable).
-- **Icons**: one SVG string set used by DOM (inline SVG) and Pixi (rasterized once).
-- **Gallery scene** (`?scene=gallery&age=N`) renders contact sheets for review (ART_BIBLE §5.16).
+Since M2 the game is drawn with the owner's STORMGLASS pixel-art kits (`public/art/README.md`); the code-only painter,
+rigs and baked backgrounds of M1 are gone.
+
+- **Offline build**: `tools/art/build_kits.py` (Python 3 + Pillow) verifies the source PNGs against the atlas sha256s,
+  applies region masks, trims, pre-scales to ~2x the reference on-screen size and packs WebP atlases (<= 2048 px) plus a
+  `manifest.json` per kit into `public/art/<kit>/`. Sources are never committed.
+- **Age -> kit**: one table, `src/render/kits/ageKits.ts`. The field (stage) Age draws the world, effects and enemy base;
+  each troop is drawn by its own Age's kit; your base by your army's. Presentation only: the sim never reads it.
+- **Loading**: `src/render/kits/loader.ts` loads a kit on demand (manifest, then pages via Pixi Assets, bilinear,
+  no mipmaps). `app/world.ts` preloads the army, field and next-Age kits from the title/hub; a battle never waits: troops
+  show a dim placeholder and the world a plain night fill until their kit arrives, then swap in.
+- **Units** (`kitUnit.ts`): the full hero sprite per troop, animated procedurally from sim states and events (stepped
+  walk bob + lean, anticipation -> lunge keyed to the impact tick, cast recoil + muzzle flash, white-silhouette hit flash
+  + knockback, fall/fade death throwing the weapon from the parts sheet, victory hop). Enemies are mirrored.
+- **Bases** (`kitBase.ts`): four damage states (intact > 66 %, damaged > 33 %, critical > 0, ruins) at one common scale on
+  one ground line; hit shake + additive flash; crossfade between states, sink into ruins on collapse.
+- **World** (`kitWorld.ts`): sky cover-fit with its focus kept in view, drifting wisps, horizon band on the lane with a
+  haze at its foot, ground and path strips (mirror-joined tiles), sparse props below the lane.
+- **Sizes**: world sizes in `src/render/kits/sizes.ts`; the art tool only decides pixel density.
+- **UI skin** (`src/ui/skin.ts`): troop/Warlord names, portraits and the logo follow the kit; icons come from the army
+  Age's kit sheet with SVG fallbacks for symbols the kits do not draw.
+- **Gallery** (`?scene=gallery[&kit=eldritch|future]`): the contact sheet of every kit sprite as the game draws it.
 
 ## 6. Save system
 

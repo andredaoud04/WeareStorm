@@ -13,6 +13,8 @@
 }
 
 .icon { display: block; flex: none; overflow: visible; }
+/* kit icon sprites: one cell of a 4 x 4 sheet; size via --s unless a rule sets width/height */
+.kit-icon { width: var(--s); height: var(--s); background-size: 400% 400%; background-repeat: no-repeat; }
 
 /* ---------------------------------------------------------------- text */
 .t-display {
@@ -133,7 +135,8 @@
   background: var(--c-paper);
   color: var(--c-ink);
   border-radius: calc(24 * var(--pt));
-  box-shadow: 0 0 0 var(--line) var(--c-ink), 0 calc(6 * var(--pt)) 0 rgba(20, 27, 51, .35);
+  /* ink outline, then an antique-gold rim that ties the panel to the kits' gilded art */
+  box-shadow: 0 0 0 var(--line) var(--c-ink), 0 0 0 calc(var(--line) * 2.2) var(--c-goldAntique), 0 calc(6 * var(--pt)) 0 rgba(12, 10, 32, .45);
   overflow: hidden;
 }
 .panel > .band {

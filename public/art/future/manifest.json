@@ -1,0 +1,778 @@
+{
+ "atlases": {
+  "bases": [
+   {
+    "file": "bases-0.webp",
+    "h": 1168,
+    "w": 1804
+   }
+  ],
+  "fx": [
+   {
+    "file": "fx-0.webp",
+    "h": 608,
+    "w": 2036
+   }
+  ],
+  "sprites": [
+   {
+    "file": "sprites-0.webp",
+    "h": 1260,
+    "w": 1976
+   }
+  ]
+ },
+ "baseAlignmentApplied": true,
+ "baseRefHeight": 600,
+ "bases": {
+  "ember.critical": "base/ember/critical",
+  "ember.damaged": "base/ember/damaged",
+  "ember.intact": "base/ember/intact",
+  "ember.ruins": "base/ember/ruins",
+  "storm.critical": "base/storm/critical",
+  "storm.damaged": "base/storm/damaged",
+  "storm.intact": "base/storm/intact",
+  "storm.ruins": "base/storm/ruins"
+ },
+ "frames": {
+  "base/ember/critical": {
+   "atlas": "bases",
+   "ax": 223.2,
+   "ay": 549.1,
+   "h": 550,
+   "page": 0,
+   "w": 448,
+   "x": 2,
+   "y": 615
+  },
+  "base/ember/damaged": {
+   "atlas": "bases",
+   "ax": 224.2,
+   "ay": 608.4,
+   "h": 609,
+   "page": 0,
+   "w": 449,
+   "x": 2,
+   "y": 2
+  },
+  "base/ember/intact": {
+   "atlas": "bases",
+   "ax": 222.2,
+   "ay": 600.6,
+   "h": 602,
+   "page": 0,
+   "w": 446,
+   "x": 905,
+   "y": 2
+  },
+  "base/ember/ruins": {
+   "atlas": "bases",
+   "ax": 220.2,
+   "ay": 197.5,
+   "h": 198,
+   "page": 0,
+   "w": 442,
+   "x": 1352,
+   "y": 615
+  },
+  "base/storm/critical": {
+   "atlas": "bases",
+   "ax": 223.2,
+   "ay": 547.7,
+   "h": 549,
+   "page": 0,
+   "w": 448,
+   "x": 454,
+   "y": 615
+  },
+  "base/storm/damaged": {
+   "atlas": "bases",
+   "ax": 223.2,
+   "ay": 603.5,
+   "h": 604,
+   "page": 0,
+   "w": 446,
+   "x": 455,
+   "y": 2
+  },
+  "base/storm/intact": {
+   "atlas": "bases",
+   "ax": 222.2,
+   "ay": 600.6,
+   "h": 602,
+   "page": 0,
+   "w": 445,
+   "x": 1355,
+   "y": 2
+  },
+  "base/storm/ruins": {
+   "atlas": "bases",
+   "ax": 220.2,
+   "ay": 244.7,
+   "h": 246,
+   "page": 0,
+   "w": 442,
+   "x": 906,
+   "y": 615
+  },
+  "cloud/1": {
+   "atlas": "fx",
+   "ax": 156.0,
+   "ay": 111.5,
+   "h": 223,
+   "page": 0,
+   "w": 312,
+   "x": 753,
+   "y": 2
+  },
+  "cloud/2": {
+   "atlas": "fx",
+   "ax": 98.5,
+   "ay": 134.0,
+   "h": 268,
+   "page": 0,
+   "w": 197,
+   "x": 552,
+   "y": 2
+  },
+  "cloud/3": {
+   "atlas": "fx",
+   "ax": 139.0,
+   "ay": 101.0,
+   "h": 202,
+   "page": 0,
+   "w": 278,
+   "x": 1405,
+   "y": 2
+  },
+  "cloud/4": {
+   "atlas": "fx",
+   "ax": 202.0,
+   "ay": 91.5,
+   "h": 183,
+   "page": 0,
+   "w": 404,
+   "x": 2,
+   "y": 327
+  },
+  "cloud/5": {
+   "atlas": "fx",
+   "ax": 166.0,
+   "ay": 111.0,
+   "h": 222,
+   "page": 0,
+   "w": 332,
+   "x": 1069,
+   "y": 2
+  },
+  "fx/coin": {
+   "atlas": "fx",
+   "ax": 50.5,
+   "ay": 59.8,
+   "h": 119,
+   "page": 0,
+   "w": 101,
+   "x": 1613,
+   "y": 327
+  },
+  "fx/dust": {
+   "atlas": "fx",
+   "ax": 103.2,
+   "ay": 59.0,
+   "h": 118,
+   "page": 0,
+   "w": 206,
+   "x": 1718,
+   "y": 327
+  },
+  "fx/hit": {
+   "atlas": "fx",
+   "ax": 69.2,
+   "ay": 61.0,
+   "h": 121,
+   "page": 0,
+   "w": 138,
+   "x": 1471,
+   "y": 327
+  },
+  "fx/impact": {
+   "atlas": "fx",
+   "ax": 132.1,
+   "ay": 94.2,
+   "h": 188,
+   "page": 0,
+   "w": 264,
+   "x": 1687,
+   "y": 2
+  },
+  "fx/poof": {
+   "atlas": "fx",
+   "ax": 114.0,
+   "ay": 79.0,
+   "h": 158,
+   "page": 0,
+   "w": 227,
+   "x": 410,
+   "y": 327
+  },
+  "fx/projectile": {
+   "atlas": "fx",
+   "ax": 86.0,
+   "ay": 16.2,
+   "h": 32,
+   "page": 0,
+   "w": 172,
+   "x": 636,
+   "y": 514
+  },
+  "fx/scorch": {
+   "atlas": "fx",
+   "ax": 104.2,
+   "ay": 35.5,
+   "h": 70,
+   "page": 0,
+   "w": 208,
+   "x": 346,
+   "y": 514
+  },
+  "fx/strike": {
+   "atlas": "fx",
+   "ax": 273.0,
+   "ay": 160.5,
+   "h": 321,
+   "page": 0,
+   "w": 546,
+   "x": 2,
+   "y": 2
+  },
+  "fx/swoosh": {
+   "atlas": "fx",
+   "ax": 101.0,
+   "ay": 69.8,
+   "h": 140,
+   "page": 0,
+   "w": 203,
+   "x": 790,
+   "y": 327
+  },
+  "part/heavy_ember/cannon": {
+   "atlas": "sprites",
+   "ax": 50.3,
+   "ay": 42.5,
+   "h": 72,
+   "page": 0,
+   "w": 167,
+   "x": 1717,
+   "y": 952
+  },
+  "part/heavy_ember/shield": {
+   "atlas": "sprites",
+   "ax": 36.3,
+   "ay": 75.8,
+   "h": 152,
+   "page": 0,
+   "w": 73,
+   "x": 1564,
+   "y": 952
+  },
+  "part/heavy_storm/cannon": {
+   "atlas": "sprites",
+   "ax": 50.2,
+   "ay": 42.3,
+   "h": 72,
+   "page": 0,
+   "w": 166,
+   "x": 2,
+   "y": 1183
+  },
+  "part/heavy_storm/shield": {
+   "atlas": "sprites",
+   "ax": 35.5,
+   "ay": 75.9,
+   "h": 151,
+   "page": 0,
+   "w": 72,
+   "x": 1641,
+   "y": 952
+  },
+  "part/marksman_ember/rifle": {
+   "atlas": "sprites",
+   "ax": 49.1,
+   "ay": 24.4,
+   "h": 42,
+   "page": 0,
+   "w": 164,
+   "x": 449,
+   "y": 1183
+  },
+  "part/marksman_storm/rifle": {
+   "atlas": "sprites",
+   "ax": 49.1,
+   "ay": 24.5,
+   "h": 42,
+   "page": 0,
+   "w": 163,
+   "x": 617,
+   "y": 1183
+  },
+  "part/rifleman_ember/rifle": {
+   "atlas": "sprites",
+   "ax": 40.4,
+   "ay": 28.6,
+   "h": 49,
+   "page": 0,
+   "w": 135,
+   "x": 172,
+   "y": 1183
+  },
+  "part/rifleman_storm/rifle": {
+   "atlas": "sprites",
+   "ax": 40.3,
+   "ay": 28.6,
+   "h": 49,
+   "page": 0,
+   "w": 134,
+   "x": 311,
+   "y": 1183
+  },
+  "prop/alien_fern": {
+   "atlas": "fx",
+   "ax": 72.5,
+   "ay": 148.0,
+   "h": 148,
+   "page": 0,
+   "w": 145,
+   "x": 641,
+   "y": 327
+  },
+  "prop/broken_drone": {
+   "atlas": "fx",
+   "ax": 51.0,
+   "ay": 86.0,
+   "h": 86,
+   "page": 0,
+   "w": 102,
+   "x": 110,
+   "y": 514
+  },
+  "prop/conduit_relic": {
+   "atlas": "fx",
+   "ax": 51.5,
+   "ay": 134.0,
+   "h": 134,
+   "page": 0,
+   "w": 103,
+   "x": 1146,
+   "y": 327
+  },
+  "prop/crystal_cyan": {
+   "atlas": "fx",
+   "ax": 55.0,
+   "ay": 128.0,
+   "h": 128,
+   "page": 0,
+   "w": 110,
+   "x": 1253,
+   "y": 327
+  },
+  "prop/crystal_violet": {
+   "atlas": "fx",
+   "ax": 50.0,
+   "ay": 122.0,
+   "h": 122,
+   "page": 0,
+   "w": 100,
+   "x": 1367,
+   "y": 327
+  },
+  "prop/luminous_flowers": {
+   "atlas": "fx",
+   "ax": 53.0,
+   "ay": 101.0,
+   "h": 101,
+   "page": 0,
+   "w": 106,
+   "x": 1928,
+   "y": 327
+  },
+  "prop/rock_large": {
+   "atlas": "fx",
+   "ax": 72.5,
+   "ay": 138.0,
+   "h": 138,
+   "page": 0,
+   "w": 145,
+   "x": 997,
+   "y": 327
+  },
+  "prop/rock_medium": {
+   "atlas": "fx",
+   "ax": 52.0,
+   "ay": 92.0,
+   "h": 92,
+   "page": 0,
+   "w": 104,
+   "x": 2,
+   "y": 514
+  },
+  "prop/rock_small": {
+   "atlas": "fx",
+   "ax": 37.0,
+   "ay": 62.0,
+   "h": 62,
+   "page": 0,
+   "w": 74,
+   "x": 558,
+   "y": 514
+  },
+  "prop/supply_crate": {
+   "atlas": "fx",
+   "ax": 63.0,
+   "ay": 79.0,
+   "h": 79,
+   "page": 0,
+   "w": 126,
+   "x": 216,
+   "y": 514
+  },
+  "unit/boss": {
+   "atlas": "sprites",
+   "ax": 451.7,
+   "ay": 587.2,
+   "h": 588,
+   "nominalH": 600.0,
+   "page": 0,
+   "w": 902,
+   "x": 2,
+   "y": 2
+  },
+  "unit/boss.white": {
+   "atlas": "sprites",
+   "ax": 451.7,
+   "ay": 587.2,
+   "h": 588,
+   "page": 0,
+   "w": 902,
+   "x": 908,
+   "y": 2
+  },
+  "unit/heavy_ember": {
+   "atlas": "sprites",
+   "ax": 183.2,
+   "ay": 354.0,
+   "h": 354,
+   "muzzle": [
+    267.3,
+    218.8
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 357,
+   "x": 2,
+   "y": 594
+  },
+  "unit/heavy_ember.white": {
+   "atlas": "sprites",
+   "ax": 183.2,
+   "ay": 354.0,
+   "h": 354,
+   "page": 0,
+   "w": 357,
+   "x": 363,
+   "y": 594
+  },
+  "unit/heavy_storm": {
+   "atlas": "sprites",
+   "ax": 182.2,
+   "ay": 353.7,
+   "h": 354,
+   "muzzle": [
+    266.3,
+    218.8
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 354,
+   "x": 724,
+   "y": 594
+  },
+  "unit/heavy_storm.white": {
+   "atlas": "sprites",
+   "ax": 182.2,
+   "ay": 353.7,
+   "h": 354,
+   "page": 0,
+   "w": 354,
+   "x": 1082,
+   "y": 594
+  },
+  "unit/marksman_ember": {
+   "atlas": "sprites",
+   "ax": 121.8,
+   "ay": 225.9,
+   "h": 227,
+   "muzzle": [
+    251.6,
+    66.6
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 253,
+   "x": 2,
+   "y": 952
+  },
+  "unit/marksman_ember.white": {
+   "atlas": "sprites",
+   "ax": 121.8,
+   "ay": 225.9,
+   "h": 227,
+   "page": 0,
+   "w": 253,
+   "x": 259,
+   "y": 952
+  },
+  "unit/marksman_storm": {
+   "atlas": "sprites",
+   "ax": 120.8,
+   "ay": 225.7,
+   "h": 227,
+   "muzzle": [
+    250.6,
+    66.6
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 251,
+   "x": 516,
+   "y": 952
+  },
+  "unit/marksman_storm.white": {
+   "atlas": "sprites",
+   "ax": 120.8,
+   "ay": 225.7,
+   "h": 227,
+   "page": 0,
+   "w": 251,
+   "x": 771,
+   "y": 952
+  },
+  "unit/rifleman_ember": {
+   "atlas": "sprites",
+   "ax": 128.8,
+   "ay": 225.7,
+   "h": 227,
+   "muzzle": [
+    262.5,
+    59.9
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 265,
+   "x": 1440,
+   "y": 594
+  },
+  "unit/rifleman_ember.white": {
+   "atlas": "sprites",
+   "ax": 128.8,
+   "ay": 225.7,
+   "h": 227,
+   "page": 0,
+   "w": 265,
+   "x": 1709,
+   "y": 594
+  },
+  "unit/rifleman_storm": {
+   "atlas": "sprites",
+   "ax": 128.8,
+   "ay": 225.5,
+   "h": 226,
+   "muzzle": [
+    262.5,
+    59.9
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 265,
+   "x": 1026,
+   "y": 952
+  },
+  "unit/rifleman_storm.white": {
+   "atlas": "sprites",
+   "ax": 128.8,
+   "ay": 225.5,
+   "h": 226,
+   "page": 0,
+   "w": 265,
+   "x": 1295,
+   "y": 952
+  }
+ },
+ "images": {
+  "ground": {
+   "file": "ground.webp",
+   "h": 896,
+   "repeat": "xy",
+   "w": 896
+  },
+  "horizon": {
+   "file": "horizon.webp",
+   "h": 478,
+   "w": 1152
+  },
+  "icons": {
+   "cell": 128,
+   "cols": 4,
+   "file": "icons.webp",
+   "h": 512,
+   "order": [
+    "credits",
+    "food",
+    "stormcall",
+    "battle",
+    "army",
+    "ages",
+    "walls",
+    "melee",
+    "ranged",
+    "tank",
+    "boss",
+    "crown",
+    "settings",
+    "pause",
+    "speed",
+    "locked"
+   ],
+   "w": 512
+  },
+  "logo": {
+   "file": "logo.webp",
+   "h": 203,
+   "w": 960
+  },
+  "path": {
+   "file": "path.webp",
+   "h": 156,
+   "repeat": "x",
+   "w": 1844
+  },
+  "portrait-melee": {
+   "file": "portrait-melee.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-ranged": {
+   "file": "portrait-ranged.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-tank": {
+   "file": "portrait-tank.webp",
+   "h": 256,
+   "w": 256
+  },
+  "sky": {
+   "file": "sky.webp",
+   "focus": [
+    0.62,
+    0.2
+   ],
+   "h": 1152,
+   "w": 768
+  }
+ },
+ "kit": "future",
+ "schema": 1,
+ "sources": {
+  "assets/bases/ember/critical.png": "e635efae8eac642f6853f251d6a829c87735983086d4465af4222d796e03f4b1",
+  "assets/bases/ember/damaged.png": "6b9ebb5cb8c2f88316723adf0a19c235387e40c2e98f03b7b6250fc1b9dedd92",
+  "assets/bases/ember/intact.png": "ce128e71eaf7de60507af6bfacab87aec490bbb9c66ce2c8260dc247bf8e5863",
+  "assets/bases/ember/ruins.png": "68bd5597056e70701a26c16b23940be39cb926712b97476df379c13230dff046",
+  "assets/bases/storm/critical.png": "88d40675b12c45583e763c63a13eceefb37abf9544d4607aa2fc7ef34fcd6f91",
+  "assets/bases/storm/damaged.png": "96d2c4ebf613eb8492907596ec0002135dc9221dcb7b2d9f0192db6088d908cc",
+  "assets/bases/storm/intact.png": "13e857d2a723b4d116cc7de5693354272a0ee28577118ef3f3b800d8331d1091",
+  "assets/bases/storm/ruins.png": "2983e33ebffc057544b8c41cb9a927018987bb27f853dd12e6db6668ebca13aa",
+  "assets/boss/commander_parts.png": "faeea1fc3182193a13f9c4987058ac74b1b8895f25c15ea4bc9f07813a7ae286",
+  "assets/boss/siege_commander.png": "3a53c4531f67c3c7fe7f2a47584e8ac33b28157bc5c2b14d1947b3ad6a874b14",
+  "assets/boss/walker_parts.png": "f941ffb0545caf1aaa844ea6752fe8a12285b09e5292108555ee8b08864e9ddb",
+  "assets/effects/battle_effects.png": "5bd217688a6ed10150223f929242cda588f3e585ee52e1f4fcb30e6eda93426c",
+  "assets/environment/clouds.png": "64b90297e07f3709a1840b6adb13566474d1509d8f5f1a9cbf3671fb2f9de7c2",
+  "assets/environment/foreground_props.png": "e7ecf11eb991ede2f52acae9de188b55d8f62532bb6fd856bff2b6e8b0ca246a",
+  "assets/environment/ground_tile.png": "e0ee33d181205bb7410723e8e3877b4434f2d8c560b31a015ea58309df914140",
+  "assets/environment/horizon.png": "8e278728c216d57aced8f784fb387e30a30267646cb395dd350391516156670b",
+  "assets/environment/path.png": "94ea85b4fd95fc619d3b26ab56e92a8e5e6138956be64c0c2036a3c2b0716092",
+  "assets/environment/sky.png": "ac1bf5589942e7b562fc04ed84c7905a4b2e97d7800d787b1e51ef2a611ffb67",
+  "assets/ui/icons.png": "3ab88c6bc7280df10253409aa8c8429c69825ee4f98b8b069f4c08ecd0c1fd3e",
+  "assets/ui/logo.png": "6ecf811066471a2c5bbe6f361c36cb4defe81b37e6c1aec19c7895bcf544a3b1",
+  "assets/units/ember/heavy.png": "865992c0d892f6727b25996840555c2c8419ea552866e01fd27e90310394effd",
+  "assets/units/ember/heavy_parts.png": "0c17e4433d481eebd2fc1258539d085dc1baa4981e717e82788b239002c9ffcb",
+  "assets/units/ember/marksman.png": "643e2409d2575ba271cfe7884888e603e7532095f45b734cf06a689bf9a6dc1c",
+  "assets/units/ember/marksman_parts.png": "6053b6a5e65eece6c2c34212273d600e3b8977b195167871883e535e14b2e538",
+  "assets/units/ember/rifleman.png": "587cdb2d390f3468e9c85254b86e75b20b5ae80083bd3404dca7101d7e35124a",
+  "assets/units/ember/rifleman_parts.png": "39621fc7656b2b6af7897c53f2d2d9e14539d7da84c86f6fbc2fd1d8329c5571",
+  "assets/units/storm/heavy.png": "5cc21868212d7c439a5269ddf6fa781c282598498349ac9056481a1e708b69e5",
+  "assets/units/storm/heavy_parts.png": "3f035ec261af2e5cf7e28ebd85f54eb0decb06257fdabe45bf3415003727ad84",
+  "assets/units/storm/marksman.png": "c204f5d85716f8e0a78e13faa36588982b2230ca5e0e9a3893b612521dd5a7f5",
+  "assets/units/storm/marksman_parts.png": "d1d61a4710402161f61f18c5248c08fd49484f05f7f6d30049cffec1d9756404",
+  "assets/units/storm/rifleman.png": "58e3c11805c94157c9607ac3583be7efc1ed91faa5416abc44e17591efeeb04e",
+  "assets/units/storm/rifleman_parts.png": "cd6f8ac84515df5f566c0bf52f4e84e290fabddb8be15941b67c48dc934a664f"
+ },
+ "title": "STORMGLASS \u2014 Future Era",
+ "units": {
+  "melee.ember": {
+   "debris": [
+    "part/rifleman_ember/rifle"
+   ],
+   "frame": "unit/rifleman_ember",
+   "name": "rifleman",
+   "white": "unit/rifleman_ember.white"
+  },
+  "melee.storm": {
+   "debris": [
+    "part/rifleman_storm/rifle"
+   ],
+   "frame": "unit/rifleman_storm",
+   "name": "rifleman",
+   "white": "unit/rifleman_storm.white"
+  },
+  "ranged.ember": {
+   "debris": [
+    "part/marksman_ember/rifle"
+   ],
+   "frame": "unit/marksman_ember",
+   "name": "marksman",
+   "white": "unit/marksman_ember.white"
+  },
+  "ranged.storm": {
+   "debris": [
+    "part/marksman_storm/rifle"
+   ],
+   "frame": "unit/marksman_storm",
+   "name": "marksman",
+   "white": "unit/marksman_storm.white"
+  },
+  "tank.ember": {
+   "debris": [
+    "part/heavy_ember/cannon",
+    "part/heavy_ember/shield"
+   ],
+   "frame": "unit/heavy_ember",
+   "name": "heavy",
+   "white": "unit/heavy_ember.white"
+  },
+  "tank.storm": {
+   "debris": [
+    "part/heavy_storm/cannon",
+    "part/heavy_storm/shield"
+   ],
+   "frame": "unit/heavy_storm",
+   "name": "heavy",
+   "white": "unit/heavy_storm.white"
+  },
+  "warlord.ember": {
+   "debris": [],
+   "frame": "unit/boss",
+   "name": "boss_commander",
+   "white": "unit/boss.white"
+  }
+ }
+}

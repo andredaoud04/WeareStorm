@@ -2,10 +2,10 @@ import { MAX_AGE } from '../../app/build';
 import { doEvolve, go, save, toast } from '../../app/store';
 import { AGE_ORDER } from '../../contracts';
 import { AGES, ageDef } from '../../data/ages';
-import { rosterOf, warlordOf } from '../../data/units';
+import { rosterOf } from '../../data/units';
 import { canEvolve, evolvePrice, mustEvolve } from '../../meta/progress';
-import { portraits } from '../../render/art/portraits';
-import { Icon } from '../kit/icons';
+import { Icon, Portrait } from '../kit/icons';
+import { displayName, portraitUrl, warlordName } from '../skin';
 import { Button, Panel, Pill } from '../kit/kit';
 
 export { MAX_AGE } from '../../app/build';
@@ -45,14 +45,14 @@ export function Ages() {
           <div class="age-troops">
             {(['melee', 'ranged', 'tank'] as const).map((slot) => (
               <div key={slot} class={`age-troop ${slot}`}>
-                {portraits.value[roster[slot].id] ? <img class="bust small" src={portraits.value[roster[slot].id]} alt="" draggable={false} /> : <Icon name={slot} size={40} />}
-                <span>{roster[slot].name}</span>
+                <Portrait src={portraitUrl(s.armyAge, slot)} class="small" fallback={slot} size={40} />
+                <span>{displayName(roster[slot].id)}</span>
               </div>
             ))}
           </div>
           <div class={`age-warlord ${beaten ? 'beaten' : ''}`}>
             <Icon name="crown" size={30} />
-            <span>{warlordOf(s.armyAge).name}</span>
+            <span>{warlordName(s.armyAge)}</span>
             {beaten && <Icon name="check" size={26} />}
           </div>
           {nextLocked ? (
@@ -82,7 +82,7 @@ export function Ages() {
                   }
                 }}
               />
-              <span class="age-hint">{price === 0 ? 'Your army is ready.' : mustEvolve(s) ? '' : `Evolve early, or beat ${warlordOf(s.armyAge).name} to evolve free.`}</span>
+              <span class="age-hint">{price === 0 ? 'Your army is ready.' : mustEvolve(s) ? '' : `Evolve early, or beat ${warlordName(s.armyAge)} to evolve free.`}</span>
             </div>
           )}
         </div>

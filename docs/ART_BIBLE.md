@@ -1,5 +1,9 @@
 # WeAreStorm — Art Bible: clean cartoon, made in code
 
+> **Superseded for in-game art (M2).** The owner replaced the code-drawn cartoon style with the STORMGLASS pixel-art
+> kits: see `public/art/README.md` and `docs/TECH.md` §5. The kits' own `STYLE_GUIDE.md` is the visual authority for the
+> world, troops, bases, effects and icons. Motion, VFX timing, feedback and UI-layout rules below still apply.
+
 This is the visual law of the game. **One style everywhere**: bold ink outline + flat fill + one coloured cel-shadow
 crescent + optional highlight, light from the top-left. No pixel art, no RPG/parchment frames, no glossy 3D gradients on
 characters. Assembled from the "Visual Craft" proposal; reconcile with `GDD.md` → Reconciliation:

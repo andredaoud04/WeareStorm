@@ -1,5 +1,5 @@
 import { reduceMotion } from '../../app/motion';
-import { iconSvg } from './icons';
+import { iconHtml } from './icons';
 
 /**
  * DOM one-shot effects (ART_BIBLE §5.14): coin flights, sparkles, floating numbers, confetti. Each is a short-lived
@@ -62,7 +62,7 @@ export function flyCoin(from: Pt, to: Pt, o: CoinOpts = {}) {
     return;
   }
   const size = (o.size ?? 26) * pt();
-  const el = make('fx-coin', iconSvg('coin', size));
+  const el = make('fx-coin', iconHtml('coin', size));
   const h = size / 2;
   const [sx, sy, tx, ty] = [from.x - h, from.y - h, to.x - h, to.y - h];
   let frames: Keyframe[];

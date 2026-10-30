@@ -1,10 +1,13 @@
-import { effect } from '@preact/signals';
+import { effect, untracked } from '@preact/signals';
 import { pixiHost } from '../render/pixi/app';
-import { bakePortraits } from '../render/art/portraits';
+import { AGE_ORDER, type AgeId } from '../contracts';
+import { stageDef } from '../data/stages';
+import { kitForAge } from '../render/kits/ageKits';
+import { preloadKits } from '../render/kits/loader';
 import { BattleScene } from '../render/scenes/battleScene';
 import { session } from './battleController';
 import { reduceMotion } from './motion';
-import { route, save } from './store';
+import { nextStage, route, save } from './store';
 
 /**
  * Owns the Pixi world for the app's lifetime: one scene that is the Hub diorama when no battle runs and the lane
@@ -29,24 +32,40 @@ export function setWorldMood(mood: 'defeat' | null) {
   document.getElementById('world')?.classList.toggle('mood-defeat', mood === 'defeat');
 }
 
+/** Your army's Age and the next stage's (the Hub diorama shows both). */
+function hubAges(): { army: AgeId; field: AgeId } {
+  return { army: save.value.armyAge, field: stageDef(nextStage.value).age };
+}
+
+/**
+ * Art kits load on demand: the ones the Hub shows now plus the next Age's, so an Evolve or the next battle never waits.
+ * Runs whenever the save changes (cheap: loaded kits are cached).
+ */
+function preloadArt() {
+  const { army, field } = hubAges();
+  const next = AGE_ORDER[Math.min(AGE_ORDER.length - 1, AGE_ORDER.indexOf(army) + 1)]!;
+  preloadKits([army, field, next].map(kitForAge));
+}
+
 export async function startWorld() {
+  effect(preloadArt);
   const host = await pixiHost();
   scene = new BattleScene(host, {
     uiTop,
     reduceMotion,
     damageNumbers: () => save.value.settings.damageNumbers,
+    hubAges,
   });
   effect(() => {
     const s = session.value;
     const r = route.value;
-    scene?.attach(r === 'battle' ? s : null);
+    untracked(() => scene?.attach(r === 'battle' ? s : null)); // reads the save for the Hub's Ages: not a trigger
     setWorldMood(null);
     host.world.visible = true; // the title sits over the living diorama
     // the DOM moves when the route changes; re-measure after it lays out
     requestAnimationFrame(() => scene?.layout());
   });
   if (import.meta.env.DEV || location.search.includes('scene=')) (window as unknown as { __scene?: unknown }).__scene = scene;
-  bakePortraits();
   host.app.ticker.add((t) => {
     const dt = t.deltaMS;
     const s = session.value;

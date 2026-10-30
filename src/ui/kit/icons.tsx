@@ -1,6 +1,11 @@
+import { useState } from 'preact/hooks';
+import { ICON_KIT, kitUrl, type KitId } from '../../render/kits/ageKits';
+
 /**
- * The icon set (ART_BIBLE §5.13): filled shapes, a cel shadow, and an ink outline that stays 2.5 pt at any display
- * size (non-scaling stroke). Drawn on a 48 × 48 grid. No emoji anywhere in the UI: every symbol is one of these.
+ * The icon set. Symbols the art kits draw come from the kit bound to your army's Age (a 4 × 4 sheet built by
+ * tools/art/build_kits.py, order ICON_ORDER there); the rest are the original SVGs: filled shapes, a cel shadow, and
+ * an ink outline that stays 2.5 pt at any display size (non-scaling stroke), drawn on a 48 × 48 grid. No emoji
+ * anywhere in the UI: every symbol is one of these.
  */
 const INK = '#1D1830';
 const S = `stroke="${INK}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"`;
@@ -43,12 +48,50 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-/** The raw SVG markup of an icon, for elements built outside Preact (coin flights, sparkles). */
-export function iconSvg(name: IconName, size: number): string {
+/** Kit sheet cells, in the order the art tool packs them. */
+export const KIT_ICON_ORDER = ['credits', 'food', 'stormcall', 'battle', 'army', 'ages', 'walls', 'melee', 'ranged', 'tank', 'boss', 'crown', 'settings', 'pause', 'speed', 'locked'] as const;
+
+/** UI icon → kit icon. Anything not listed keeps its SVG. */
+export const KIT_ICON: Partial<Record<IconName, (typeof KIT_ICON_ORDER)[number]>> = {
+  coin: 'credits',
+  food: 'food',
+  storm: 'stormcall',
+  bolt: 'stormcall',
+  battle: 'battle',
+  helmet: 'army',
+  ages: 'ages',
+  wall: 'walls',
+  melee: 'melee',
+  ranged: 'ranged',
+  tank: 'tank',
+  skull: 'boss',
+  crown: 'crown',
+  gear: 'settings',
+  pause: 'pause',
+  speed: 'speed',
+  lock: 'locked',
+};
+
+
+function kitStyle(name: IconName, size: number, kit: KitId): string | null {
+  const k = KIT_ICON[name];
+  if (!k) return null;
+  const i = KIT_ICON_ORDER.indexOf(k);
+  const x = ((i % 4) * 100) / 3;
+  const y = (Math.floor(i / 4) * 100) / 3;
+  return `--s:${size}px;background-image:url(${kitUrl(kit, 'icons.webp')});background-position:${x}% ${y}%`;
+}
+
+/** The raw markup of an icon, for elements built outside Preact (coin flights, sparkles). */
+export function iconHtml(name: IconName, size: number): string {
+  const st = kitStyle(name, size, ICON_KIT);
+  if (st) return `<span class="icon kit-icon" style="${st}" aria-hidden="true"></span>`;
   return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${ICONS[name]}</svg>`;
 }
 
 export function Icon({ name, size = 28, class: cls = '' }: { name: IconName; size?: number; class?: string }) {
+  const st = kitStyle(name, size, ICON_KIT);
+  if (st) return <span class={`icon kit-icon ${cls}`} style={st} aria-hidden="true" />;
   return (
     <svg
       class={`icon ${cls}`}
@@ -60,4 +103,13 @@ export function Icon({ name, size = 28, class: cls = '' }: { name: IconName; siz
       dangerouslySetInnerHTML={{ __html: ICONS[name] }}
     />
   );
+}
+
+/**
+ * A troop portrait (an upper-body crop of the kit's hero sprite). If the image cannot load, the role icon stands in.
+ */
+export function Portrait({ src, fallback, class: cls = '', size = 56 }: { src: string; fallback: IconName; class?: string; size?: number }) {
+  const [broken, setBroken] = useState<string | null>(null);
+  if (broken === src) return <Icon name={fallback} size={size} />;
+  return <img class={`bust ${cls}`} src={src} alt="" draggable={false} onError={() => setBroken(src)} />;
 }

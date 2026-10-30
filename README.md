@@ -2,7 +2,7 @@
 
 A portrait mobile lane-battle game: one lane, a Food meter, three troop cards, authored enemy waves — smash the enemy
 base, earn Gold, upgrade your camp, and evolve your army through six Ages from the Stone Age to the Future.
-Clean cartoon art, all of it drawn in code.
+Pixel art from the owner's STORMGLASS kits (packed by `tools/art/build_kits.py`, see `public/art/README.md`).
 
 ## Design pack
 
