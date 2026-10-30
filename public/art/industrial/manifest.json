@@ -1,0 +1,595 @@
+{
+ "atlases": {
+  "bases": [
+   {
+    "file": "bases-0.webp",
+    "h": 860,
+    "w": 1952
+   }
+  ],
+  "sprites": [
+   {
+    "file": "sprites-0.webp",
+    "h": 1256,
+    "w": 1984
+   }
+  ]
+ },
+ "baseAlignmentApplied": true,
+ "baseRefHeight": 690.5,
+ "bases": {
+  "ember.critical": "base/ember/critical",
+  "ember.damaged": "base/ember/damaged",
+  "ember.intact": "base/ember/intact",
+  "ember.ruins": "base/ember/ruins",
+  "storm.critical": "base/storm/critical",
+  "storm.damaged": "base/storm/damaged",
+  "storm.intact": "base/storm/intact",
+  "storm.ruins": "base/storm/ruins"
+ },
+ "frames": {
+  "base/ember/critical": {
+   "atlas": "bases",
+   "ax": 375.1,
+   "ay": 353.9,
+   "h": 355,
+   "page": 0,
+   "w": 646,
+   "x": 651,
+   "y": 2
+  },
+  "base/ember/damaged": {
+   "atlas": "bases",
+   "ax": 374.1,
+   "ay": 358.0,
+   "h": 359,
+   "page": 0,
+   "w": 645,
+   "x": 2,
+   "y": 2
+  },
+  "base/ember/intact": {
+   "atlas": "bases",
+   "ax": 372.1,
+   "ay": 354.3,
+   "h": 355,
+   "page": 0,
+   "w": 642,
+   "x": 1301,
+   "y": 2
+  },
+  "base/ember/ruins": {
+   "atlas": "bases",
+   "ax": 377.1,
+   "ay": 134.8,
+   "h": 135,
+   "page": 0,
+   "w": 651,
+   "x": 2,
+   "y": 723
+  },
+  "base/storm/critical": {
+   "atlas": "bases",
+   "ax": 374.1,
+   "ay": 353.5,
+   "h": 354,
+   "page": 0,
+   "w": 643,
+   "x": 2,
+   "y": 365
+  },
+  "base/storm/damaged": {
+   "atlas": "bases",
+   "ax": 378.1,
+   "ay": 351.5,
+   "h": 352,
+   "page": 0,
+   "w": 654,
+   "x": 649,
+   "y": 365
+  },
+  "base/storm/intact": {
+   "atlas": "bases",
+   "ax": 372.1,
+   "ay": 351.1,
+   "h": 351,
+   "page": 0,
+   "w": 641,
+   "x": 1307,
+   "y": 365
+  },
+  "base/storm/ruins": {
+   "atlas": "bases",
+   "ax": 373.1,
+   "ay": 132.7,
+   "h": 133,
+   "page": 0,
+   "w": 641,
+   "x": 657,
+   "y": 723
+  },
+  "fx/coin": {
+   "atlas": "sprites",
+   "ax": 45.5,
+   "ay": 51.5,
+   "h": 103,
+   "page": 0,
+   "w": 91,
+   "x": 354,
+   "y": 1130
+  },
+  "fx/dust": {
+   "atlas": "sprites",
+   "ax": 103.2,
+   "ay": 59.0,
+   "h": 118,
+   "page": 0,
+   "w": 206,
+   "x": 144,
+   "y": 1130
+  },
+  "fx/hit": {
+   "atlas": "sprites",
+   "ax": 69.2,
+   "ay": 61.0,
+   "h": 121,
+   "page": 0,
+   "w": 138,
+   "x": 2,
+   "y": 1130
+  },
+  "fx/impact": {
+   "atlas": "sprites",
+   "ax": 132.1,
+   "ay": 94.2,
+   "h": 188,
+   "page": 0,
+   "w": 264,
+   "x": 1277,
+   "y": 890
+  },
+  "fx/poof": {
+   "atlas": "sprites",
+   "ax": 114.0,
+   "ay": 79.0,
+   "h": 158,
+   "page": 0,
+   "w": 227,
+   "x": 1545,
+   "y": 890
+  },
+  "fx/projectile": {
+   "atlas": "sprites",
+   "ax": 60.0,
+   "ay": 5.0,
+   "blend": "add",
+   "flash": true,
+   "h": 10,
+   "page": 0,
+   "size": 130,
+   "w": 120,
+   "x": 1723,
+   "y": 1130
+  },
+  "fx/scorch": {
+   "atlas": "sprites",
+   "ax": 104.2,
+   "ay": 35.5,
+   "h": 70,
+   "page": 0,
+   "w": 208,
+   "x": 891,
+   "y": 1130
+  },
+  "fx/strike": {
+   "atlas": "sprites",
+   "ax": 273.0,
+   "ay": 160.5,
+   "h": 321,
+   "page": 0,
+   "w": 546,
+   "x": 1002,
+   "y": 2
+  },
+  "fx/swoosh": {
+   "atlas": "sprites",
+   "ax": 101.0,
+   "ay": 69.8,
+   "h": 140,
+   "page": 0,
+   "w": 203,
+   "x": 1776,
+   "y": 890
+  },
+  "part/heavy_gunner_ember/gun": {
+   "atlas": "sprites",
+   "ax": 108.5,
+   "ay": 35.0,
+   "h": 70,
+   "page": 0,
+   "w": 217,
+   "x": 449,
+   "y": 1130
+  },
+  "part/heavy_gunner_storm/gun": {
+   "atlas": "sprites",
+   "ax": 108.5,
+   "ay": 35.0,
+   "h": 70,
+   "page": 0,
+   "w": 217,
+   "x": 670,
+   "y": 1130
+  },
+  "part/rifleman_ember/rifle": {
+   "atlas": "sprites",
+   "ax": 94.5,
+   "ay": 10.5,
+   "h": 21,
+   "page": 0,
+   "w": 189,
+   "x": 1337,
+   "y": 1130
+  },
+  "part/rifleman_storm/rifle": {
+   "atlas": "sprites",
+   "ax": 94.5,
+   "ay": 10.5,
+   "h": 21,
+   "page": 0,
+   "w": 189,
+   "x": 1530,
+   "y": 1130
+  },
+  "part/trench_raider_ember/club": {
+   "atlas": "sprites",
+   "ax": 56.5,
+   "ay": 16.5,
+   "h": 33,
+   "page": 0,
+   "w": 113,
+   "x": 1103,
+   "y": 1130
+  },
+  "part/trench_raider_storm/club": {
+   "atlas": "sprites",
+   "ax": 56.5,
+   "ay": 16.5,
+   "h": 33,
+   "page": 0,
+   "w": 113,
+   "x": 1220,
+   "y": 1130
+  },
+  "unit/boss": {
+   "atlas": "sprites",
+   "ax": 222.3,
+   "ay": 577.0,
+   "h": 578,
+   "nominalH": 600.0,
+   "page": 0,
+   "w": 496,
+   "x": 2,
+   "y": 2
+  },
+  "unit/boss.white": {
+   "atlas": "sprites",
+   "ax": 222.3,
+   "ay": 577.0,
+   "h": 578,
+   "page": 0,
+   "w": 496,
+   "x": 502,
+   "y": 2
+  },
+  "unit/heavy_gunner_ember": {
+   "atlas": "sprites",
+   "ax": 118.1,
+   "ay": 301.5,
+   "h": 302,
+   "muzzle": [
+    327.6,
+    138.2
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 330,
+   "x": 1552,
+   "y": 2
+  },
+  "unit/heavy_gunner_ember.white": {
+   "atlas": "sprites",
+   "ax": 118.1,
+   "ay": 301.5,
+   "h": 302,
+   "page": 0,
+   "w": 330,
+   "x": 2,
+   "y": 584
+  },
+  "unit/heavy_gunner_storm": {
+   "atlas": "sprites",
+   "ax": 118.3,
+   "ay": 301.2,
+   "h": 302,
+   "muzzle": [
+    327.6,
+    138.2
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 330,
+   "x": 336,
+   "y": 584
+  },
+  "unit/heavy_gunner_storm.white": {
+   "atlas": "sprites",
+   "ax": 118.3,
+   "ay": 301.2,
+   "h": 302,
+   "page": 0,
+   "w": 330,
+   "x": 670,
+   "y": 584
+  },
+  "unit/rifleman_ember": {
+   "atlas": "sprites",
+   "ax": 88.1,
+   "ay": 231.6,
+   "h": 233,
+   "muzzle": [
+    243.0,
+    117.1
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 246,
+   "x": 277,
+   "y": 890
+  },
+  "unit/rifleman_ember.white": {
+   "atlas": "sprites",
+   "ax": 88.1,
+   "ay": 231.6,
+   "h": 233,
+   "page": 0,
+   "w": 246,
+   "x": 527,
+   "y": 890
+  },
+  "unit/rifleman_storm": {
+   "atlas": "sprites",
+   "ax": 88.1,
+   "ay": 231.9,
+   "h": 233,
+   "muzzle": [
+    243.0,
+    117.1
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 246,
+   "x": 777,
+   "y": 890
+  },
+  "unit/rifleman_storm.white": {
+   "atlas": "sprites",
+   "ax": 88.1,
+   "ay": 231.9,
+   "h": 233,
+   "page": 0,
+   "w": 246,
+   "x": 1027,
+   "y": 890
+  },
+  "unit/trench_raider_ember": {
+   "atlas": "sprites",
+   "ax": 163.1,
+   "ay": 235.3,
+   "h": 236,
+   "muzzle": [
+    3.1,
+    143.3
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 271,
+   "x": 1556,
+   "y": 584
+  },
+  "unit/trench_raider_ember.white": {
+   "atlas": "sprites",
+   "ax": 163.1,
+   "ay": 235.3,
+   "h": 236,
+   "page": 0,
+   "w": 271,
+   "x": 2,
+   "y": 890
+  },
+  "unit/trench_raider_storm": {
+   "atlas": "sprites",
+   "ax": 164.0,
+   "ay": 235.6,
+   "h": 237,
+   "muzzle": [
+    4.1,
+    143.3
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 272,
+   "x": 1004,
+   "y": 584
+  },
+  "unit/trench_raider_storm.white": {
+   "atlas": "sprites",
+   "ax": 164.0,
+   "ay": 235.6,
+   "h": 237,
+   "page": 0,
+   "w": 272,
+   "x": 1280,
+   "y": 584
+  }
+ },
+ "images": {
+  "distant": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "distant.webp",
+   "h": 257,
+   "w": 1152,
+   "y": 510.8
+  },
+  "fill": {
+   "file": "fill.webp",
+   "h": 200,
+   "repeat": "xy",
+   "w": 1536
+  },
+  "foreground": {
+   "file": "foreground.webp",
+   "h": 319,
+   "w": 1152
+  },
+  "ground": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "ground.webp",
+   "h": 220,
+   "laneY": 654.0,
+   "w": 1152,
+   "y": 548.2
+  },
+  "midground": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "midground.webp",
+   "h": 598,
+   "w": 1152,
+   "y": 169.5
+  },
+  "portrait-melee": {
+   "file": "portrait-melee.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-ranged": {
+   "file": "portrait-ranged.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-tank": {
+   "file": "portrait-tank.webp",
+   "h": 256,
+   "w": 256
+  },
+  "sky": {
+   "file": "sky.webp",
+   "focus": [
+    0.5,
+    0.3
+   ],
+   "h": 768,
+   "w": 1152
+  }
+ },
+ "kit": "industrial",
+ "schema": 1,
+ "sources": {
+  "ember/fortress_damaged.png": "9a17f633e005372b9bccedb16380a219d2e54073f2a844cdd10ea69fdf65356e",
+  "ember/fortress_fallen.png": "c01a58ee2157b861aaf381e76cc113291457bacefce9fbd23815f7e2a50391f0",
+  "ember/fortress_intact.png": "25e7e25a82be35bd6abaaf45f700268e4f17ce34b61dfc812bcda3e2a322de4b",
+  "ember/fortress_nearly_destroyed.png": "d50bffe8a775747ffc6675ad38d22bffff2132c60e26f989ee6290bd9db9aff0",
+  "ember/heavy_gunner.png": "00eae53a92a90053525a7c7f669ea01de3d726086320b44993a5fb13a13fe7b3",
+  "ember/heavy_gunner_parts.png": "38988fd6a90ed17ee2a0cfa5b2cb4a973f87ed091170b76914d3b4e776b75131",
+  "ember/rifleman.png": "c97e908d52d459d73ee354b6c321cac7c43e312758f6b1452995f7dcbfd25ebb",
+  "ember/rifleman_parts.png": "a63bb3407771d0a320e16918fb5a20b500e6c479eac2f4047970096452f6f21e",
+  "ember/trench_raider.png": "ac39aca62c89c10cff2328e14478a5c509c674a517232baf510751d9ed60d83c",
+  "ember/trench_raider_parts.png": "320dbd3d8ce037323f4b95be74018b5877e079467b11678b8ad68c78148b42ce",
+  "ember/warlord.png": "15f9b989c07fd97f58895b958ab113c665aeaef0c2f0e9c751780e32ee13ab34",
+  "ember/warlord_parts.png": "11a15e520fca6a81e22de3df8c6c301abf03bd364e1c1e462b5ff04f4019e61d",
+  "storm/fortress_damaged.png": "45b313616743030c8192d7dc83e9464534daa56bbe941cb35468b0cbd5b7e612",
+  "storm/fortress_fallen.png": "d63aecadef4860948a669bc984d526514f7ab33f0f568d24c19abefc714b3fee",
+  "storm/fortress_intact.png": "778e41cc6eacfc6d694cc370473fd55530a3643a0f712aeac2a3e3f37d582112",
+  "storm/fortress_nearly_destroyed.png": "a9694b597fe66d67921f283e08cd4f516db1b7bb346cf50a345c1b05d191cd6c",
+  "storm/heavy_gunner.png": "eaf67dbecc430b12c0c066c1feb497a6e8524608e8ffd53040815d3a4e6c20c1",
+  "storm/heavy_gunner_parts.png": "841f28819efa04be3b4df5a555442869ad627c66c6658adf4d79c11e5370079a",
+  "storm/rifleman.png": "aa187cd451572b64e95db681664245df6d7062d760c3e6725c3d714967ec6f27",
+  "storm/rifleman_parts.png": "b6f58eb0741f64c7003a02e03f7ef582aef13b9d0137350f690b4ec97880ec67",
+  "storm/trench_raider.png": "37dc02c04340a65f10c986610d8f9532e2a05fff18aefc09499e5f035e0370b4",
+  "storm/trench_raider_parts.png": "05936466ca932fbfd908da8b6d59ea7c25c0838f35cf4e9559669f2b60df3cdb",
+  "storm/warlord.png": "41af853893bc2216c65e737587cda946204b2f303172bb674e3b61193a7d1ee0",
+  "storm/warlord_parts.png": "6f9d2bd190233f9d5861a9c4e34fbda18c66eb1dc2ddd7487e7ccaa92d7c00ca",
+  "world/distant.png": "2ce32f05a0ab605995886b7d19b4b491a690b6bbf11a5cf8c231e38ff05caf87",
+  "world/foreground.png": "5d89bbd6634f69a46447d87b34560cfd7c0ce159d525a3380a6063bc1c378aaf",
+  "world/ground.png": "ef58e1ce1639d5d3913ccd843f1e2af644a28d7ea9a1eca9b19f631aca238d12",
+  "world/midground.png": "d693d3cfe423217b65491cd0edd1ffc8e4ff0a6bc29009173be62d4ea891504b",
+  "world/sky.png": "975475211f25978fccd08ca747e537b89b35bac160d28da74912171a9a2c3d98"
+ },
+ "title": "STORMGLASS \u2014 Industrial Era",
+ "units": {
+  "melee.ember": {
+   "debris": [
+    "part/trench_raider_ember/club"
+   ],
+   "frame": "unit/trench_raider_ember",
+   "name": "trench_raider",
+   "white": "unit/trench_raider_ember.white"
+  },
+  "melee.storm": {
+   "debris": [
+    "part/trench_raider_storm/club"
+   ],
+   "frame": "unit/trench_raider_storm",
+   "name": "trench_raider",
+   "white": "unit/trench_raider_storm.white"
+  },
+  "ranged.ember": {
+   "debris": [
+    "part/rifleman_ember/rifle"
+   ],
+   "frame": "unit/rifleman_ember",
+   "name": "rifleman",
+   "white": "unit/rifleman_ember.white"
+  },
+  "ranged.storm": {
+   "debris": [
+    "part/rifleman_storm/rifle"
+   ],
+   "frame": "unit/rifleman_storm",
+   "name": "rifleman",
+   "white": "unit/rifleman_storm.white"
+  },
+  "tank.ember": {
+   "debris": [
+    "part/heavy_gunner_ember/gun"
+   ],
+   "frame": "unit/heavy_gunner_ember",
+   "name": "heavy_gunner",
+   "white": "unit/heavy_gunner_ember.white"
+  },
+  "tank.storm": {
+   "debris": [
+    "part/heavy_gunner_storm/gun"
+   ],
+   "frame": "unit/heavy_gunner_storm",
+   "name": "heavy_gunner",
+   "white": "unit/heavy_gunner_storm.white"
+  },
+  "warlord.ember": {
+   "debris": [],
+   "frame": "unit/boss",
+   "name": "warlord",
+   "white": "unit/boss.white"
+  }
+ },
+ "world": "layers"
+}

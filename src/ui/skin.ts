@@ -5,7 +5,7 @@ import { KITS, kitForAge, kitUrl } from '../render/kits/ageKits';
 
 /**
  * The skin layer (presentation only): names and pictures follow the art kit bound to each Age, so a Stone Age
- * Clubber is shown as the Riftblade it is drawn as. The data names stay untouched for the sim, saves and logs.
+ * Clubber is shown as the Flintspear it is drawn as. The data names stay untouched for the sim, saves and logs.
  */
 
 /** The name shown for a troop or Warlord. */
@@ -36,7 +36,7 @@ export function portraitUrl(age: AgeId, slot: Slot): string {
   return kitUrl(kitForAge(age), `portrait-${slot}.webp`);
 }
 
-/** The STORMGLASS wordmark of an Age's kit. */
+/** The STORMGLASS wordmark for an Age (the era packs ship none and use the Eldritch one). */
 export function logoUrl(age: AgeId): string {
-  return kitUrl(kitForAge(age), 'logo.webp');
+  return kitUrl(KITS[kitForAge(age)].logo, 'logo.webp');
 }

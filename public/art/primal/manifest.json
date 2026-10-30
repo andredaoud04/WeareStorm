@@ -1,0 +1,628 @@
+{
+ "atlases": {
+  "bases": [
+   {
+    "file": "bases-0.webp",
+    "h": 992,
+    "w": 1960
+   }
+  ],
+  "sprites": [
+   {
+    "file": "sprites-0.webp",
+    "h": 1476,
+    "w": 2028
+   }
+  ]
+ },
+ "baseAlignmentApplied": true,
+ "baseRefHeight": 690.5,
+ "bases": {
+  "ember.critical": "base/ember/critical",
+  "ember.damaged": "base/ember/damaged",
+  "ember.intact": "base/ember/intact",
+  "ember.ruins": "base/ember/ruins",
+  "storm.critical": "base/storm/critical",
+  "storm.damaged": "base/storm/damaged",
+  "storm.intact": "base/storm/intact",
+  "storm.ruins": "base/storm/ruins"
+ },
+ "frames": {
+  "base/ember/critical": {
+   "atlas": "bases",
+   "ax": 375.8,
+   "ay": 405.4,
+   "h": 406,
+   "page": 0,
+   "w": 643,
+   "x": 1296,
+   "y": 426
+  },
+  "base/ember/damaged": {
+   "atlas": "bases",
+   "ax": 375.8,
+   "ay": 418.5,
+   "h": 419,
+   "page": 0,
+   "w": 649,
+   "x": 657,
+   "y": 2
+  },
+  "base/ember/intact": {
+   "atlas": "bases",
+   "ax": 377.8,
+   "ay": 419.4,
+   "h": 420,
+   "page": 0,
+   "w": 651,
+   "x": 2,
+   "y": 2
+  },
+  "base/ember/ruins": {
+   "atlas": "bases",
+   "ax": 375.8,
+   "ay": 129.0,
+   "h": 129,
+   "page": 0,
+   "w": 650,
+   "x": 653,
+   "y": 846
+  },
+  "base/storm/critical": {
+   "atlas": "bases",
+   "ax": 372.9,
+   "ay": 416.8,
+   "h": 417,
+   "page": 0,
+   "w": 645,
+   "x": 1310,
+   "y": 2
+  },
+  "base/storm/damaged": {
+   "atlas": "bases",
+   "ax": 373.9,
+   "ay": 414.0,
+   "h": 414,
+   "page": 0,
+   "w": 645,
+   "x": 647,
+   "y": 426
+  },
+  "base/storm/intact": {
+   "atlas": "bases",
+   "ax": 371.9,
+   "ay": 415.5,
+   "h": 416,
+   "page": 0,
+   "w": 641,
+   "x": 2,
+   "y": 426
+  },
+  "base/storm/ruins": {
+   "atlas": "bases",
+   "ax": 374.9,
+   "ay": 141.7,
+   "h": 142,
+   "page": 0,
+   "w": 647,
+   "x": 2,
+   "y": 846
+  },
+  "fx/coin": {
+   "atlas": "sprites",
+   "ax": 45.5,
+   "ay": 51.5,
+   "h": 103,
+   "page": 0,
+   "w": 91,
+   "x": 1403,
+   "y": 1233
+  },
+  "fx/dust": {
+   "atlas": "sprites",
+   "ax": 103.2,
+   "ay": 59.0,
+   "h": 118,
+   "page": 0,
+   "w": 206,
+   "x": 1193,
+   "y": 1233
+  },
+  "fx/hit": {
+   "atlas": "sprites",
+   "ax": 69.2,
+   "ay": 61.0,
+   "h": 121,
+   "page": 0,
+   "w": 138,
+   "x": 1051,
+   "y": 1233
+  },
+  "fx/impact": {
+   "atlas": "sprites",
+   "ax": 132.1,
+   "ay": 94.2,
+   "h": 188,
+   "page": 0,
+   "w": 264,
+   "x": 2,
+   "y": 1233
+  },
+  "fx/poof": {
+   "atlas": "sprites",
+   "ax": 114.0,
+   "ay": 79.0,
+   "h": 158,
+   "page": 0,
+   "w": 227,
+   "x": 465,
+   "y": 1233
+  },
+  "fx/projectile": {
+   "atlas": "sprites",
+   "ax": 15.0,
+   "ay": 13.0,
+   "blend": "normal",
+   "flash": false,
+   "h": 26,
+   "page": 0,
+   "size": 34,
+   "w": 30,
+   "x": 632,
+   "y": 1425
+  },
+  "fx/scorch": {
+   "atlas": "sprites",
+   "ax": 104.2,
+   "ay": 35.5,
+   "h": 70,
+   "page": 0,
+   "w": 208,
+   "x": 1566,
+   "y": 1233
+  },
+  "fx/strike": {
+   "atlas": "sprites",
+   "ax": 273.0,
+   "ay": 160.5,
+   "h": 321,
+   "page": 0,
+   "w": 546,
+   "x": 1091,
+   "y": 647
+  },
+  "fx/swoosh": {
+   "atlas": "sprites",
+   "ax": 101.0,
+   "ay": 69.8,
+   "h": 140,
+   "page": 0,
+   "w": 203,
+   "x": 844,
+   "y": 1233
+  },
+  "part/boneguard_ember/axe": {
+   "atlas": "sprites",
+   "ax": 35.0,
+   "ay": 73.5,
+   "h": 147,
+   "page": 0,
+   "w": 70,
+   "x": 696,
+   "y": 1233
+  },
+  "part/boneguard_ember/shield": {
+   "atlas": "sprites",
+   "ax": 46.5,
+   "ay": 79.5,
+   "h": 159,
+   "page": 0,
+   "w": 93,
+   "x": 368,
+   "y": 1233
+  },
+  "part/boneguard_storm/axe": {
+   "atlas": "sprites",
+   "ax": 35.0,
+   "ay": 73.0,
+   "h": 146,
+   "page": 0,
+   "w": 70,
+   "x": 770,
+   "y": 1233
+  },
+  "part/boneguard_storm/shield": {
+   "atlas": "sprites",
+   "ax": 47.0,
+   "ay": 79.5,
+   "h": 159,
+   "page": 0,
+   "w": 94,
+   "x": 270,
+   "y": 1233
+  },
+  "part/flintspear_ember/spear": {
+   "atlas": "sprites",
+   "ax": 155.5,
+   "ay": 24.0,
+   "h": 48,
+   "page": 0,
+   "w": 311,
+   "x": 2,
+   "y": 1425
+  },
+  "part/flintspear_storm/spear": {
+   "atlas": "sprites",
+   "ax": 155.5,
+   "ay": 24.0,
+   "h": 48,
+   "page": 0,
+   "w": 311,
+   "x": 317,
+   "y": 1425
+  },
+  "part/slinghunter_ember/sling": {
+   "atlas": "sprites",
+   "ax": 15.5,
+   "ay": 44.0,
+   "h": 88,
+   "page": 0,
+   "w": 31,
+   "x": 1498,
+   "y": 1233
+  },
+  "part/slinghunter_storm/sling": {
+   "atlas": "sprites",
+   "ax": 14.5,
+   "ay": 44.0,
+   "h": 88,
+   "page": 0,
+   "w": 29,
+   "x": 1533,
+   "y": 1233
+  },
+  "prop/weathered_totem": {
+   "atlas": "sprites",
+   "ax": 98.5,
+   "ay": 430.0,
+   "h": 430,
+   "page": 0,
+   "w": 197,
+   "x": 1414,
+   "y": 2
+  },
+  "unit/boneguard_ember": {
+   "atlas": "sprites",
+   "ax": 200.3,
+   "ay": 333.5,
+   "h": 334,
+   "muzzle": [
+    72.4,
+    197.6
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 359,
+   "x": 1615,
+   "y": 2
+  },
+  "unit/boneguard_ember.white": {
+   "atlas": "sprites",
+   "ax": 200.3,
+   "ay": 333.5,
+   "h": 334,
+   "page": 0,
+   "w": 359,
+   "x": 2,
+   "y": 647
+  },
+  "unit/boneguard_storm": {
+   "atlas": "sprites",
+   "ax": 200.3,
+   "ay": 332.8,
+   "h": 333,
+   "muzzle": [
+    72.4,
+    196.6
+   ],
+   "nominalH": 360.0,
+   "page": 0,
+   "w": 359,
+   "x": 365,
+   "y": 647
+  },
+  "unit/boneguard_storm.white": {
+   "atlas": "sprites",
+   "ax": 200.3,
+   "ay": 332.8,
+   "h": 333,
+   "page": 0,
+   "w": 359,
+   "x": 728,
+   "y": 647
+  },
+  "unit/boss": {
+   "atlas": "sprites",
+   "ax": 461.3,
+   "ay": 640.2,
+   "h": 641,
+   "nominalH": 600.0,
+   "page": 0,
+   "w": 702,
+   "x": 2,
+   "y": 2
+  },
+  "unit/boss.white": {
+   "atlas": "sprites",
+   "ax": 461.3,
+   "ay": 640.2,
+   "h": 641,
+   "page": 0,
+   "w": 702,
+   "x": 708,
+   "y": 2
+  },
+  "unit/flintspear_ember": {
+   "atlas": "sprites",
+   "ax": 102.7,
+   "ay": 225.9,
+   "h": 227,
+   "muzzle": [
+    302.4,
+    55.9
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 308,
+   "x": 782,
+   "y": 985
+  },
+  "unit/flintspear_ember.white": {
+   "atlas": "sprites",
+   "ax": 102.7,
+   "ay": 225.9,
+   "h": 227,
+   "page": 0,
+   "w": 308,
+   "x": 1094,
+   "y": 985
+  },
+  "unit/flintspear_storm": {
+   "atlas": "sprites",
+   "ax": 102.6,
+   "ay": 225.9,
+   "h": 227,
+   "muzzle": [
+    302.4,
+    55.9
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 307,
+   "x": 1406,
+   "y": 985
+  },
+  "unit/flintspear_storm.white": {
+   "atlas": "sprites",
+   "ax": 102.6,
+   "ay": 225.9,
+   "h": 227,
+   "page": 0,
+   "w": 307,
+   "x": 1717,
+   "y": 985
+  },
+  "unit/slinghunter_ember": {
+   "atlas": "sprites",
+   "ax": 115.1,
+   "ay": 242.7,
+   "h": 244,
+   "muzzle": [
+    246.5,
+    157.8
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 256,
+   "x": 1641,
+   "y": 647
+  },
+  "unit/slinghunter_ember.white": {
+   "atlas": "sprites",
+   "ax": 115.1,
+   "ay": 242.7,
+   "h": 244,
+   "page": 0,
+   "w": 256,
+   "x": 2,
+   "y": 985
+  },
+  "unit/slinghunter_storm": {
+   "atlas": "sprites",
+   "ax": 115.1,
+   "ay": 243.1,
+   "h": 244,
+   "muzzle": [
+    246.5,
+    157.8
+   ],
+   "nominalH": 240.0,
+   "page": 0,
+   "w": 256,
+   "x": 262,
+   "y": 985
+  },
+  "unit/slinghunter_storm.white": {
+   "atlas": "sprites",
+   "ax": 115.1,
+   "ay": 243.1,
+   "h": 244,
+   "page": 0,
+   "w": 256,
+   "x": 522,
+   "y": 985
+  }
+ },
+ "images": {
+  "distant": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "distant.webp",
+   "h": 370,
+   "w": 1152,
+   "y": 397.5
+  },
+  "fill": {
+   "file": "fill.webp",
+   "h": 200,
+   "repeat": "xy",
+   "w": 1536
+  },
+  "foreground": {
+   "file": "foreground.webp",
+   "h": 294,
+   "w": 1152
+  },
+  "ground": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "ground.webp",
+   "h": 197,
+   "laneY": 592.5,
+   "w": 1152,
+   "y": 570.8
+  },
+  "midground": {
+   "canvas": [
+    1152,
+    768
+   ],
+   "file": "midground.webp",
+   "h": 768,
+   "w": 1152,
+   "y": 0.0
+  },
+  "portrait-melee": {
+   "file": "portrait-melee.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-ranged": {
+   "file": "portrait-ranged.webp",
+   "h": 256,
+   "w": 256
+  },
+  "portrait-tank": {
+   "file": "portrait-tank.webp",
+   "h": 256,
+   "w": 256
+  },
+  "sky": {
+   "file": "sky.webp",
+   "focus": [
+    0.5,
+    0.3
+   ],
+   "h": 768,
+   "w": 1152
+  }
+ },
+ "kit": "primal",
+ "schema": 1,
+ "sources": {
+  "ember/boneguard.png": "ce3d3ed00da1e0b027522b2dad985b8d0f70cfac41619a32b599420d2636ebe3",
+  "ember/boneguard_parts.png": "7f0eef7d8d827cfe93232612c8390d27d4c1c1ac89f73f680e7a8c55efca583e",
+  "ember/flintspear.png": "38ef166bc8f733db76b48503921bc4ca6f0a1ba2f52d992f9e45aa1a071822ca",
+  "ember/flintspear_parts.png": "871ffef43f20c1481459739be9d217d9d4bc07e6065798af3c3f95e0878ffa89",
+  "ember/fortress_damaged.png": "42375f5969b6ed8bb2b86300c139f3f4d0a9ad921578537ed4d693a23952091d",
+  "ember/fortress_fallen.png": "409e84eff0c5572d855ef572ebb63bb8e48b9291ee2f8939bab656f789dd0b28",
+  "ember/fortress_intact.png": "ac59d1596cd2955c823d1e0466fb10702f1ac67ce2928b2ae22f9ef3b734e14b",
+  "ember/fortress_nearly_destroyed.png": "8ab466171d9bb74197f6a9601de4aebcd70e60271facbcd0c57e3f8895a7d9be",
+  "ember/slinghunter.png": "d70e5dc0baf8074e6720bc11143a0bf751e5d5d3c55802bc169e3ce59f9d24f0",
+  "ember/slinghunter_parts.png": "df898de6cad0f6d3c554aca9192f4a8650c53d3b1d264e2a418c4836b12bd599",
+  "ember/warlord.png": "4b642d6ba08ea73a16d63bf84b5f0b24b09c2f01f9f8160e0a6748fc665af0a6",
+  "ember/warlord_parts.png": "4aa21fc9a0c7f0a81d766ca9a9e7a73dfe762bb7b6f0aa7a8b2b7762fb0fa666",
+  "storm/boneguard.png": "b480a4b6391585722bdd69a52f2335affb3c8c562f8f8c17807cdaffd50d3418",
+  "storm/boneguard_parts.png": "a5c5f928b57cbc21ae14d8dd42a44bbd58499e7cdc132e2ff0c4075c3d4876f3",
+  "storm/flintspear.png": "cfdd4eacd080940b1d1f77947a429054a14a1a3be6867a2f22c42011557f3fbf",
+  "storm/flintspear_parts.png": "6c14906dd9fd429d834b4458d2149e73828d8e734bb3e27ca938b356221e7b8f",
+  "storm/fortress_damaged.png": "d5bf66ba839877a956601e7759e150e4a5c6426fd8a52bd6cbba30caadd92beb",
+  "storm/fortress_fallen.png": "00655413d5d1b7eeac65d004efea029a01a0712fe8ba0a8b7e0bfde7a5cb801e",
+  "storm/fortress_intact.png": "9b18271052ffac5f1eaae34e015571780b889ca3aa83f58e035f0fb2d5eb1e85",
+  "storm/fortress_nearly_destroyed.png": "2c8efeea334598499ad7b951ce087e5dad4b33c3ca47dd20dd274ab5da701fcb",
+  "storm/slinghunter.png": "b040fe73fcfa302f6d7729efd8fed6cc2d29423aee953b8aa647f3bdfc401bda",
+  "storm/slinghunter_parts.png": "878554ebb9ee98fb34a43a1b7aaa2e8dc9a2fbb54e19b5ccfacaee662d4f6f5e",
+  "storm/warlord.png": "dc8f7139d3b5e3293df5db7c45d7d3a0509fcca29c8a8d6056f276bbe66e39f8",
+  "storm/warlord_parts.png": "2dc4dc6063586eab125c1855c3e0f8c996c2391a95981f9ef2bb836441624107",
+  "world/distant.png": "a00e207ef88a2b0c91008af60a9c2e4a552480667deccae48d6c31e4e4e91a33",
+  "world/foreground.png": "120334b6eb31bcb802293c5a4165338184b035c41139b5d229528a772a97adbd",
+  "world/ground.png": "2a7027adf407981001660b612ddb107e3f96891099c46dbab699dc9b895cfda1",
+  "world/midground.png": "1b47f7e3cf3db1a15d717d950a53bfec83a71cd2e1d2f9d907bfc3f5d41258f4",
+  "world/sky.png": "ea6675107e7a27c2017c75299008af13dec5e01deb743b5b8834fbb25414f6b1",
+  "world/weathered_totem.png": "74c93f593b1e7b5a4f542757c9e0cb8764a756cc351246c41b3675b0175b0b55"
+ },
+ "title": "STORMGLASS \u2014 Primal Era",
+ "units": {
+  "melee.ember": {
+   "debris": [
+    "part/flintspear_ember/spear"
+   ],
+   "frame": "unit/flintspear_ember",
+   "name": "flintspear",
+   "white": "unit/flintspear_ember.white"
+  },
+  "melee.storm": {
+   "debris": [
+    "part/flintspear_storm/spear"
+   ],
+   "frame": "unit/flintspear_storm",
+   "name": "flintspear",
+   "white": "unit/flintspear_storm.white"
+  },
+  "ranged.ember": {
+   "debris": [
+    "part/slinghunter_ember/sling"
+   ],
+   "frame": "unit/slinghunter_ember",
+   "name": "slinghunter",
+   "white": "unit/slinghunter_ember.white"
+  },
+  "ranged.storm": {
+   "debris": [
+    "part/slinghunter_storm/sling"
+   ],
+   "frame": "unit/slinghunter_storm",
+   "name": "slinghunter",
+   "white": "unit/slinghunter_storm.white"
+  },
+  "tank.ember": {
+   "debris": [
+    "part/boneguard_ember/axe",
+    "part/boneguard_ember/shield"
+   ],
+   "frame": "unit/boneguard_ember",
+   "name": "boneguard",
+   "white": "unit/boneguard_ember.white"
+  },
+  "tank.storm": {
+   "debris": [
+    "part/boneguard_storm/axe",
+    "part/boneguard_storm/shield"
+   ],
+   "frame": "unit/boneguard_storm",
+   "name": "boneguard",
+   "white": "unit/boneguard_storm.white"
+  },
+  "warlord.ember": {
+   "debris": [],
+   "frame": "unit/boss",
+   "name": "warlord",
+   "white": "unit/boss.white"
+  }
+ },
+ "world": "layers"
+}

@@ -1,6 +1,6 @@
 import { Assets, Rectangle, Texture, type TextureSource } from 'pixi.js';
 import { kitUrl, type KitId } from './ageKits';
-import { validateManifest, type KitManifest } from './manifest';
+import { validateManifest, worldImages, type KitManifest } from './manifest';
 
 /**
  * Loads a kit's manifest and texture pages on demand (only the kits the current and next Age need) and slices the
@@ -79,9 +79,11 @@ async function load(id: KitId): Promise<Kit> {
     });
   }
   const images: Record<string, Texture> = {};
-  for (const key of ['sky', 'horizon', 'path', 'ground']) {
+  for (const key of worldImages(manifest)) {
     const im = manifest.images[key]!;
-    const data = im.repeat ? { scaleMode: 'linear', addressMode: 'repeat' } : { scaleMode: 'linear', autoGenerateMipmaps: key === 'horizon' };
+    // far layers are drawn well below their size on small phones: mipmaps keep them from shimmering
+    const mip = key === 'horizon' || key === 'distant';
+    const data = im.repeat ? { scaleMode: 'linear', addressMode: 'repeat' } : { scaleMode: 'linear', autoGenerateMipmaps: mip };
     jobs.push(
       Assets.load<Texture>({ alias: `${id}:${im.file}`, src: kitUrl(id, im.file), data }).then((t) => {
         images[key] = t;

@@ -16,6 +16,12 @@ export interface FrameDef {
   nominalH?: number;
   /** Units: muzzle / casting point in frame pixels (source faces right). */
   muzzle?: [number, number];
+  /** Effects: world size (wu along the longest side) overriding the scene's default for that effect. */
+  size?: number;
+  /** Effects: 'normal' for solid objects (a sling stone, an arrow); glows are additive. */
+  blend?: 'add' | 'normal';
+  /** Projectiles: false when the shot has no muzzle flash (sling, bow, thrown grenade). */
+  flash?: boolean;
 }
 
 export interface ImageDef {
@@ -27,6 +33,11 @@ export interface ImageDef {
   cell?: number;
   cols?: number;
   order?: string[];
+  /** Layered worlds: top of this layer on the shared scene canvas (output px), and that canvas's size. */
+  y?: number;
+  canvas?: [number, number];
+  /** Layered worlds (ground layer): the canvas row the troops' feet stand on. */
+  laneY?: number;
 }
 
 export interface UnitEntry {
@@ -34,12 +45,19 @@ export interface UnitEntry {
   white: string;
   debris: string[];
   name: string;
+  /** How a close-combat troop strikes: a swing (default, slash effect) or a point-blank 'shot' (muzzle flash). */
+  strike?: 'swing' | 'shot';
 }
 
 export interface KitManifest {
   kit: string;
   title: string;
   schema: number;
+  /**
+   * The battle world: absent for the atlas kits (sky, horizon band, path strip, ground tile); 'layers' for the era
+   * packs (sky plus the authored distant / midground / ground layers on one canvas, a foreground strip and a fill).
+   */
+  world?: 'layers';
   atlases: Record<string, { file: string; w: number; h: number }[]>;
   frames: Record<string, FrameDef>;
   images: Record<string, ImageDef>;
@@ -47,6 +65,7 @@ export interface KitManifest {
   units: Record<string, UnitEntry>;
   /** `${faction}.${state}` → frame name. */
   bases: Record<string, string>;
+  /** Base texture pixels that the runtime draws at BASE_HEIGHT (src/render/kits/sizes.ts). */
   baseRefHeight: number;
   baseAlignmentApplied: boolean;
   sources: Record<string, string>;
@@ -73,6 +92,11 @@ export function unitEntry(m: KitManifest, role: 'melee' | 'ranged' | 'tank' | 'w
   return e;
 }
 
+/** The full-size images a kit's battle world is drawn from (the loader fetches exactly these). */
+export function worldImages(m: Pick<KitManifest, 'world'>): string[] {
+  return m.world === 'layers' ? ['sky', 'distant', 'midground', 'ground', 'foreground', 'fill'] : ['sky', 'horizon', 'path', 'ground'];
+}
+
 /** Checks what the loader relies on, so a stale or hand-edited manifest fails loudly instead of drawing nothing. */
 export function validateManifest(m: KitManifest): string[] {
   const errs: string[] = [];
@@ -89,7 +113,8 @@ export function validateManifest(m: KitManifest): string[] {
       const n = m.bases[`${f}.${s}`];
       if (!n || !m.frames[n]) errs.push(`missing base ${f}.${s}`);
     }
-  for (const k of ['sky', 'horizon', 'path', 'ground', 'logo', 'icons']) if (!m.images[k]) errs.push(`missing image ${k}`);
+  for (const k of worldImages(m)) if (!m.images[k]) errs.push(`missing image ${k}`);
+  if (m.world === 'layers' && m.images.ground?.laneY === undefined) errs.push('ground layer has no laneY');
   for (const [n, fr] of Object.entries(m.frames)) {
     const pages = m.atlases[fr.atlas];
     const page = pages?.[fr.page];

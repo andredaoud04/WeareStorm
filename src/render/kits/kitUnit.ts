@@ -54,6 +54,8 @@ export class KitUnit {
   private cheering = false;
   private debris: Debris[] = [];
   private debrisNames: string[];
+  /** How this troop's close attack looks (a swing, or a point-blank shot from the muzzle). */
+  readonly strike: 'swing' | 'shot';
   dying = -1; // ms since death; -1 alive
 
   constructor(private kit: Kit, readonly role: Role, readonly side: Side, readonly seed: number) {
@@ -65,6 +67,7 @@ export class KitUnit {
     this.anchorPx = [f.ax, f.ay];
     this.muzzlePx = f.muzzle ?? null;
     this.debrisNames = entry.debris;
+    this.strike = entry.strike ?? 'swing';
     this.walkPhase = (seed * 0.618) % 1;
 
     const halfW = Math.min(f.w * 0.22, f.ax, f.w - f.ax) * this.scale;

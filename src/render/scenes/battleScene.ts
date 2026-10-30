@@ -9,6 +9,7 @@ import { KitBase } from '../kits/kitBase';
 import { KitUnit } from '../kits/kitUnit';
 import { KitWorld } from '../kits/kitWorld';
 import { getKit, loadKit, onKitLoaded, type Kit } from '../kits/loader';
+import type { FrameDef } from '../kits/manifest';
 import { BASE_INSET, DEPTH_Y, ROLE_HEIGHT } from '../kits/sizes';
 import { makeCamera, rankSpread, type Camera } from '../pixi/camera';
 import { TRAUMA, Trauma, coverScale } from '../pixi/trauma';
@@ -49,6 +50,8 @@ interface Proj {
   fire: number; // tick
   arrive: number;
   arc: number;
+  /** A lobbed solid (sling stone, grenade) tumbles instead of pointing along its path. */
+  spin: boolean;
   base: number; // wu per texture px
   px: number;
   py: number;
@@ -346,15 +349,17 @@ export class BattleScene {
             fromX = src.lastX + src.sdx + facing * m.x;
             fromY = -m.y;
           }
-          this.fx('hit', fromX, fromY, { max: 120, s0: 0.45, s1: 0.8, kit: src?.kit }); // muzzle / casting flash
           const tex = this.fxTexture('projectile', src?.kit);
+          // muzzle / casting flash (not for a sling stone, an arrow or a thrown grenade)
+          if (tex?.fr.flash !== false) this.fx('hit', fromX, fromY, { max: 120, s0: 0.45, s1: 0.8, kit: src?.kit });
           if (!tex) break;
           const g = new Sprite(tex.t);
           g.anchor.set(0.5);
-          g.blendMode = 'add';
+          g.blendMode = tex.fr.blend === 'normal' ? 'normal' : 'add';
           this.fxLayer.addChild(g);
-          const lob = e.style === 'bomb' || e.style === 'shell' || e.style === 'pebble';
-          this.projs.set(e.projId, { g, fromX, fromY, toX: e.toX, target: e.to, fire: tick, arrive: e.arriveTick, arc: lob ? 90 : 18, base: tex.base, px: Number.NaN, py: Number.NaN });
+          // lobbed styles arc, unless the kit draws them as a tracer or beam (an additive glow flies flat)
+          const lob = (e.style === 'bomb' || e.style === 'shell' || e.style === 'pebble') && tex.fr.blend !== 'add';
+          this.projs.set(e.projId, { g, fromX, fromY, toX: e.toX, target: e.to, fire: tick, arrive: e.arriveTick, arc: lob ? 90 : 18, spin: lob && tex.fr.blend === 'normal', base: tex.base, px: Number.NaN, py: Number.NaN });
           break;
         }
         case 'projectileEnd': {
@@ -394,10 +399,18 @@ export class BattleScene {
           const dir = u.side === 'player' ? 1 : -1;
           this.fx(e.heavy ? 'impact' : 'hit', u.lastX + u.sdx + dir * H * 0.08, H * 0.5, { max: e.heavy ? 240 : 170, s0: e.heavy ? 0.4 : 0.55, s1: e.heavy ? 0.75 : 1, spin: 3 });
           if (src && e.projId === undefined && src.role !== 'ranged' && src.dying < 0) {
-            // melee swoosh on the striking side
             const sd = src.side === 'player' ? 1 : -1;
             const SH = this.height(src);
-            this.fx('swoosh', src.lastX + src.sdx + sd * SH * 0.3, SH * 0.55, { max: 160, s0: (SH / 250) * 0.9, s1: (SH / 250) * 1.05, mirror: sd, kit: src.kit, fadeIn: 30 });
+            if (src.art?.strike === 'shot') {
+              // a point-blank volley: flash and smoke at the muzzle
+              const m = src.art.muzzle();
+              const mx = src.lastX + src.sdx + sd * m.x;
+              this.fx('hit', mx, -m.y, { max: 140, s0: 0.6, s1: 1, kit: src.kit });
+              this.fx('dust', mx + sd * 20, -m.y, { vx: sd * 60, vy: 30, max: 520, s0: 0.25, s1: 0.5, kit: src.kit });
+            } else {
+              // melee swoosh on the striking side
+              this.fx('swoosh', src.lastX + src.sdx + sd * SH * 0.3, SH * 0.55, { max: 160, s0: (SH / 250) * 0.9, s1: (SH / 250) * 1.05, mirror: sd, kit: src.kit, fadeIn: 30 });
+            }
           }
           if (src && src.id === this.warlordId) {
             if (this.slamTick !== tick) {
@@ -544,7 +557,8 @@ export class BattleScene {
         const y = p.fromY + (toY - p.fromY) * f + Math.sin(f * Math.PI) * p.arc;
         const px = sx(x);
         const py = gy - y * k;
-        if (!Number.isNaN(p.px) && (px !== p.px || py !== p.py)) p.g.rotation = Math.atan2(py - p.py, px - p.px);
+        if (p.spin) p.g.rotation = f * 9 * (toX < p.fromX ? -1 : 1);
+        else if (!Number.isNaN(p.px) && (px !== p.px || py !== p.py)) p.g.rotation = Math.atan2(py - p.py, px - p.px);
         else if (Number.isNaN(p.px)) p.g.rotation = toX < p.fromX ? Math.PI : 0;
         p.px = px;
         p.py = py;
@@ -680,12 +694,12 @@ export class BattleScene {
   // Effects (kit sprites)
 
   /** An effect texture from a kit (the field kit by default) with its world scale, or null while it loads. */
-  private fxTexture(name: FxName, kitId?: KitId): { t: Texture; base: number; kit: Kit } | null {
+  private fxTexture(name: FxName, kitId?: KitId): { t: Texture; base: number; kit: Kit; fr: FrameDef } | null {
     const kit = getKit(kitId ?? kitForAge(this.ages.field)) ?? getKit(kitForAge(this.ages.field));
     if (!kit) return null;
     const fr = kit.manifest.frames[`fx/${name}`];
     if (!fr) return null;
-    return { t: kit.frame(`fx/${name}`), base: (FX[name].size || 100) / Math.max(fr.w, fr.h), kit };
+    return { t: kit.frame(`fx/${name}`), base: (fr.size ?? (FX[name].size || 100)) / Math.max(fr.w, fr.h), kit, fr };
   }
 
   /** One effect sprite living in world units. */
