@@ -4,9 +4,10 @@
  */
 export const color = {
   ink: '#1D1830',
-  night900: '#141B33',
-  night800: '#1E2A4A',
-  night700: '#2B3B66',
+  // deep indigo, matched to the STORMGLASS night sky (M2; was #141B33 / #1E2A4A / #2B3B66)
+  night900: '#121331',
+  night800: '#1C1E47',
+  night700: '#2A2D66',
   paper: '#F7F9FC',
   paperShade: '#DCE3EF',
   blue500: '#2E86F0',
@@ -15,6 +16,8 @@ export const color = {
   green500: '#46C25A',
   green700: '#2A8C3B',
   gold400: '#FFCF3D',
+  /** Antique gold of the kits' trims: frames around panels that sit on the world. */
+  goldAntique: '#C9A44C',
   gold600: '#E39A12',
   purple500: '#8B5CF6',
   purple700: '#5B34C2',

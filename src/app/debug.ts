@@ -1,4 +1,5 @@
 import type { Slot } from '../contracts';
+import { stageDef } from '../data/stages';
 import { recommendUpgrade } from '../meta/progress';
 import { newSave, type SaveV1 } from '../meta/save';
 import { session, startBattle, type BattleSession } from './battleController';
@@ -30,14 +31,12 @@ export function installDebug() {
     /** Advance the running battle by `seconds` of sim time with a simple deploy policy (screenshots / e2e). */
     play: (seconds: number, deploy = true) => session.value && fastForward(session.value, seconds, deploy),
     setSave: (s: Partial<SaveV1>) => commit({ ...newSave(), ...s }),
-    artLint: async () => (await import('../render/art/artLint')).artLint(),
   };
 }
 
-function fastForward(s: BattleSession, seconds: number, deploy: boolean) {
-  const order: Slot[] = ['melee', 'melee', 'ranged', 'tank'];
+function fastForward(s: BattleSession, seconds: number, deploy: boolean, until?: () => boolean, order: Slot[] = ['melee', 'melee', 'ranged', 'tank']) {
   let i = 0;
-  for (let t = 0; t < seconds * 20 && !s.ended$.value; t++) {
+  for (let t = 0; t < seconds * 20 && !s.ended$.value && !until?.(); t++) {
     if (deploy) {
       const owned = order.filter((x) => x === 'melee' || s.state.input.owned[x as 'ranged' | 'tank']);
       const slot = owned[i % owned.length]!;
@@ -67,6 +66,14 @@ const AFTER_2: Partial<SaveV1> = { ...AFTER_1_BOUGHT, gold: 34, campaignStage: 3
 const AFTER_3: Partial<SaveV1> = { ...AFTER_2, gold: 84, campaignStage: 4, clearedStages: [1, 2, 3], levels: { food: 2, walls: 1, melee: 2, ranged: 1, tank: 1 }, ftue: { ...AFTER_2.ftue, speedUsed: true, speedSeen: true, 'food-upSeen': true } };
 const AFTER_4: Partial<SaveV1> = { ...AFTER_3, gold: 30, campaignStage: 5, clearedStages: [1, 2, 3, 4], owned: { ranged: true, tank: true }, levels: { food: 3, walls: 2, melee: 3, ranged: 2, tank: 1 }, ftue: { ...AFTER_3.ftue, tankSeen: true, stormcall: true } };
 
+/** Late-campaign fixtures for the Future-kit Ages (art review scenes). */
+const strong = { food: 8, walls: 8, melee: 8, ranged: 8, tank: 8 };
+const lateSave = (stage: number): Partial<SaveV1> => {
+  const age = stageDef(stage).age;
+  const cleared = Array.from({ length: stage - 1 }, (_, i) => i + 1);
+  return { ...STONE_MID, armyAge: age, campaignStage: stage, clearedStages: cleared, warlordsBeaten: [], levels: { food: 5, walls: 4, melee: 5, ranged: 4, tank: 3 } };
+};
+
 /** Named states for the screenshot matrix (UX §10). */
 export function loadScene() {
   const scene = params.get('scene');
@@ -88,11 +95,35 @@ export function loadScene() {
   const later = (ms: number, fn: () => void) => setTimeout(fn, ms);
   const click = (id: string) => (document.querySelector(`[data-testid="${id}"]`) as HTMLElement | null)?.click();
   switch (scene) {
+    case 'battle-ancient':
+      fixture(lateSave(9));
+      battle(9, 24);
+      break;
+    case 'battle-future':
+      fixture(lateSave(29));
+      battle(29, 24);
+      break;
+    case 'battle-warlord-future':
+      fixture({ ...lateSave(30), levels: strong });
+      battle(30, 22);
+      break;
+    case 'base': {
+      // ?scene=base&state=damaged|critical|ruins&stage=4: a strong army plays until the enemy base reaches the state
+      const stage = Number(params.get('stage') ?? 4);
+      const state = params.get('state') ?? 'damaged';
+      fixture({ ...(stage > 5 ? lateSave(stage) : STONE_MID), levels: { food: 8, walls: 8, melee: 1, ranged: stage > 5 ? 5 : 1, tank: 1 } }); // weak shots: the HP walks down gently
+      const limit = state === 'damaged' ? 0.6 : state === 'critical' ? 0.25 : 0;
+      const s = startBattle(stage);
+      go('battle');
+      // ranged troops only: they shoot from range, so the base stays in view
+      fastForward(s, 400, true, () => s.curr.enemyBase.hp / s.curr.enemyBase.maxHp <= limit, ['ranged']);
+      break;
+    }
     case 'gallery':
       fixture({});
       go('title');
       document.getElementById('app')!.style.display = 'none';
-      void import('../render/scenes/gallery').then((g) => g.showGallery(params.get('ids')?.split(',')));
+      void import('../render/scenes/gallery').then((g) => g.showGallery(params.get('kit') ?? undefined));
       break;
     case 'title':
       fixture({});

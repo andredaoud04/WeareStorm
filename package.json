@@ -15,8 +15,7 @@
     "harness:ci": "tsx tools/harness/ci.ts",
     "screens": "tsx tools/screens/matrix.ts",
     "e2e": "tsx tools/screens/e2e.ts",
-    "calibrate": "tsx tools/harness/calibrate.ts",
-    "art:lint": "tsx tools/screens/artlint.ts"
+    "calibrate": "tsx tools/harness/calibrate.ts"
   },
   "dependencies": {
     "@fontsource/lilita-one": "^5.3.0",
