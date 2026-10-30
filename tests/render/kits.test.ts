@@ -1,15 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { AGE_ORDER } from '../../src/contracts';
-import { AGE_KIT, KIT_IDS, KITS, kitForAge, kitUrl } from '../../src/render/kits/ageKits';
-import { BASE_STATES, baseState, unitEntry, validateManifest, type KitManifest } from '../../src/render/kits/manifest';
+import { AGE_KIT, ICON_KIT, KIT_IDS, KITS, kitForAge, kitUrl } from '../../src/render/kits/ageKits';
+import { BASE_STATES, baseState, unitEntry, validateManifest, worldImages, type KitManifest } from '../../src/render/kits/manifest';
 
 const manifest = (kit: string) => JSON.parse(readFileSync(new URL(`../../public/art/${kit}/manifest.json`, import.meta.url), 'utf8')) as KitManifest;
 
 describe('age → kit mapping', () => {
-  it('binds every Age to a kit: the early Ages to Eldritch, the late ones to Future', () => {
+  it('binds every Age to its own kit', () => {
     for (const age of AGE_ORDER) expect(KIT_IDS).toContain(kitForAge(age));
-    expect(AGE_ORDER.map((a) => AGE_KIT[a])).toEqual(['eldritch', 'eldritch', 'eldritch', 'future', 'future', 'future']);
+    expect(AGE_ORDER.map((a) => AGE_KIT[a])).toEqual(['primal', 'ancient', 'eldritch', 'gunpowder', 'industrial', 'future']);
+    expect(new Set(AGE_ORDER.map(kitForAge)).size).toBe(AGE_ORDER.length);
+    expect(KIT_IDS).toHaveLength(AGE_ORDER.length);
   });
 
   it('builds kit URLs under the public art folder', () => {
@@ -48,17 +50,55 @@ describe('kit manifests (public/art)', () => {
       for (const f of ['storm', 'ember']) for (const st of BASE_STATES) expect(m.frames[m.bases[`${f}.${st}`]!]).toBeTruthy();
       for (const fx of ['hit', 'impact', 'dust', 'poof', 'projectile', 'coin', 'strike', 'scorch', 'swoosh']) expect(m.frames[`fx/${fx}`]).toBeTruthy();
       expect(m.baseAlignmentApplied).toBe(true);
-      expect(Object.keys(m.sources)).toHaveLength(32);
+      if (m.world !== 'layers') expect(Object.keys(m.sources)).toHaveLength(32);
+      for (const h of Object.values(m.sources)) expect(h).toMatch(/^[0-9a-f]{64}$/);
+      for (const k of worldImages(m)) expect(m.images[k]).toBeTruthy();
+      for (const slot of ['melee', 'ranged', 'tank']) expect(m.images[`portrait-${slot}`]).toBeTruthy();
       for (const pages of Object.values(m.atlases)) for (const p of pages) expect(Math.max(p.w, p.h)).toBeLessThanOrEqual(2048);
     });
-
-    it(`${kit}: the icon sheet order matches the UI's`, async () => {
-      // icons.tsx pulls in Preact signals and the store; read its order constant textually instead
-      const src = readFileSync(new URL('../../src/ui/kit/icons.tsx', import.meta.url), 'utf8');
-      const order = JSON.parse(src.match(/KIT_ICON_ORDER = (\[[^\]]+\])/)![1]!.replace(/'/g, '"'));
-      expect(manifest(kit).images.icons!.order).toEqual(order);
-    });
   }
+
+  it('the shared icon sheet order matches the UI', () => {
+    // icons.tsx pulls in Preact; read its order constant textually instead
+    const src = readFileSync(new URL('../../src/ui/kit/icons.tsx', import.meta.url), 'utf8');
+    const order = JSON.parse(src.match(/KIT_ICON_ORDER = (\[[^\]]+\])/)![1]!.replace(/'/g, '"'));
+    expect(manifest(ICON_KIT).images.icons!.order).toEqual(order);
+  });
+
+  it('era packs record the sha256 of all 118 pack sources', () => {
+    const all = ['primal', 'ancient', 'gunpowder', 'industrial'].flatMap((k) => Object.keys(manifest(k).sources).map((p) => `${k}/${p}`));
+    expect(new Set(all).size).toBe(118);
+  });
+
+  it('era packs: layered world on one canvas, debris parts, a styled projectile, one base scale', () => {
+    for (const kit of ['primal', 'ancient', 'gunpowder', 'industrial']) {
+      const m = manifest(kit);
+      expect(m.world).toBe('layers');
+      const g = m.images.ground!;
+      expect(g.laneY).toBeGreaterThan(g.y!); // the lane row lies inside the painted ground layer
+      expect(g.laneY).toBeLessThan(g.y! + g.h);
+      for (const k of ['distant', 'midground']) expect(m.images[k]!.canvas).toEqual(g.canvas);
+      expect(m.images.fill!.repeat).toBe('xy');
+      for (const role of ['melee', 'ranged', 'tank'] as const) expect(unitEntry(m, role, 'storm').debris.length).toBeGreaterThan(0);
+      expect(m.frames['fx/projectile']!.size).toBeGreaterThan(0);
+      // every damage state stands on the intact state's ground line: anchors sit on each frame's bottom row
+      for (const f of ['storm', 'ember']) for (const st of BASE_STATES) {
+        const fr = m.frames[m.bases[`${f}.${st}`]!]!;
+        expect(Math.abs(fr.ay - fr.h)).toBeLessThan(2);
+      }
+    }
+  });
+
+  it('a soldier is the same nominal size in every Age; tanks larger, the Warlord ~2.4×', () => {
+    for (const kit of KIT_IDS) {
+      const m = manifest(kit);
+      const nominal = (role: 'melee' | 'ranged' | 'tank' | 'warlord') => m.frames[unitEntry(m, role, 'ember').frame]!.nominalH!;
+      expect(nominal('melee')).toBe(240);
+      expect(nominal('ranged')).toBe(240);
+      expect(nominal('tank')).toBe(360);
+      expect(nominal('warlord')).toBe(600);
+    }
+  });
 
   it('flags a broken manifest', () => {
     const m = manifest('eldritch');
@@ -72,5 +112,18 @@ describe('kit manifests (public/art)', () => {
   it('names come from one table per kit', () => {
     expect(KITS.eldritch.units).toEqual({ melee: 'Riftblade', ranged: 'Voidseer', tank: 'Obsidian Warden' });
     expect(KITS.future.warlord).toBe('Siege Commander');
+    expect(KITS.primal.units).toEqual({ melee: 'Flintspear', ranged: 'Slinghunter', tank: 'Boneguard' });
+    expect(KITS.industrial.warlord).toBe('Industrial Warlord');
+    for (const kit of KIT_IDS) expect(manifest(KITS[kit].logo).images.logo).toBeTruthy(); // every title has a wordmark
+  });
+
+  it('every manifest unit is drawn from the design the name table promises', () => {
+    for (const kit of ['primal', 'ancient', 'gunpowder', 'industrial'] as const) {
+      const m = manifest(kit);
+      for (const slot of ['melee', 'ranged', 'tank'] as const) {
+        const design = unitEntry(m, slot, 'storm').name.replace(/_/g, ' ');
+        expect(KITS[kit].units[slot].toLowerCase()).toBe(design);
+      }
+    }
   });
 });

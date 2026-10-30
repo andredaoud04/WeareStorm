@@ -1,7 +1,5 @@
-import { computed } from '@preact/signals';
 import { useState } from 'preact/hooks';
-import { save } from '../../app/store';
-import { kitForAge, kitUrl, type KitId } from '../../render/kits/ageKits';
+import { ICON_KIT, kitUrl, type KitId } from '../../render/kits/ageKits';
 
 /**
  * The icon set. Symbols the art kits draw come from the kit bound to your army's Age (a 4 × 4 sheet built by
@@ -74,8 +72,6 @@ export const KIT_ICON: Partial<Record<IconName, (typeof KIT_ICON_ORDER)[number]>
   lock: 'locked',
 };
 
-/** The icon kit follows your army's Age. */
-const iconKit = computed<KitId>(() => kitForAge(save.value.armyAge));
 
 function kitStyle(name: IconName, size: number, kit: KitId): string | null {
   const k = KIT_ICON[name];
@@ -88,13 +84,13 @@ function kitStyle(name: IconName, size: number, kit: KitId): string | null {
 
 /** The raw markup of an icon, for elements built outside Preact (coin flights, sparkles). */
 export function iconHtml(name: IconName, size: number): string {
-  const st = kitStyle(name, size, iconKit.peek());
+  const st = kitStyle(name, size, ICON_KIT);
   if (st) return `<span class="icon kit-icon" style="${st}" aria-hidden="true"></span>`;
   return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${ICONS[name]}</svg>`;
 }
 
 export function Icon({ name, size = 28, class: cls = '' }: { name: IconName; size?: number; class?: string }) {
-  const st = kitStyle(name, size, iconKit.value);
+  const st = kitStyle(name, size, ICON_KIT);
   if (st) return <span class={`icon kit-icon ${cls}`} style={st} aria-hidden="true" />;
   return (
     <svg

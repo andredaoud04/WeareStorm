@@ -1,4 +1,4 @@
-import type { Slot } from '../contracts';
+import { AGE_ORDER, type AgeId, type Slot } from '../contracts';
 import { stageDef } from '../data/stages';
 import { recommendUpgrade } from '../meta/progress';
 import { newSave, type SaveV1 } from '../meta/save';
@@ -66,7 +66,7 @@ const AFTER_2: Partial<SaveV1> = { ...AFTER_1_BOUGHT, gold: 34, campaignStage: 3
 const AFTER_3: Partial<SaveV1> = { ...AFTER_2, gold: 84, campaignStage: 4, clearedStages: [1, 2, 3], levels: { food: 2, walls: 1, melee: 2, ranged: 1, tank: 1 }, ftue: { ...AFTER_2.ftue, speedUsed: true, speedSeen: true, 'food-upSeen': true } };
 const AFTER_4: Partial<SaveV1> = { ...AFTER_3, gold: 30, campaignStage: 5, clearedStages: [1, 2, 3, 4], owned: { ranged: true, tank: true }, levels: { food: 3, walls: 2, melee: 3, ranged: 2, tank: 1 }, ftue: { ...AFTER_3.ftue, tankSeen: true, stormcall: true } };
 
-/** Late-campaign fixtures for the Future-kit Ages (art review scenes). */
+/** Later-campaign fixtures for the per-Age art review scenes. */
 const strong = { food: 8, walls: 8, melee: 8, ranged: 8, tank: 8 };
 const lateSave = (stage: number): Partial<SaveV1> => {
   const age = stageDef(stage).age;
@@ -95,28 +95,18 @@ export function loadScene() {
   const later = (ms: number, fn: () => void) => setTimeout(fn, ms);
   const click = (id: string) => (document.querySelector(`[data-testid="${id}"]`) as HTMLElement | null)?.click();
   switch (scene) {
-    case 'battle-ancient':
-      fixture(lateSave(9));
-      battle(9, 24);
-      break;
-    case 'battle-future':
-      fixture(lateSave(29));
-      battle(29, 24);
-      break;
-    case 'battle-warlord-future':
-      fixture({ ...lateSave(30), levels: strong });
-      battle(30, 22);
-      break;
+
     case 'base': {
       // ?scene=base&state=damaged|critical|ruins&stage=4: a strong army plays until the enemy base reaches the state
       const stage = Number(params.get('stage') ?? 4);
       const state = params.get('state') ?? 'damaged';
-      fixture({ ...(stage > 5 ? lateSave(stage) : STONE_MID), levels: { food: 8, walls: 8, melee: 1, ranged: stage > 5 ? 5 : 1, tank: 1 } }); // weak shots: the HP walks down gently
+      fixture({ ...(stage > 5 ? lateSave(stage) : STONE_MID), levels: { food: 8, walls: 8, melee: 1, ranged: stage > 5 ? 7 : 1, tank: 1 } }); // weak shots: the HP walks down gently
       const limit = state === 'damaged' ? 0.66 : state === 'critical' ? 0.33 : 0; // stop on entering the state
       const s = startBattle(stage);
       go('battle');
       // ranged troops only: they shoot from range, so the base stays in view
       fastForward(s, 400, true, () => s.curr.enemyBase.hp / s.curr.enemyBase.maxHp <= limit, ['ranged']);
+      later(800, () => (s.paused = true)); // hold the state for the screenshot once its crossfade has played
       break;
     }
     case 'gallery':
@@ -279,6 +269,36 @@ export function loadScene() {
       battle(4, 400, false);
       break;
     default:
+      ageBattle(scene);
       break;
+  }
+
+  /**
+   * Art review scenes, one per Age kit: `battle-<age>` is a mid-campaign crowd (the Age's 4th stage),
+   * `battle-warlord-<age>` its Warlord stage with a strong army, `army-<age>` / `ages-<age>` those screens. Ages: stone, ancient, medieval, gunpowder,
+   * industrial, future (the kit names primal / eldritch work too).
+   */
+  function ageBattle(name: string) {
+    const screen = /^(army|ages)-(\w+)$/.exec(name); // `army-<age>` / `ages-<age>`: those screens mid-Age
+    if (screen) {
+      const a = ({ primal: 'stone', eldritch: 'medieval' } as Record<string, AgeId>)[screen[2]!] ?? (screen[2] as AgeId);
+      if (!AGE_ORDER.includes(a)) return;
+      fixture({ ...lateSave(AGE_ORDER.indexOf(a) * 5 + 4), gold: 200 });
+      go(screen[1] as 'army' | 'ages');
+      return;
+    }
+    const m = /^battle-(warlord-)?(\w+)$/.exec(name);
+    const alias: Record<string, AgeId> = { primal: 'stone', eldritch: 'medieval' };
+    const key = m?.[2] ?? '';
+    const age = alias[key] ?? (AGE_ORDER.includes(key as AgeId) ? (key as AgeId) : null);
+    if (!m || !age) return;
+    const first = AGE_ORDER.indexOf(age) * 5 + 1;
+    if (m[1]) {
+      fixture({ ...lateSave(first + 4), levels: strong });
+      battle(first + 4, 22);
+    } else {
+      fixture(lateSave(first + 3));
+      battle(first + 3, 24);
+    }
   }
 }

@@ -5,7 +5,7 @@ import { BASE_STATES, baseState, factionOf, type BaseState } from './manifest';
 import { BASE_HEIGHT } from './sizes';
 
 /**
- * A Rift Citadel / Citadel base: four damage states drawn at one common scale on one ground line (each state's
+ * A base (Rift Citadel, Citadel or an era fortress): four damage states drawn at one common scale on one ground line (each state's
  * ground anchor and width normalisation were applied by the art tool, so nothing is rescaled here). Hits shake and
  * brighten it; a state change crossfades; the collapse sinks the last standing state into the ruins. Local frame:
  * the base's ground anchor at (0, 0), facing +x (the scene mirrors the enemy's).
@@ -25,7 +25,8 @@ export class KitBase {
   readonly scale: number;
   /** Visible width of the intact state, wu. */
   readonly width: number;
-  readonly height = BASE_HEIGHT;
+  /** Visible height of the intact state, wu (BASE_HEIGHT for the atlas kits; the wide era forts are lower). */
+  readonly height: number;
   onStateChange: ((s: BaseState) => void) | null = null;
 
   constructor(kit: Kit, readonly side: Side) {
@@ -44,6 +45,7 @@ export class KitBase {
     }
     const intact = m.frames[m.bases[`${f}.intact`]!]!;
     this.width = intact.w * this.scale;
+    this.height = intact.h * this.scale;
     // hit flash: the current state drawn again additively
     this.glow.blendMode = 'add';
     this.glow.alpha = 0;

@@ -21,6 +21,9 @@ export const BASE_HEIGHT = pt(205);
 /** World x of each base's ground anchor, relative to the lane end it guards (0 for the player, 1000 for the enemy). */
 export const BASE_INSET = 25;
 
+/** Layered (era-pack) worlds: the width of the painted scene canvas; it is mirror-repeated past that. */
+export const SCENE_WIDTH = pt(820);
+
 /** Lane band: the path strip's screen height, centred on the ground line. */
 export const LANE_HEIGHT = pt(62);
 
